@@ -73,19 +73,40 @@ def test_no_float_columns_anywhere() -> None:
     assert offenders == []
 
 
-def test_primary_keys_are_uuid_not_autoincrement() -> None:
+def test_primary_keys_are_integer_autoincrement() -> None:
+    """id is BaseModel's internal PK/FK target — fast joins, never exposed."""
     for table in Base.metadata.tables.values():
         pk_columns = list(table.primary_key.columns)
         assert len(pk_columns) == 1, table.name
         pk = pk_columns[0]
-        assert isinstance(pk.type, Uuid), f"{table.name}.{pk.name} is not a UUID"
-        assert not isinstance(pk.type, Integer), table.name
-        default = pk.default
-        assert isinstance(default, ColumnDefault), f"{table.name}.{pk.name} has no default"
+        assert pk.name == "id", table.name
+        assert isinstance(pk.type, Integer), f"{table.name}.{pk.name} is not an Integer"
+        assert pk.autoincrement in (True, "auto"), table.name
+
+
+def test_every_table_has_a_public_uuid() -> None:
+    """uid is BaseModel's public identifier — never leaks row counts like id."""
+    for table in Base.metadata.tables.values():
+        uid = table.columns.get("uid")
+        assert uid is not None, f"{table.name} has no uid column"
+        assert isinstance(uid.type, Uuid), f"{table.name}.uid is not a UUID"
+        assert uid.unique or any(
+            list(c.columns) == [uid] for c in table.constraints if hasattr(c, "columns")
+        ), f"{table.name}.uid is not unique"
+        default = uid.default
+        assert isinstance(default, ColumnDefault), f"{table.name}.uid has no default"
         # SQLAlchemy wraps a zero-arg callable default in a context-taking
         # shim (preserving __name__), so compare by name, not identity.
         assert default.arg.__name__ == "uuid4", table.name
         assert isinstance(default.arg(None), uuid.UUID), table.name
+
+
+def test_every_table_has_soft_delete_and_timestamps() -> None:
+    for table in Base.metadata.tables.values():
+        assert "created_at" in table.columns, table.name
+        assert "updated_at" in table.columns, table.name
+        assert "deleted_at" in table.columns, table.name
+        assert table.columns["deleted_at"].nullable, table.name
 
 
 def test_organization_id_is_indexed_and_not_null() -> None:
@@ -172,8 +193,3 @@ def test_audit_actor_id_is_not_a_foreign_key() -> None:
     assert audit.columns["entity_id"].foreign_keys == set()
 
 
-def test_every_table_has_created_at() -> None:
-    for table in Base.metadata.tables.values():
-        assert "created_at" in table.columns, table.name
-    # Append-only tables carry no updated_at: nothing ever updates them.
-    assert "updated_at" not in Base.metadata.tables["audit_logs"].columns

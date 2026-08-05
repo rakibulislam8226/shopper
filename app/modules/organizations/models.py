@@ -8,15 +8,13 @@ and auditable.
 
 from __future__ import annotations
 
-import uuid
 from typing import TYPE_CHECKING
 
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.db.base import Base
+from app.db.base import BaseModel
 from app.db.enums import ORGANIZATION_STATUS_ENUM, OrganizationStatus
-from app.db.mixins import TimestampMixin, UUIDPrimaryKeyMixin
 
 if TYPE_CHECKING:
     from app.modules.memberships.models import Membership
@@ -24,7 +22,7 @@ if TYPE_CHECKING:
     from app.modules.sales.models import Sale
 
 
-class Organization(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class Organization(BaseModel):
     __tablename__ = "organizations"
 
     name: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -65,7 +63,7 @@ class Organization(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
     # Nullable only to survive data-integrity edge cases (e.g. a superadmin row
     # that predates this column). In practice provisioning always sets it.
-    created_by_superadmin_id: Mapped[uuid.UUID | None] = mapped_column(
+    created_by_superadmin_id: Mapped[int | None] = mapped_column(
         ForeignKey("superadmins.id", ondelete="RESTRICT"),
         nullable=True,
     )

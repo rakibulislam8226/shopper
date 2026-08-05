@@ -9,28 +9,26 @@ reactivates history rather than forking it.
 
 from __future__ import annotations
 
-import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import CheckConstraint, ForeignKey, Index, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.db.base import Base
+from app.db.base import BaseModel
 from app.db.enums import (
     MEMBERSHIP_ROLE_ENUM,
     MEMBERSHIP_STATUS_ENUM,
     MembershipRole,
     MembershipStatus,
 )
-from app.db.mixins import TimestampMixin, UUIDPrimaryKeyMixin
 
 if TYPE_CHECKING:
     from app.modules.organizations.models import Organization
     from app.modules.users.models import User
 
 
-class Membership(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class Membership(BaseModel):
     __tablename__ = "memberships"
     __table_args__ = (
         # One membership row per user per org — see the module docstring.
@@ -49,12 +47,12 @@ class Membership(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         ),
     )
 
-    user_id: Mapped[uuid.UUID] = mapped_column(
+    user_id: Mapped[int] = mapped_column(
         ForeignKey("users.id", ondelete="RESTRICT"),
         nullable=False,
         index=True,
     )
-    organization_id: Mapped[uuid.UUID] = mapped_column(
+    organization_id: Mapped[int] = mapped_column(
         ForeignKey("organizations.id", ondelete="RESTRICT"),
         nullable=False,
         index=True,
@@ -75,11 +73,11 @@ class Membership(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
     # Provenance: an invite comes from either an org user or a superadmin
     # (the org's first owner), never both. Enforced application-side.
-    invited_by_user_id: Mapped[uuid.UUID | None] = mapped_column(
+    invited_by_user_id: Mapped[int | None] = mapped_column(
         ForeignKey("users.id", ondelete="RESTRICT"),
         nullable=True,
     )
-    invited_by_superadmin_id: Mapped[uuid.UUID | None] = mapped_column(
+    invited_by_superadmin_id: Mapped[int | None] = mapped_column(
         ForeignKey("superadmins.id", ondelete="RESTRICT"),
         nullable=True,
     )
@@ -87,7 +85,7 @@ class Membership(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     joined_at: Mapped[datetime] = mapped_column(nullable=False, server_default=func.now())
     removed_at: Mapped[datetime | None] = mapped_column(nullable=True)
     # Null when the departure was self-initiated (status RESIGNED).
-    removed_by_user_id: Mapped[uuid.UUID | None] = mapped_column(
+    removed_by_user_id: Mapped[int | None] = mapped_column(
         ForeignKey("users.id", ondelete="RESTRICT"),
         nullable=True,
     )

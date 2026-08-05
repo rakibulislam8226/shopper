@@ -1,24 +1,24 @@
 """Audit log — append-only record of who changed what.
 
-Rows are written, never updated or deleted, which is why this table carries
-only ``created_at`` and not an ``updated_at``.
+Rows are written, never updated or deleted. ``updated_at``/``deleted_at`` are
+inherited from :class:`~app.db.base.BaseModel` like every other table but are
+never set in practice — nothing in this codebase issues an UPDATE or a soft
+delete against ``audit_logs``.
 """
 
 from __future__ import annotations
 
-import uuid
 from typing import Any
 
-from sqlalchemy import ForeignKey, Index, String, Uuid
+from sqlalchemy import ForeignKey, Index, Integer, String
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.db.base import Base
+from app.db.base import BaseModel
 from app.db.enums import ACTOR_TYPE_ENUM, ActorType
-from app.db.mixins import CreatedAtMixin, UUIDPrimaryKeyMixin
 
 
-class AuditLog(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class AuditLog(BaseModel):
     __tablename__ = "audit_logs"
     __table_args__ = (
         # "Show me this org's history", newest first.
@@ -28,7 +28,7 @@ class AuditLog(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
     )
 
     # Nullable: platform-level superadmin actions are not tied to any org.
-    organization_id: Mapped[uuid.UUID | None] = mapped_column(
+    organization_id: Mapped[int | None] = mapped_column(
         ForeignKey("organizations.id", ondelete="RESTRICT"),
         nullable=True,
     )
@@ -42,7 +42,7 @@ class AuditLog(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
     # The trade-off: the database will not validate this value, so the service
     # layer (later phases) must resolve the actor against the correct table
     # before writing, and readers must tolerate a dangling id.
-    actor_id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), nullable=False)
+    actor_id: Mapped[int] = mapped_column(Integer, nullable=False)
 
     # Dotted action name, e.g. "organization.suspended", "product.price_changed".
     action: Mapped[str] = mapped_column(String(128), nullable=False)
@@ -51,7 +51,7 @@ class AuditLog(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
     # Also a deliberate non-FK: it points at whichever table ``entity_type``
     # names.
     entity_type: Mapped[str] = mapped_column(String(64), nullable=False)
-    entity_id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), nullable=False)
+    entity_id: Mapped[int] = mapped_column(Integer, nullable=False)
 
     # Snapshots of the changed record. Null where a side does not apply
     # (creation has no before, deletion has no after).

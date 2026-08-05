@@ -12,14 +12,13 @@ from typing import TYPE_CHECKING
 from sqlalchemy import Boolean, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.db.base import Base
-from app.db.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from app.db.base import BaseModel
 
 if TYPE_CHECKING:
     from app.modules.memberships.models import Membership
 
 
-class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class User(BaseModel):
     __tablename__ = "users"
 
     name: Mapped[str] = mapped_column(String(255), nullable=False)

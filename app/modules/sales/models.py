@@ -18,7 +18,6 @@ Sale rows are immutable after creation apart from the annotation fields.
 
 from __future__ import annotations
 
-import uuid
 from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
@@ -35,8 +34,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.db.base import Base
-from app.db.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from app.db.base import BaseModel
 
 if TYPE_CHECKING:
     from app.modules.organizations.models import Organization
@@ -44,7 +42,7 @@ if TYPE_CHECKING:
     from app.modules.users.models import User
 
 
-class Sale(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class Sale(BaseModel):
     __tablename__ = "sales"
     __table_args__ = (
         # A sale of zero or negative units is never a real event; refunds get
@@ -58,17 +56,17 @@ class Sale(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         Index("ix_sales_organization_id_sold_at", "organization_id", "sold_at"),
     )
 
-    organization_id: Mapped[uuid.UUID] = mapped_column(
+    organization_id: Mapped[int] = mapped_column(
         ForeignKey("organizations.id", ondelete="RESTRICT"),
         nullable=False,
         index=True,
     )
-    salesman_user_id: Mapped[uuid.UUID] = mapped_column(
+    salesman_user_id: Mapped[int] = mapped_column(
         ForeignKey("users.id", ondelete="RESTRICT"),
         nullable=False,
         index=True,
     )
-    product_id: Mapped[uuid.UUID] = mapped_column(
+    product_id: Mapped[int] = mapped_column(
         ForeignKey("products.id", ondelete="RESTRICT"),
         nullable=False,
         index=True,

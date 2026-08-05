@@ -13,7 +13,6 @@ every historical :class:`~app.modules.sales.models.Sale` references one.
 
 from __future__ import annotations
 
-import uuid
 from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
@@ -31,16 +30,15 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.db.base import Base
+from app.db.base import BaseModel
 from app.db.enums import PRODUCT_STATUS_ENUM, ProductStatus
-from app.db.mixins import TimestampMixin, UUIDPrimaryKeyMixin
 
 if TYPE_CHECKING:
     from app.modules.organizations.models import Organization
     from app.modules.sales.models import Sale
 
 
-class Product(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class Product(BaseModel):
     __tablename__ = "products"
     __table_args__ = (
         # SKU is unique within an org, not globally. PostgreSQL treats NULLs as
@@ -58,7 +56,7 @@ class Product(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         Index("ix_products_organization_id_status", "organization_id", "status"),
     )
 
-    organization_id: Mapped[uuid.UUID] = mapped_column(
+    organization_id: Mapped[int] = mapped_column(
         ForeignKey("organizations.id", ondelete="RESTRICT"),
         nullable=False,
         index=True,
@@ -90,11 +88,11 @@ class Product(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         index=True,
     )
 
-    created_by_user_id: Mapped[uuid.UUID] = mapped_column(
+    created_by_user_id: Mapped[int] = mapped_column(
         ForeignKey("users.id", ondelete="RESTRICT"),
         nullable=False,
     )
-    updated_by_user_id: Mapped[uuid.UUID | None] = mapped_column(
+    updated_by_user_id: Mapped[int | None] = mapped_column(
         ForeignKey("users.id", ondelete="RESTRICT"),
         nullable=True,
     )
@@ -117,7 +115,7 @@ class Product(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<Product id={self.id} name={self.name!r} sku={self.sku!r}>"
 
 
-class PriceHistory(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class PriceHistory(BaseModel):
     """Append-only record of every cost/sale price change on a product.
 
     Service logic (later phases) writes one row here *before* mutating
@@ -135,7 +133,7 @@ class PriceHistory(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
     __tablename__ = "price_history"
 
-    product_id: Mapped[uuid.UUID] = mapped_column(
+    product_id: Mapped[int] = mapped_column(
         ForeignKey("products.id", ondelete="RESTRICT"),
         nullable=False,
         index=True,
@@ -147,7 +145,7 @@ class PriceHistory(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     old_sale_price: Mapped[Decimal | None] = mapped_column(Numeric(12, 2), nullable=True)
     new_sale_price: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
 
-    changed_by_user_id: Mapped[uuid.UUID] = mapped_column(
+    changed_by_user_id: Mapped[int] = mapped_column(
         ForeignKey("users.id", ondelete="RESTRICT"),
         nullable=False,
     )
