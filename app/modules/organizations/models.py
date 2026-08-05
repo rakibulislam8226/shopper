@@ -1,0 +1,75 @@
+"""Organizations — the tenant boundary.
+
+Every org-scoped row in the system carries this table's ``id``. Organizations
+are never hard-deleted: ``status`` moves to SUSPENDED (reversible lock) or
+REMOVED (soft, longer-term), so the financial history underneath stays intact
+and auditable.
+"""
+
+from __future__ import annotations
+
+import uuid
+from typing import TYPE_CHECKING
+
+from sqlalchemy import ForeignKey, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.db.base import Base
+from app.db.enums import ORGANIZATION_STATUS_ENUM, OrganizationStatus
+from app.db.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+
+if TYPE_CHECKING:
+    from app.modules.memberships.models import Membership
+    from app.modules.products.models import Product
+    from app.modules.sales.models import Sale
+
+
+class Organization(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    __tablename__ = "organizations"
+
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+
+    # Free text by design ("retail", "restaurant", "pharmacy", ...). Not an
+    # enum: the set of business types is open-ended and not behaviour-bearing.
+    type: Mapped[str] = mapped_column(String(64), nullable=False)
+
+    status: Mapped[OrganizationStatus] = mapped_column(
+        ORGANIZATION_STATUS_ENUM,
+        nullable=False,
+        default=OrganizationStatus.ACTIVE,
+        server_default=OrganizationStatus.ACTIVE.value,
+        index=True,
+    )
+
+    # ISO 4217 code; used to render every monetary amount belonging to this org.
+    currency: Mapped[str] = mapped_column(String(3), nullable=False, server_default="USD")
+    # IANA name, e.g. "Asia/Dhaka". Reporting day boundaries resolve against it.
+    timezone: Mapped[str] = mapped_column(String(64), nullable=False, server_default="UTC")
+
+    # Nullable only to survive data-integrity edge cases (e.g. a superadmin row
+    # that predates this column). In practice provisioning always sets it.
+    created_by_superadmin_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("superadmins.id", ondelete="RESTRICT"),
+        nullable=True,
+    )
+
+    # passive_deletes="all" on every collection below: without it SQLAlchemy's
+    # default delete behaviour is to NULL out the child's organization_id
+    # before issuing the parent DELETE, which orphans rows and never lets the
+    # database's ondelete="RESTRICT" fire. "all" tells the ORM to touch nothing
+    # and let PostgreSQL refuse the delete outright.
+    memberships: Mapped[list[Membership]] = relationship(
+        back_populates="organization",
+        passive_deletes="all",
+    )
+    products: Mapped[list[Product]] = relationship(
+        back_populates="organization",
+        passive_deletes="all",
+    )
+    sales: Mapped[list[Sale]] = relationship(
+        back_populates="organization",
+        passive_deletes="all",
+    )
+
+    def __repr__(self) -> str:  # pragma: no cover - debugging aid
+        return f"<Organization id={self.id} name={self.name!r} status={self.status.value}>"

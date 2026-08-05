@@ -1,0 +1,33 @@
+# ---- Python (backend) ----
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ---- Node (frontend, in web/) ----
+web/node_modules/
+web/dist/
+
+# ---- Environment — never commit real secrets. Only .env.example is tracked ----
+.env
+.env.*
+!.env.example
+
+# ---- Local uploads (media storage: local driver) ----
+uploads/
+
+# ---- Logs ----
+*.log
+logs/
+
+# ---- Editor / OS ----
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+Thumbs.db
