@@ -16,10 +16,11 @@ export function LandingPage() {
     },
   });
 
-  const dependencies = data
+  const healthData = data?.data;
+  const dependencies = healthData
     ? [
-        { name: 'database', status: data.database },
-        { name: 'redis', status: data.redis },
+        { name: 'database', status: healthData.database },
+        { name: 'redis', status: healthData.redis },
       ]
     : [];
 

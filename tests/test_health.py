@@ -1,8 +1,7 @@
 """Smoke test — confirms the app boots and the health endpoint answers.
 
-Uses httpx's ASGI transport (no network). It does not assume Postgres/Redis are
-up: it accepts either a healthy 200 or a 503 with per-dependency status, so it
-verifies the test runner and the endpoint contract rather than infrastructure.
+Uses httpx's ASGI transport (no network). It accepts either a healthy 200 or a 503
+with per-dependency status wrapped in the standard ApiResponse envelope.
 """
 
 from __future__ import annotations
@@ -21,8 +20,11 @@ async def test_health_contract() -> None:
 
     assert response.status_code in (200, 503)
     body = response.json()
-    assert set(body) == {"status", "database", "redis"}
-    assert body["status"] in ("ok", "error")
+    assert set(body) == {"status", "message", "data", "meta"}
+    assert isinstance(body["status"], bool)
+    assert isinstance(body["message"], str)
+    assert set(body["data"]) == {"status", "database", "redis"}
+    assert body["data"]["status"] in ("ok", "error")
 
 
 def test_app_metadata() -> None:

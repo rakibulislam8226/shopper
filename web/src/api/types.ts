@@ -1,20 +1,35 @@
 /**
  * API contracts the frontend depends on. These mirror the FastAPI backend's
- * response shapes (app/core/exceptions.py and app/health/router.py). Kept small
- * and local rather than in a shared package at this project size.
+ * response shapes (app/core/response.py).
  */
 
-/** Consistent error envelope returned by the backend's exception handlers. */
-export interface ApiErrorResponse {
-  detail: string | unknown;
-  status_code: number;
-  path: string;
-  timestamp: string;
+/** Metadata payload for list/paginated API responses. */
+export interface PaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+  total_pages: number;
+  has_next: boolean;
+  has_prev: boolean;
 }
 
-/** Response of GET /health. */
-export interface HealthResponse {
+/** Global standard API response envelope returned by the backend. */
+export interface ApiResponse<T = unknown> {
+  status: boolean;
+  message: string;
+  data: T | null;
+  meta?: PaginationMeta | Record<string, unknown> | null;
+}
+
+/** Legacy alias for backwards compatibility with error handlers. */
+export type ApiErrorResponse = ApiResponse;
+
+/** Health check data structure. */
+export interface HealthData {
   status: 'ok' | 'error';
   database: 'ok' | 'down';
   redis: 'ok' | 'down';
 }
+
+/** Response payload of GET /health wrapped in ApiResponse. */
+export type HealthResponse = ApiResponse<HealthData>;

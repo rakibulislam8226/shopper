@@ -14,6 +14,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
+from app.core.response import error_response, success_response
 from app.db.session import get_db
 from app.redis.client import get_redis
 
@@ -47,10 +48,21 @@ async def health(
     redis_ok = await _check_redis(redis)
     healthy = database_ok and redis_ok
 
-    body = {
+    health_data = {
         "status": "ok" if healthy else "error",
         "database": "ok" if database_ok else "down",
         "redis": "ok" if redis_ok else "down",
     }
-    code = status.HTTP_200_OK if healthy else status.HTTP_503_SERVICE_UNAVAILABLE
-    return JSONResponse(status_code=code, content=body)
+
+    if healthy:
+        return success_response(
+            data=health_data,
+            message="Service is healthy",
+            status_code=status.HTTP_200_OK,
+        )
+
+    return error_response(
+        message="Service is unhealthy",
+        data=health_data,
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+    )
