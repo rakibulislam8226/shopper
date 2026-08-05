@@ -13,7 +13,7 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, Index, UniqueConstraint, func
+from sqlalchemy import CheckConstraint, ForeignKey, Index, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -40,6 +40,13 @@ class Membership(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         # The hot path: "all ACTIVE owners of org X" (the last-owner
         # resignation guard), "all ACTIVE members of org X", role listings.
         Index("ix_memberships_organization_id_role_status", "organization_id", "role", "status"),
+        # An invite has exactly one inviter, and the inviter is polymorphic —
+        # hence two nullable columns. At most one may be set; a row with both
+        # is a bug, not a valid state.
+        CheckConstraint(
+            "NOT (invited_by_user_id IS NOT NULL AND invited_by_superadmin_id IS NOT NULL)",
+            name="single_inviter",
+        ),
     )
 
     user_id: Mapped[uuid.UUID] = mapped_column(

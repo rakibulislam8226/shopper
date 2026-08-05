@@ -41,10 +41,27 @@ class Organization(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         index=True,
     )
 
+    # Both carry a Python-side default as well as a server default, matching
+    # every other defaulted column in the schema (status, stock_quantity,
+    # must_change_password). The Python default puts the value in the INSERT
+    # itself rather than relying on the database to fill it and hand it back,
+    # so the value an org is created with does not depend on dialect RETURNING
+    # support. Neither default populates the attribute before flush.
+    #
     # ISO 4217 code; used to render every monetary amount belonging to this org.
-    currency: Mapped[str] = mapped_column(String(3), nullable=False, server_default="USD")
+    currency: Mapped[str] = mapped_column(
+        String(3),
+        nullable=False,
+        default="USD",
+        server_default="USD",
+    )
     # IANA name, e.g. "Asia/Dhaka". Reporting day boundaries resolve against it.
-    timezone: Mapped[str] = mapped_column(String(64), nullable=False, server_default="UTC")
+    timezone: Mapped[str] = mapped_column(
+        String(64),
+        nullable=False,
+        default="UTC",
+        server_default="UTC",
+    )
 
     # Nullable only to survive data-integrity edge cases (e.g. a superadmin row
     # that predates this column). In practice provisioning always sets it.

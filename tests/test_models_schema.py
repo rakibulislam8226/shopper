@@ -119,6 +119,7 @@ def test_no_cascade_deletes() -> None:
         ("sales", "ck_sales_quantity_positive"),
         ("sales", "ck_sales_total_amount_non_negative"),
         ("sales", "ck_sales_unit_price_at_sale_non_negative"),
+        ("memberships", "ck_memberships_single_inviter"),
     ],
 )
 def test_check_constraints_present(table_name: str, constraint_name: str) -> None:
@@ -149,6 +150,14 @@ def test_composite_uniques_and_indexes() -> None:
         if isinstance(constraint, UniqueConstraint)
     }
     assert ("organization_id", "sku") in product_uniques
+
+    product_indexes = {tuple(c.name for c in index.columns) for index in products.indexes}
+    assert ("organization_id", "status") in product_indexes
+
+    sales_indexes = {
+        tuple(c.name for c in index.columns) for index in Base.metadata.tables["sales"].indexes
+    }
+    assert ("organization_id", "sold_at") in sales_indexes
 
     audit = Base.metadata.tables["audit_logs"]
     audit_indexes = {tuple(c.name for c in index.columns) for index in audit.indexes}

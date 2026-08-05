@@ -23,7 +23,16 @@ from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from sqlalchemy import CheckConstraint, ForeignKey, Integer, Numeric, String, Text, func
+from sqlalchemy import (
+    CheckConstraint,
+    ForeignKey,
+    Index,
+    Integer,
+    Numeric,
+    String,
+    Text,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -43,6 +52,10 @@ class Sale(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         CheckConstraint("quantity > 0", name="quantity_positive"),
         CheckConstraint("unit_price_at_sale >= 0", name="unit_price_at_sale_non_negative"),
         CheckConstraint("total_amount >= 0", name="total_amount_non_negative"),
+        # Every sales report is "org X between two dates". Without this the
+        # planner falls back to the organization_id index and sorts the whole
+        # org's ledger to answer a one-day question.
+        Index("ix_sales_organization_id_sold_at", "organization_id", "sold_at"),
     )
 
     organization_id: Mapped[uuid.UUID] = mapped_column(

@@ -21,6 +21,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import (
     CheckConstraint,
     ForeignKey,
+    Index,
     Integer,
     Numeric,
     String,
@@ -52,6 +53,9 @@ class Product(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         CheckConstraint("stock_quantity >= 0", name="stock_quantity_non_negative"),
         CheckConstraint("cost_price >= 0", name="cost_price_non_negative"),
         CheckConstraint("sale_price >= 0", name="sale_price_non_negative"),
+        # The inventory list is always "ACTIVE products in org X"; the two
+        # single-column indexes cannot serve that as well as one composite.
+        Index("ix_products_organization_id_status", "organization_id", "status"),
     )
 
     organization_id: Mapped[uuid.UUID] = mapped_column(

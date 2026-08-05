@@ -12,8 +12,9 @@ They share nothing at the tooling level and run as separate processes. There
 are exactly two dependency environments: a Python virtualenv for the backend
 and `web/node_modules` for the frontend.
 
-> **Phase 0 — infrastructure only.** No business logic (auth, RBAC, sales,
-> inventory) yet. The one live endpoint is `GET /health`.
+> **Phase 1 — data layer.** The full domain schema exists as SQLAlchemy models
+> and one Alembic migration. There is still no business logic (auth, RBAC,
+> sales, inventory) and no router beyond `GET /health`.
 
 ---
 
@@ -29,16 +30,26 @@ shopper/
 │   │   ├── security.py      Argon2 password hashing (JWT helpers land in Phase 2)
 │   │   └── exceptions.py    custom errors + handlers (consistent error shape)
 │   ├── db/
-│   │   ├── base.py          SQLAlchemy DeclarativeBase
+│   │   ├── base.py          DeclarativeBase + naming convention + type map
+│   │   ├── enums.py         domain enums (single source of truth)
+│   │   ├── mixins.py        UUID PK, created_at/updated_at mixins
+│   │   ├── models.py        model registry — imports every model for Alembic
 │   │   └── session.py       async engine, session factory, get_db dependency
 │   ├── redis/
 │   │   └── client.py        redis.asyncio client
 │   ├── health/
 │   │   └── router.py        GET /health (checks Postgres + Redis)
-│   └── modules/             empty — folder-per-feature convention for Phase 1+
+│   └── modules/             folder-per-feature; Phase 1 ships models.py only
+│       ├── superadmins/     SuperAdmin
+│       ├── users/           User
+│       ├── organizations/   Organization
+│       ├── memberships/     Membership (user ↔ organization + role)
+│       ├── products/        Product, PriceHistory
+│       ├── sales/           Sale
+│       └── audit/           AuditLog
 ├── alembic/                 migrations (env.py reads app settings)
 ├── alembic.ini
-├── tests/                   pytest (trivial health smoke test for now)
+├── tests/                   pytest (health smoke test + schema invariants)
 ├── pyproject.toml           ruff + mypy + pytest config
 ├── requirements.txt         pinned production deps
 ├── requirements-dev.txt     dev-only deps (ruff, mypy, pytest, httpx)
@@ -46,6 +57,53 @@ shopper/
 ├── .env.example
 └── README.md
 ```
+
+---
+
+## Data model (Phase 1)
+
+Eight tables. `Organization` is the tenant boundary: every org-scoped row
+carries a NOT NULL, indexed `organization_id`, and every query from Phase 2
+onward filters on it.
+
+```
+SuperAdmin ──creates──> Organization <──┬── Membership ──> User
+ (platform)                             ├── Product ──> PriceHistory
+                                        └── Sale ──> Product, User(salesman)
+AuditLog ── organization_id (nullable, null = platform-level action)
+```
+
+`Membership` is the only place a role lives — `User` itself has no org and no
+permissions. There is exactly **one membership row per (user, organization)**
+forever: promotions update `role`, departures update `status`. Rows are never
+duplicated or deleted.
+
+Rules the schema enforces, not just documents:
+
+| Rule | Mechanism |
+|---|---|
+| Money is exact | `Numeric(12, 2)` everywhere; `Decimal` in Python, never `float` |
+| IDs aren't guessable | UUIDv4 primary keys, never auto-increment integers |
+| History can't be destroyed | every FK is `ondelete="RESTRICT"`; no CASCADE anywhere |
+| Stock can't go negative | `CHECK (stock_quantity >= 0)` |
+| Prices/totals can't go negative | `CHECK` on cost, sale, unit, and total |
+| A sale is at least one unit | `CHECK (quantity > 0)` |
+| One membership per user per org | `UNIQUE (user_id, organization_id)` |
+| SKU unique within an org | `UNIQUE (organization_id, sku)` (NULLs allowed) |
+| An invite has one inviter | `CHECK` — user and superadmin columns mutually exclusive |
+
+Historical accuracy comes from two frozen columns on `Sale`:
+`unit_price_at_sale` (never updated, so a later price change cannot rewrite
+what a customer paid) and `total_amount` (stored, so past totals survive any
+future change to calculation logic). `PriceHistory` is a separate audit trail
+of price changes over time — reporting never has to replay it.
+
+Nothing is ever hard-deleted. `Organization`, `Membership`, and `Product` all
+carry a status enum instead.
+
+> **Changing an enum is a migration, not an edit.** These are native PostgreSQL
+> enum types; `--autogenerate` will not notice a new member. See the note at the
+> top of `app/db/enums.py`.
 
 ---
 
@@ -74,7 +132,7 @@ source .venv/bin/activate                 # Windows: .venv\Scripts\activate
 # 3. Dependencies
 pip install -r requirements.txt -r requirements-dev.txt
 
-# 4. Migrations (safe to run with zero models — it's a clean no-op in Phase 0)
+# 4. Migrations — creates the full Phase 1 schema
 alembic upgrade head
 
 # 5. Run (dev, auto-reload)
@@ -126,8 +184,18 @@ ruff check .           # lint
 ruff format .          # format
 mypy app               # type-check
 pytest                 # tests
-alembic revision --autogenerate -m "..."   # (Phase 1+, once models exist)
+alembic revision --autogenerate -m "..."   # new migration
+alembic upgrade head   # apply
+alembic downgrade base # full reverse (verified working)
 ```
+
+**When you add a model,** import it in `app/db/models.py`. Alembic only sees
+what is registered there — a model that is missing from it is invisible to
+autogenerate, and its table will be dropped by the next migration.
+
+Always read a generated migration before applying it. Autogenerate does not
+emit `DROP TYPE` for native enums, so any migration that creates one needs the
+teardown added by hand (the initial migration shows the pattern).
 
 ---
 

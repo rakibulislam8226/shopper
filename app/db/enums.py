@@ -8,6 +8,13 @@ Each enum is a :class:`enum.StrEnum`, so a member *is* its string value: it
 serialises to plain ``"owner"`` in JSON, compares equal to ``"owner"``, and
 interpolates as ``owner`` rather than ``MembershipRole.OWNER``. Each also gets
 a matching native PostgreSQL ``ENUM`` type built by :func:`pg_enum`.
+
+CHANGING AN ENUM IS A MIGRATION, NOT AN EDIT. These are native PostgreSQL enum
+types, so editing a class here does nothing to an existing database and
+``--autogenerate`` will not notice. Adding a member needs an explicit
+``ALTER TYPE <name> ADD VALUE '<value>'``; renaming or removing one needs a
+full type rebuild (create new type, ``ALTER TABLE ... USING``, drop old). Add
+new members at the end and treat removal as a data migration.
 """
 
 from __future__ import annotations
