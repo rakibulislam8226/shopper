@@ -24,7 +24,7 @@ export function LandingPage() {
     : [];
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-slate-950 px-6 text-slate-100">
+    <main className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center gap-6 px-6 py-12 text-slate-100">
       <div className="flex flex-col items-center gap-2 text-center">
         <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium tracking-wide text-slate-300">
           Phase 0 · Infrastructure
