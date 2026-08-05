@@ -21,6 +21,7 @@ from starlette.middleware.base import RequestResponseEndpoint
 from app.config import settings
 from app.core.exceptions import register_exception_handlers
 from app.core.logging import configure_logging, get_logger
+from app.core.spa import register_spa
 from app.db.session import engine
 from app.health.router import router as health_router
 from app.redis.client import close_redis, redis_client
@@ -104,4 +105,5 @@ async def request_context_middleware(
     return response
 
 
-app.include_router(health_router)
+app.include_router(health_router, prefix="/api")
+register_spa(app)

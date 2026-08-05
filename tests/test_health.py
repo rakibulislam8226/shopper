@@ -17,7 +17,7 @@ from app.main import app
 async def test_health_contract() -> None:
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.get("/health")
+        response = await client.get("/api/health")
 
     assert response.status_code in (200, 503)
     body = response.json()

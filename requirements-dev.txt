@@ -1,5 +1,6 @@
 # Dev-only tooling. Install alongside prod deps:
 #   pip install -r requirements.txt -r requirements-dev.txt
+-r requirements.txt
 ruff==0.16.1
 mypy==2.3.0
 pytest==9.1.1

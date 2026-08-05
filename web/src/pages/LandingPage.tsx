@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { apiClient } from '../../shared/api/client';
-import { type HealthResponse } from '../../shared/types/api';
+import { apiClient } from '../api/client';
+import { type HealthResponse } from '../api/types';
 
 /**
  * Placeholder landing page. It confirms the frontend boots and can reach the

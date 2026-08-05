@@ -14,7 +14,7 @@ and `web/node_modules` for the frontend.
 
 > **Phase 1 — data layer.** The full domain schema exists as SQLAlchemy models
 > and one Alembic migration. There is still no business logic (auth, RBAC,
-> sales, inventory) and no router beyond `GET /health`.
+> sales, inventory) and no router beyond `GET /api/health`.
 
 ---
 
@@ -28,7 +28,8 @@ shopper/
 │   ├── core/
 │   │   ├── logging.py       structlog structured logging
 │   │   ├── security.py      Argon2 password hashing (JWT helpers land in Phase 2)
-│   │   └── exceptions.py    custom errors + handlers (consistent error shape)
+│   │   ├── exceptions.py    custom errors + handlers (consistent error shape)
+│   │   └── spa.py           serves web/ from this origin — dev shell or built dist
 │   ├── db/
 │   │   ├── base.py          DeclarativeBase + naming convention + type map
 │   │   ├── enums.py         domain enums (single source of truth)
@@ -38,7 +39,7 @@ shopper/
 │   ├── redis/
 │   │   └── client.py        redis.asyncio client
 │   ├── health/
-│   │   └── router.py        GET /health (checks Postgres + Redis)
+│   │   └── router.py        GET /api/health (checks Postgres + Redis)
 │   └── modules/             folder-per-feature; Phase 1 ships models.py only
 │       ├── superadmins/     SuperAdmin
 │       ├── users/           User
@@ -126,8 +127,8 @@ Point the app at your local services via `.env`.
 cp .env.example .env                      # edit to match your local Postgres/Redis
 
 # 2. Virtualenv
-python -m venv .venv
-source .venv/bin/activate                 # Windows: .venv\Scripts\activate
+python -m venv venv
+source venv/bin/activate                 # Windows: .venv\Scripts\activate
 
 # 3. Dependencies
 pip install -r requirements.txt -r requirements-dev.txt
@@ -139,7 +140,7 @@ alembic upgrade head
 uvicorn app.main:app --reload --port 8000
 ```
 
-- Health → <http://localhost:8000/health>
+- Health → <http://localhost:8000/api/health>
 - Swagger → <http://localhost:8000/docs> (when `ENABLE_DOCS=true`)
 - ReDoc → <http://localhost:8000/redoc>
 
@@ -151,14 +152,27 @@ Process management isn't configured in this phase.
 
 ## Frontend setup
 
-The frontend reads the root `.env` (its `VITE_API_BASE_URL` points at
-`http://localhost:8000`).
+Two processes, one origin — **always open FastAPI's port, never Vite's.**
+`app/core/spa.py` serves the page at `http://localhost:8000/` with `<script>`
+tags pointing at the Vite dev server (`WEB_BASE_URL` in `.env`, default
+`http://localhost:5173`) for the app entrypoint and HMR client — same pattern
+as `django-vite`. Everything else (API calls, client-side routes) resolves
+against port 8000, since that's the page's real origin.
 
 ```bash
 cd web
 npm install
-npm run dev            # http://localhost:5173
+npm run dev            # prints http://localhost:5173 — ignore it, open :8000
 ```
+
+`npm run dev` must be running for `:8000` to render anything in development;
+FastAPI just proxies script tags to it, it doesn't bundle the frontend itself.
+
+**Production build** — `npm run build` (in `web/`) emits `web/dist`; once
+built, `app/core/spa.py` serves it directly (`/assets/*` for hashed bundles,
+`index.html` for every other non-API path) and Vite is no longer needed. Set
+`APP_ENV=production` so the backend switches from the dev shell to serving
+`dist`.
 
 ---
 

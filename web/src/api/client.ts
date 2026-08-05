@@ -1,16 +1,17 @@
 import axios, { type AxiosError, type AxiosInstance } from 'axios';
 
-import { env } from '../config/env';
-import { type ApiErrorResponse } from '../types/api';
+import { type ApiErrorResponse } from './types';
 
 /**
- * Single configured axios instance for the whole app. Base URL comes from the
- * validated environment; responses that fail are normalised so callers always
- * see the backend's `ApiErrorResponse` shape (or a synthetic one for network
- * errors that never reached the server).
+ * Single configured axios instance for the whole app. `/api` is same-origin —
+ * the dev server proxies it to FastAPI (see vite.config.ts), and in production
+ * FastAPI serves both the API and the built frontend from one origin.
+ * Responses that fail are normalised so callers always see the backend's
+ * `ApiErrorResponse` shape (or a synthetic one for network errors that never
+ * reached the server).
  */
 export const apiClient: AxiosInstance = axios.create({
-  baseURL: env.VITE_API_BASE_URL,
+  baseURL: '/api',
   timeout: 15_000,
   withCredentials: true,
   headers: {

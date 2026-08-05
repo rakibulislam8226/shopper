@@ -19,6 +19,9 @@ export default defineConfig(({ mode }) => {
     server: {
       port,
       host: true,
+      // No /api proxy: the browser is always served by FastAPI (app/core/spa.py),
+      // which loads this dev server's scripts cross-origin. API calls are
+      // relative and resolve against FastAPI's origin directly.
     },
     preview: {
       port,
