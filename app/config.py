@@ -56,8 +56,8 @@ class Settings(BaseSettings):
 
     # ---- Media storage ----
     media_storage_driver: Literal["local", "s3"] = "local"
-    media_local_upload_dir: str = "./uploads"
-    media_local_base_url: str = "http://localhost:8000/uploads"
+    media_local_upload_dir: str = "./media"
+    media_local_base_url: str = "http://localhost:8000/media"
     aws_s3_bucket: str = ""
     aws_s3_region: str = ""
     aws_access_key_id: str = ""

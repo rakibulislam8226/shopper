@@ -14,6 +14,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
+from app.core.rate_limit import rate_limit
 from app.core.response import error_response, success_response
 from app.db.session import get_db
 from app.redis.client import get_redis
@@ -39,7 +40,9 @@ async def _check_redis(redis: Redis) -> bool:
         return False
 
 
-@router.get("/health", summary="Service health")
+@router.get("", summary="Service health")
+@rate_limit(times=2, seconds=10)
+# @rate_limit(exempt=True)  # load balancer/orchestrator probes must never be throttled
 async def health(
     db: AsyncSession = Depends(get_db),
     redis: Redis = Depends(get_redis),

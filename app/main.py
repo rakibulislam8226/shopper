@@ -13,7 +13,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 import structlog
-from fastapi import FastAPI, Request, Response
+from fastapi import Depends, FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from starlette.middleware.base import RequestResponseEndpoint
@@ -21,6 +21,7 @@ from starlette.middleware.base import RequestResponseEndpoint
 from app.config import settings
 from app.core.exceptions import register_exception_handlers
 from app.core.logging import configure_logging, get_logger
+from app.core.rate_limit import enforce_rate_limit
 from app.core.spa import register_spa
 from app.db.session import engine
 from app.health.router import router as health_router
@@ -66,6 +67,7 @@ app = FastAPI(
     redoc_url=settings.redoc_url,
     openapi_url=settings.openapi_url,
     lifespan=lifespan,
+    dependencies=[Depends(enforce_rate_limit)],
 )
 
 app.add_middleware(
@@ -105,5 +107,5 @@ async def request_context_middleware(
     return response
 
 
-app.include_router(health_router, prefix="/api")
+app.include_router(health_router, prefix="/api/health")
 register_spa(app)

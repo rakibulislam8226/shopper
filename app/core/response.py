@@ -5,8 +5,14 @@ All API responses adhere to the standard schema:
     "status": bool,
     "message": str,
     "data": T | None,
-    "meta": PaginationMeta | dict | None
+    "error": dict | None,
+    "meta": PaginationMeta | None
 }
+
+``meta`` is reserved for pagination — it is only ever populated by
+``paginated_response`` and is always ``null`` otherwise. ``error`` carries
+failure detail (path, status_code, timestamp, ...) and is always ``null`` on
+success.
 """
 
 from __future__ import annotations
@@ -47,13 +53,14 @@ class ApiResponse[T](BaseModel):
     status: bool = True
     message: str = "Success"
     data: T | None = None
-    meta: PaginationMeta | dict[str, Any] | None = None
+    error: dict[str, Any] | None = None
+    meta: PaginationMeta | None = None
 
 
 def success_response(
     data: Any = None,
     message: str = "Success",
-    meta: PaginationMeta | dict[str, Any] | None = None,
+    meta: PaginationMeta | None = None,
     status_code: int = http_status.HTTP_200_OK,
 ) -> JSONResponse:
     """Build a standard JSONResponse for successful requests."""
@@ -62,6 +69,7 @@ def success_response(
         "status": True,
         "message": message,
         "data": data,
+        "error": None,
         "meta": meta_dict,
     }
     return JSONResponse(status_code=status_code, content=content)
@@ -88,14 +96,16 @@ def paginated_response(
 def error_response(
     message: str = "An error occurred",
     data: Any = None,
-    meta: dict[str, Any] | None = None,
+    error: dict[str, Any] | None = None,
     status_code: int = http_status.HTTP_400_BAD_REQUEST,
+    headers: dict[str, str] | None = None,
 ) -> JSONResponse:
     """Build a standard JSONResponse for failed/error requests."""
     content = {
         "status": False,
         "message": message,
         "data": data,
-        "meta": meta,
+        "error": error,
+        "meta": None,
     }
-    return JSONResponse(status_code=status_code, content=content)
+    return JSONResponse(status_code=status_code, content=content, headers=headers)

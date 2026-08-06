@@ -5,12 +5,15 @@ Every error leaves the API in one consistent global envelope:
     "status": false,
     "message": str,
     "data": list | dict | None,
-    "meta": {
+    "error": {
         "path": str,
         "timestamp": str,
         "status_code": int
-    }
+    },
+    "meta": null
 }
+
+``meta`` stays reserved for pagination and is never populated on an error.
 
 Unhandled exceptions are logged with their full traceback server-side and never
 leak internals to the client.
@@ -35,13 +38,19 @@ logger = get_logger(__name__)
 class AppError(Exception):
     """Base class for expected, client-facing application errors."""
 
-    def __init__(self, detail: str, status_code: int = status.HTTP_400_BAD_REQUEST) -> None:
+    def __init__(
+        self,
+        detail: str,
+        status_code: int = status.HTTP_400_BAD_REQUEST,
+        headers: dict[str, str] | None = None,
+    ) -> None:
         super().__init__(detail)
         self.detail = detail
         self.status_code = status_code
+        self.headers = headers
 
 
-def _build_error_meta(status_code: int, path: str) -> dict[str, Any]:
+def _build_error_detail(status_code: int, path: str) -> dict[str, Any]:
     return {
         "path": path,
         "status_code": status_code,
@@ -52,8 +61,9 @@ def _build_error_meta(status_code: int, path: str) -> dict[str, Any]:
 async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
     return error_response(
         message=exc.detail,
-        meta=_build_error_meta(exc.status_code, request.url.path),
+        error=_build_error_detail(exc.status_code, request.url.path),
         status_code=exc.status_code,
+        headers=exc.headers,
     )
 
 
@@ -63,7 +73,7 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException) 
     return error_response(
         message=message,
         data=data,
-        meta=_build_error_meta(exc.status_code, request.url.path),
+        error=_build_error_detail(exc.status_code, request.url.path),
         status_code=exc.status_code,
     )
 
@@ -78,7 +88,7 @@ async def validation_exception_handler(
     return error_response(
         message="Validation error",
         data=validation_errors,
-        meta=_build_error_meta(status.HTTP_422_UNPROCESSABLE_ENTITY, request.url.path),
+        error=_build_error_detail(status.HTTP_422_UNPROCESSABLE_ENTITY, request.url.path),
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
     )
 
@@ -92,7 +102,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
     )
     return error_response(
         message="Internal server error",
-        meta=_build_error_meta(status.HTTP_500_INTERNAL_SERVER_ERROR, request.url.path),
+        error=_build_error_detail(status.HTTP_500_INTERNAL_SERVER_ERROR, request.url.path),
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
     )
 
