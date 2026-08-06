@@ -1,0 +1,103 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+# A newer push to the same branch makes an in-flight run irrelevant.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend (lint · types · tests)
+    runs-on: ubuntu-latest
+
+    # test_health.py exercises the real ASGI app: the global rate-limit
+    # dependency talks to Redis on every /api/ request, and the health handler
+    # pings Postgres. Both must be reachable or the suite reports a false red.
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: shopper
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:8-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          # Matches requires-python in pyproject.toml, and the target-version
+          # ruff and mypy are already configured against.
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt -r requirements-dev.txt
+
+      # app/config.py has required settings with no defaults, so the app cannot
+      # import without them. Copying the tracked template also means CI fails
+      # loudly if a new required setting is added without updating the example.
+      - name: Provide environment
+        run: cp .env.example .env
+
+      - name: Lint (ruff)
+        run: ruff check .
+
+      - name: Type check (mypy)
+        run: mypy app
+
+      - name: Test (pytest)
+        run: pytest -q
+
+  frontend:
+    name: Frontend (lint · types)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      # ci (not install) so the lockfile is honoured exactly and a lockfile out
+      # of sync with package.json fails instead of being silently rewritten.
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint (eslint)
+        run: npm run lint
+
+      - name: Type check (tsc)
+        run: npm run typecheck

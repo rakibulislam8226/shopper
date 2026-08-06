@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+
 from app.core.response import (
     PaginationMeta,
     error_response,
@@ -32,9 +33,11 @@ def test_success_response_structure() -> None:
     res = success_response(data={"id": 123}, message="Success test")
     assert res.status_code == 200
     content = json.loads(res.body.decode())
+    assert set(content) == {"status", "message", "data", "error", "meta"}
     assert content["status"] is True
     assert content["message"] == "Success test"
     assert content["data"] == {"id": 123}
+    assert content["error"] is None
     assert content["meta"] is None
 
 
@@ -60,7 +63,27 @@ def test_error_response_structure() -> None:
     res = error_response(message="Operation failed", status_code=400)
     assert res.status_code == 400
     content = json.loads(res.body.decode())
+    assert set(content) == {"status", "message", "data", "error", "meta"}
     assert content["status"] is False
     assert content["message"] == "Operation failed"
     assert content["data"] is None
+    assert content["error"] is None
     assert content["meta"] is None
+
+
+def test_error_response_carries_detail_in_error_not_meta() -> None:
+    """Failure detail belongs in `error`; `meta` stays reserved for pagination."""
+    detail = {"path": "/api/thing", "status_code": 404, "timestamp": "2026-01-01T00:00:00Z"}
+    res = error_response(message="Not found", error=detail, status_code=404)
+    content = json.loads(res.body.decode())
+    assert content["error"] == detail
+    assert content["meta"] is None
+
+
+def test_error_response_forwards_headers() -> None:
+    """Rate limiting relies on Retry-After surviving the envelope helper."""
+    res = error_response(
+        message="Too many requests", status_code=429, headers={"Retry-After": "30"}
+    )
+    assert res.status_code == 429
+    assert res.headers["retry-after"] == "30"

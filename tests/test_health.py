@@ -20,11 +20,13 @@ async def test_health_contract() -> None:
 
     assert response.status_code in (200, 503)
     body = response.json()
-    assert set(body) == {"status", "message", "data", "meta"}
+    assert set(body) == {"status", "message", "data", "error", "meta"}
     assert isinstance(body["status"], bool)
     assert isinstance(body["message"], str)
     assert set(body["data"]) == {"status", "database", "redis"}
     assert body["data"]["status"] in ("ok", "error")
+    # `meta` is reserved for pagination and is never populated by this endpoint.
+    assert body["meta"] is None
 
 
 def test_app_metadata() -> None:
