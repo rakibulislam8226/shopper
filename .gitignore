@@ -19,6 +19,7 @@ web/dist/
 
 # ---- Local uploads (media storage: local driver) ----
 uploads/
+media/
 
 # ---- Logs ----
 *.log
