@@ -1,9 +1,10 @@
 /**
- * API contracts the frontend depends on. These mirror the FastAPI backend's
- * response shapes (app/core/response.py).
+ * The response envelope every backend endpoint returns, mirroring
+ * `app/core/response.py`. Endpoint-specific payload shapes live beside their
+ * request in `api/<resource>.ts` and plug in here as `ApiResponse<T>`.
  */
 
-/** Metadata payload for list/paginated API responses. */
+/** Pagination state for list endpoints. Only ever set on paginated responses. */
 export interface PaginationMeta {
   page: number;
   limit: number;
@@ -13,23 +14,17 @@ export interface PaginationMeta {
   has_prev: boolean;
 }
 
-/** Global standard API response envelope returned by the backend. */
+/** Failure detail. Only ever set on error responses; `meta` stays null there. */
+export interface ApiErrorDetail {
+  path: string;
+  status_code: number;
+  timestamp: string;
+}
+
 export interface ApiResponse<T = unknown> {
   status: boolean;
   message: string;
   data: T | null;
-  meta?: PaginationMeta | Record<string, unknown> | null;
+  error?: ApiErrorDetail | null;
+  meta?: PaginationMeta | null;
 }
-
-/** Legacy alias for backwards compatibility with error handlers. */
-export type ApiErrorResponse = ApiResponse;
-
-/** Health check data structure. */
-export interface HealthData {
-  status: 'ok' | 'error';
-  database: 'ok' | 'down';
-  redis: 'ok' | 'down';
-}
-
-/** Response payload of GET /health wrapped in ApiResponse. */
-export type HealthResponse = ApiResponse<HealthData>;

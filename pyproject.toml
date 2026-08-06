@@ -1,6 +1,6 @@
 [project]
 name = "shopper"
-version = "0.0.0"
+version = "0.0.1"
 description = "Shopper — multi-tenant shop/organization management SaaS (FastAPI backend)"
 requires-python = ">=3.13"
 

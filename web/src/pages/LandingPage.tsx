@@ -1,31 +1,23 @@
-import { useQuery } from '@tanstack/react-query';
-
-import { apiClient } from '../api/client';
-import { type HealthResponse } from '../api/types';
+import { useHealth } from '@api/health';
+import { StatusPill } from '@components/ui/StatusPill';
 
 /**
  * Placeholder landing page. It confirms the frontend boots and can reach the
- * backend by rendering the live `/health` result — no product UI yet.
+ * backend by rendering the live health result — no product UI yet.
  */
 export function LandingPage() {
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ['health'],
-    queryFn: async () => {
-      const response = await apiClient.get<HealthResponse>('/health');
-      return response.data;
-    },
-  });
+  const { data, isLoading, isError } = useHealth();
+  const health = data?.data;
 
-  const healthData = data?.data;
-  const dependencies = healthData
+  const dependencies = health
     ? [
-        { name: 'database', status: healthData.database },
-        { name: 'redis', status: healthData.redis },
+        { name: 'database', status: health.database },
+        { name: 'redis', status: health.redis },
       ]
     : [];
 
   return (
-    <main className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center gap-6 px-6 py-12 text-slate-100">
+    <div className="flex flex-1 flex-col items-center justify-center gap-6 px-6 py-12">
       <div className="flex flex-col items-center gap-2 text-center">
         <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-medium tracking-wide text-slate-300">
           Phase 0 · Infrastructure
@@ -36,36 +28,27 @@ export function LandingPage() {
         </p>
       </div>
 
-      <div className="w-full max-w-sm rounded-xl border border-slate-800 bg-slate-900/60 p-5">
+      <section className="w-full max-w-sm rounded-xl border border-slate-800 bg-slate-900/60 p-5">
         <h2 className="mb-3 text-sm font-semibold text-slate-300">API health</h2>
+
         {isLoading ? (
           <p className="text-sm text-slate-500">Checking…</p>
-        ) : isError || !data ? (
+        ) : isError || !health ? (
           <p className="text-sm text-rose-400">Unable to reach the API.</p>
         ) : (
           <ul className="space-y-2">
-            {dependencies.map((dep) => (
-              <li key={dep.name} className="flex items-center justify-between text-sm">
-                <span className="text-slate-300">{dep.name}</span>
-                <StatusPill status={dep.status} />
+            {dependencies.map((dependency) => (
+              <li key={dependency.name} className="flex items-center justify-between text-sm">
+                <span className="text-slate-300">{dependency.name}</span>
+                <StatusPill
+                  label={dependency.status}
+                  tone={dependency.status === 'ok' ? 'positive' : 'negative'}
+                />
               </li>
             ))}
           </ul>
         )}
-      </div>
-    </main>
-  );
-}
-
-function StatusPill({ status }: { status: string }) {
-  const isUp = status === 'ok';
-  return (
-    <span
-      className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-        isUp ? 'bg-emerald-500/15 text-emerald-400' : 'bg-rose-500/15 text-rose-400'
-      }`}
-    >
-      {status}
-    </span>
+      </section>
+    </div>
   );
 }

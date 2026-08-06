@@ -7,7 +7,9 @@ import { defineConfig, loadEnv } from 'vite';
 
 // The single `.env` at the project root is shared by backend and frontend, so
 // point Vite there instead of keeping a duplicate env file inside web/.
-const rootEnvDir = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const webDir = dirname(fileURLToPath(import.meta.url));
+const rootEnvDir = resolve(webDir, '..');
+const srcDir = resolve(webDir, 'src');
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, rootEnvDir, '');
@@ -16,12 +18,20 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react(), tailwindcss()],
     envDir: rootEnvDir,
+    // Mirrors the "paths" aliases in tsconfig.json — keep both in sync.
+    resolve: {
+      alias: {
+        '@api': resolve(srcDir, 'api'),
+        '@app': resolve(srcDir, 'app'),
+        '@components': resolve(srcDir, 'components'),
+        '@pages': resolve(srcDir, 'pages'),
+        '@plugins': resolve(srcDir, 'plugins'),
+        '@': srcDir,
+      },
+    },
     server: {
       port,
       host: true,
-      // No /api proxy: the browser is always served by FastAPI (app/core/spa.py),
-      // which loads this dev server's scripts cross-origin. API calls are
-      // relative and resolve against FastAPI's origin directly.
     },
     preview: {
       port,

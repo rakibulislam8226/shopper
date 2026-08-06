@@ -11,6 +11,7 @@ __pycache__/
 # ---- Node (frontend, in web/) ----
 web/node_modules/
 web/dist/
+web/*.tsbuildinfo
 
 # ---- Environment — never commit real secrets. Only .env.example is tracked ----
 .env

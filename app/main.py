@@ -62,7 +62,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
 app = FastAPI(
     title="Shopper API",
     description="Multi-tenant shop/organization management SaaS — API surface",
-    version="0.0.0",
+    version="0.0.1",
     docs_url=settings.docs_url,
     redoc_url=settings.redoc_url,
     openapi_url=settings.openapi_url,
