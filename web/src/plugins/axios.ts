@@ -1,5 +1,6 @@
 import Axios, { type AxiosInstance } from 'axios';
 
+import { attachAuthPlugin } from './auth';
 import { attachToastPlugin } from './toast';
 
 /**
@@ -18,4 +19,10 @@ export const axios: AxiosInstance = Axios.create({
   withCredentials: true,
 });
 
+// Order matters. Response interceptors run in registration order, so the auth
+// plugin sees a raw AxiosError and gets its chance to refresh-and-replay
+// first; the toast plugin then normalises whatever is left into an
+// ApiResponse. Reversed, the auth plugin would receive an already-normalised
+// object with no `config` to replay.
+attachAuthPlugin(axios);
 attachToastPlugin(axios);

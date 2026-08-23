@@ -1,6 +1,8 @@
+import { useIsAuthenticated } from '@stores/auth';
 import { NavLink } from 'react-router-dom';
 
 import { BrandLogo } from './BrandLogo';
+import { UserMenu } from './UserMenu';
 
 const NAV_ITEMS = [
   { label: 'Home', path: '/' },
@@ -15,6 +17,8 @@ const linkClasses = ({ isActive }: { isActive: boolean }) =>
   }`;
 
 export function Navbar() {
+  const isAuthenticated = useIsAuthenticated();
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -26,6 +30,19 @@ export function Navbar() {
               {item.label}
             </NavLink>
           ))}
+
+          <span className="mx-1 h-5 w-px bg-slate-800" aria-hidden="true" />
+
+          {isAuthenticated ? (
+            <UserMenu />
+          ) : (
+            <NavLink
+              to="/login"
+              className="rounded-lg bg-indigo-600 px-3.5 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-indigo-500"
+            >
+              Sign in
+            </NavLink>
+          )}
         </nav>
       </div>
     </header>

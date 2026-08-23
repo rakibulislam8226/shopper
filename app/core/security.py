@@ -85,7 +85,7 @@ def create_access_token(subject: str, extra_claims: dict[str, Any] | None = None
     return _create_token(
         subject=subject,
         token_type="access",
-        expires_delta=timedelta(minutes=settings.jwt_access_expires_minutes),
+        expires_delta=timedelta(days=settings.jwt_access_expires_days),
         extra_claims=extra_claims,
     )
 

@@ -66,7 +66,7 @@ async def _issue_tokens(user: User) -> TokenPair:
     return TokenPair(
         access_token=access.token,
         refresh_token=refresh.token,
-        expires_in=settings.jwt_access_expires_minutes * 60,
+        expires_in=settings.jwt_access_expires_days * 24 * 60 * 60,
     )
 
 

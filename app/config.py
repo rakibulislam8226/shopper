@@ -48,11 +48,17 @@ class Settings(BaseSettings):
     redis_password: str = ""
     redis_db: int = 0
 
-    # ---- Auth (wired in Phase 2) ----
+    # ---- Auth ----
+    # Secrets must differ: signing access and refresh tokens with separate keys
+    # means a leaked access secret cannot be used to mint refresh tokens.
     jwt_access_secret: str
     jwt_refresh_secret: str
-    jwt_access_expires_minutes: int = 15
-    jwt_refresh_expires_days: int = 7
+    # Lifetimes are environment-driven. The defaults below apply only when the
+    # variable is absent — whatever .env sets always wins.
+    # Both lifetimes are expressed in days, so the two knobs read on the same
+    # scale and cannot be misread for one another.
+    jwt_access_expires_days: int = Field(default=1, gt=0)
+    jwt_refresh_expires_days: int = Field(default=10, gt=0)
 
     # ---- Media storage ----
     media_storage_driver: Literal["local", "s3"] = "local"
