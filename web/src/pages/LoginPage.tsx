@@ -1,5 +1,6 @@
 import { useLogin } from '@api/auth';
 import { BrandLogo } from '@components/layout/BrandLogo';
+import { Button } from '@components/ui/Button';
 import { isSafeRedirect } from '@lib/session';
 import { useAuthStore, useIsAuthenticated } from '@stores/auth';
 import { type FormEvent, useState } from 'react';
@@ -81,13 +82,16 @@ export function LoginPage() {
             />
           </label>
 
-          <button
+          <Button
             type="submit"
-            disabled={login.isPending}
-            className="mt-1 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-60"
+            size="lg"
+            fullWidth
+            isLoading={login.isPending}
+            loadingText="Signing in…"
+            className="mt-1"
           >
-            {login.isPending ? 'Signing in…' : 'Sign in'}
-          </button>
+            Sign in
+          </Button>
         </form>
       </div>
     </div>

@@ -1,3 +1,5 @@
+import { Button } from '@components/ui/Button';
+import { clearStoredSession } from '@lib/session';
 import { useAuthStore } from '@stores/auth';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -12,32 +14,33 @@ function initials(name: string): string {
 export function UserMenu() {
   const navigate = useNavigate();
   const name = useAuthStore((state) => state.name);
-  const clearSession = useAuthStore((state) => state.clearSession);
   const [open, setOpen] = useState(false);
 
   if (!name) return null;
 
   const handleSignOut = () => {
     setOpen(false);
-    clearSession();
+    // Drops the tokens from memory and removes the localStorage entry.
+    clearStoredSession();
     void navigate('/', { replace: true });
   };
 
   return (
     <div className="relative">
-      <button
-        type="button"
+      <Button
+        variant="plain"
+        size="icon"
         onClick={() => setOpen((value) => !value)}
         aria-expanded={open}
         aria-haspopup="menu"
-        className="flex h-9 w-9 items-center justify-center rounded-full bg-linear-to-br from-indigo-500 to-purple-600 text-xs font-bold text-white shadow-md shadow-indigo-500/20 transition-transform hover:scale-105"
+        aria-label="Account menu"
+        className="rounded-full bg-linear-to-br from-indigo-500 to-purple-600 font-bold text-white shadow-md shadow-indigo-500/20 hover:scale-105"
       >
         {initials(name)}
-      </button>
+      </Button>
 
       {open ? (
         <>
-          {/* Click-away layer — closes the panel without a document listener. */}
           <button
             type="button"
             aria-label="Close menu"
@@ -54,14 +57,16 @@ export function UserMenu() {
               <p className="text-xs text-slate-400">Signed in</p>
             </div>
 
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="lg"
+              fullWidth
               role="menuitem"
               onClick={handleSignOut}
-              className="w-full px-4 py-2.5 text-left text-sm text-slate-300 transition-colors hover:bg-slate-800 hover:text-rose-400"
+              className="justify-start rounded-none hover:text-rose-400"
             >
               Sign out
-            </button>
+            </Button>
           </div>
         </>
       ) : null}

@@ -16,6 +16,21 @@ export function isSafeRedirect(path: string | null | undefined): path is string 
 }
 
 /**
+ * Wipe the session from memory *and* from localStorage.
+ *
+ * The store's own `clearSession` only nulls the fields, and the persist
+ * middleware faithfully writes those nulls back — leaving a `shopper.auth`
+ * entry behind after sign-out. `clearStorage()` removes the key outright.
+ *
+ * Order matters: reset the state first, then drop the key. Reversed, the
+ * state change would immediately re-persist the entry.
+ */
+export function clearStoredSession(): void {
+  useAuthStore.getState().clearSession();
+  useAuthStore.persist.clearStorage();
+}
+
+/**
  * Tear down the session and send the user to the login page.
  *
  * Called from the axios interceptors, which live outside React and have no
@@ -24,7 +39,7 @@ export function isSafeRedirect(path: string | null | undefined): path is string 
  * caches included) that belonged to the dead session.
  */
 export function endSession(): void {
-  useAuthStore.getState().clearSession();
+  clearStoredSession();
 
   // Already on (or heading to) the login page — nothing to redirect.
   if (window.location.pathname.startsWith(LOGIN_PATH)) return;

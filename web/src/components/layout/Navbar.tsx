@@ -1,3 +1,4 @@
+import { ButtonLink } from '@components/ui/Button';
 import { useIsAuthenticated } from '@stores/auth';
 import { NavLink } from 'react-router-dom';
 
@@ -33,16 +34,7 @@ export function Navbar() {
 
           <span className="mx-1 h-5 w-px bg-slate-800" aria-hidden="true" />
 
-          {isAuthenticated ? (
-            <UserMenu />
-          ) : (
-            <NavLink
-              to="/login"
-              className="rounded-lg bg-indigo-600 px-3.5 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-indigo-500"
-            >
-              Sign in
-            </NavLink>
-          )}
+          {isAuthenticated ? <UserMenu /> : <ButtonLink to="/login">Sign in</ButtonLink>}
         </nav>
       </div>
     </header>
