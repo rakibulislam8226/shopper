@@ -10,7 +10,7 @@ from app.core.rate_limit import rate_limit
 from app.core.response import success_response
 from app.db.session import get_db
 from app.modules.users import service
-from app.modules.users.schemas import LoginRequest
+from app.modules.users.schemas import LoginRequest, RefreshRequest
 
 router = APIRouter(tags=["users-auth"])
 
@@ -25,5 +25,19 @@ async def login(
     return success_response(
         data=result.model_dump(mode="json"),
         message="Login successful",
+        status_code=status.HTTP_200_OK,
+    )
+
+
+@router.post("/refresh", summary="Exchange a refresh token for a new token pair")
+@rate_limit(times=30, seconds=60)  # legitimate clients refresh rarely; abuse does not
+async def refresh(
+    payload: RefreshRequest,
+    db: AsyncSession = Depends(get_db),
+) -> JSONResponse:
+    result = await service.refresh(db, refresh_token=payload.refresh_token)
+    return success_response(
+        data=result.model_dump(mode="json"),
+        message="Token refreshed",
         status_code=status.HTTP_200_OK,
     )

@@ -15,6 +15,12 @@ class LoginRequest(BaseModel):
     password: str = Field(min_length=1, max_length=128, examples=["S3cret!pass"])
 
 
+class RefreshRequest(BaseModel):
+    """Body for `POST /api/users/refresh`."""
+
+    refresh_token: str = Field(min_length=1)
+
+
 class UserPublic(BaseModel):
     """User fields safe to expose to a client. Never carries `password_hash`."""
 
@@ -44,4 +50,10 @@ class LoginResponse(BaseModel):
     """Payload placed in the standard envelope's `data` field on login."""
 
     user: UserPublic
+    tokens: TokenPair
+
+
+class RefreshResponse(BaseModel):
+    """Payload placed in the standard envelope's `data` field on refresh."""
+
     tokens: TokenPair

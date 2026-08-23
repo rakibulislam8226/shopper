@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from uuid import UUID
 
 from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,15 +12,17 @@ from app.config import settings
 from app.core.exceptions import AppError
 from app.core.logging import get_logger
 from app.core.security import (
+    TokenError,
     create_access_token,
     create_refresh_token,
+    decode_token,
     hash_password,
     needs_rehash,
     verify_password,
 )
 from app.modules.users.models import User
-from app.modules.users.repository import get_user_by_phone
-from app.modules.users.schemas import LoginResponse, TokenPair, UserPublic
+from app.modules.users.repository import get_user_by_phone, get_user_by_uid
+from app.modules.users.schemas import LoginResponse, RefreshResponse, TokenPair, UserPublic
 from app.redis.client import redis_client
 
 logger = get_logger(__name__)
@@ -32,6 +35,12 @@ _INVALID_CREDENTIALS = "Invalid phone number or password"
 # owner why they are locked out without revealing account existence to anyone
 # guessing phone numbers.
 _ACCOUNT_INACTIVE = "This account has been deactivated. Contact your administrator."
+
+# One message for every way a refresh can fail — expired, tampered, already
+# rotated, revoked, unknown user. The client's response is identical in all of
+# them (send the user back to login), so distinguishing them only helps an
+# attacker probe the token store.
+_INVALID_REFRESH = "Invalid or expired refresh token"
 
 # Refresh jtis are tracked in Redis so a session can be revoked (logout, forced
 # sign-out) before the token's own expiry. Key: refresh:<user uid>:<jti>.
@@ -61,6 +70,11 @@ async def _issue_tokens(user: User) -> TokenPair:
     )
 
 
+async def _revoke_refresh_jti(subject: str, jti: str) -> bool:
+    """Consume a refresh jti. False if it was not registered (reused or revoked)."""
+    return bool(await redis_client.delete(_refresh_key(subject, jti)))
+
+
 async def login(db: AsyncSession, phone: str, password: str) -> LoginResponse:
     """Authenticate by phone + password and return the user with fresh tokens."""
     user = await get_user_by_phone(db, phone)
@@ -85,3 +99,47 @@ async def login(db: AsyncSession, phone: str, password: str) -> LoginResponse:
     logger.info("login_succeeded", user_uid=str(user.uid))
 
     return LoginResponse(user=UserPublic.model_validate(user), tokens=tokens)
+
+
+async def refresh(db: AsyncSession, refresh_token: str) -> RefreshResponse:
+    """Exchange a valid refresh token for a brand-new access/refresh pair.
+
+    Refresh tokens are single-use: the presented jti is consumed before a new
+    pair is issued (rotation). A token that has already been rotated no longer
+    exists in Redis and is rejected, so a stolen copy is useful only until the
+    legitimate client refreshes once.
+    """
+    try:
+        claims = decode_token(refresh_token, "refresh")
+    except TokenError as exc:
+        logger.info("refresh_rejected_invalid_token", reason=str(exc))
+        raise AppError(_INVALID_REFRESH, status_code=status.HTTP_401_UNAUTHORIZED) from exc
+
+    subject = str(claims["sub"])
+    jti = str(claims["jti"])
+
+    # Consume first: two concurrent requests carrying the same token race here,
+    # and Redis DELETE returns 1 to exactly one of them.
+    if not await _revoke_refresh_jti(subject, jti):
+        logger.warning("refresh_rejected_unknown_jti", user_uid=subject, jti=jti)
+        raise AppError(_INVALID_REFRESH, status_code=status.HTTP_401_UNAUTHORIZED)
+
+    try:
+        user_uid = UUID(subject)
+    except ValueError as exc:
+        raise AppError(_INVALID_REFRESH, status_code=status.HTTP_401_UNAUTHORIZED) from exc
+
+    user = await get_user_by_uid(db, user_uid)
+    if user is None:
+        logger.warning("refresh_rejected_unknown_user", user_uid=subject)
+        raise AppError(_INVALID_REFRESH, status_code=status.HTTP_401_UNAUTHORIZED)
+
+    # Deactivation takes effect at the next refresh — an already-issued access
+    # token stays valid until it expires, which is what its short lifetime is for.
+    if not user.is_active:
+        logger.info("refresh_rejected_inactive", user_uid=subject)
+        raise AppError(_ACCOUNT_INACTIVE, status_code=status.HTTP_403_FORBIDDEN)
+
+    tokens = await _issue_tokens(user)
+    logger.info("refresh_succeeded", user_uid=subject)
+    return RefreshResponse(tokens=tokens)
