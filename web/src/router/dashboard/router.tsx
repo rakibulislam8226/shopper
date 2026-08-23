@@ -9,16 +9,9 @@ import { SettingsPage } from '@pages/dashboard/SettingsPage';
 import { StaffPage } from '@pages/dashboard/StaffPage';
 import { type RouteObject } from 'react-router-dom';
 
-// Type-only import: erased at build time, so it creates no runtime cycle.
 import { type RoutePaths } from '../index';
 
-/**
- * Routes rendered inside the authenticated panel (sidebar shell).
- *
- * `RequireAuth` sits above the layout rather than on each route, so a new
- * section is protected by being added to this list — there is no per-route
- * flag anyone can forget to set.
- */
+
 export function createDashboardRoutes(routes: RoutePaths): RouteObject[] {
   return [
     {

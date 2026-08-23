@@ -1,7 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom';
 
-import { createDashboardRoutes } from './dashboard';
-import { createPublicRoutes } from './public';
+import { createDashboardRoutes } from './dashboard/router';
+import { createPublicRoutes } from './public/router';
 
 export const ROUTES = {
   home: '/',
