@@ -1,5 +1,5 @@
 import { AppLayout } from '@components/layout/AppLayout';
-import { HelloPage } from '@pages/HelloPage';
+import { HealthPage } from '@pages/HealthPage';
 import { LandingPage } from '@pages/LandingPage';
 import { LoginPage } from '@pages/LoginPage';
 import { createBrowserRouter } from 'react-router-dom';
@@ -10,7 +10,7 @@ export const router = createBrowserRouter([
     element: <AppLayout />,
     children: [
       { path: '/', element: <LandingPage /> },
-      { path: '/hello', element: <HelloPage /> },
+      { path: '/health', element: <HealthPage /> },
       { path: '/login', element: <LoginPage /> },
     ],
   },

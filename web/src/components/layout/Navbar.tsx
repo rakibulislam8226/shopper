@@ -7,7 +7,7 @@ import { UserMenu } from './UserMenu';
 
 const NAV_ITEMS = [
   { label: 'Home', path: '/' },
-  { label: 'Hello', path: '/hello' },
+  { label: 'Status', path: '/health' },
 ] as const;
 
 const linkClasses = ({ isActive }: { isActive: boolean }) =>
