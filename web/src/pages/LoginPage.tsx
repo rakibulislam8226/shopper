@@ -21,7 +21,7 @@ export function LoginPage() {
   // Validated, because `next` comes from the URL and an unchecked value here
   // is an open redirect.
   const next = searchParams.get('next');
-  const redirectTo = isSafeRedirect(next) ? next : '/';
+  const redirectTo = isSafeRedirect(next) ? next : '/dashboard';
 
   if (isAuthenticated) return <Navigate to={redirectTo} replace />;
 

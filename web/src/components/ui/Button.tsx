@@ -1,11 +1,55 @@
+import { cn } from '@lib/cn';
 import { type ButtonHTMLAttributes, type ReactNode } from 'react';
 import { Link, type LinkProps } from 'react-router-dom';
 
-import { buttonClasses, type ButtonStyleProps } from './buttonStyles';
 
-// Types only. Re-exporting `buttonClasses` (a value) from a component module
-// breaks React Fast Refresh — import it from './buttonStyles' directly.
-export type { ButtonSize, ButtonStyleProps, ButtonVariant } from './buttonStyles';
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'plain';
+export type ButtonSize = 'sm' | 'md' | 'lg' | 'icon';
+
+
+const BASE_CLASSES =
+  'inline-flex cursor-pointer select-none items-center justify-center gap-2 rounded-lg font-semibold ' +
+  'transition-all duration-200 outline-none ' +
+  'focus-visible:ring-2 focus-visible:ring-indigo-500/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 ' +
+  'active:scale-[0.98] ' +
+  'disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100 ' +
+  'aria-disabled:cursor-not-allowed aria-disabled:opacity-60';
+
+const VARIANT_CLASSES: Record<ButtonVariant, string> = {
+  primary: 'bg-indigo-600 text-white shadow-sm hover:bg-indigo-500',
+  secondary: 'border border-slate-700 bg-slate-800/80 text-slate-200 hover:bg-slate-700/80',
+  ghost: 'text-slate-300 hover:bg-slate-800 hover:text-slate-100',
+  danger: 'bg-rose-600 text-white shadow-sm hover:bg-rose-500',
+  plain: '',
+};
+
+const SIZE_CLASSES: Record<ButtonSize, string> = {
+  sm: 'px-3 py-1.5 text-xs',
+  md: 'px-3.5 py-1.5 text-sm',
+  lg: 'px-4 py-2.5 text-sm',
+  icon: 'h-9 w-9 p-0 text-xs',
+};
+
+export interface ButtonStyleProps {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  fullWidth?: boolean;
+}
+
+function buttonClasses({
+  variant = 'primary',
+  size = 'md',
+  fullWidth = false,
+  className,
+}: ButtonStyleProps & { className?: string } = {}): string {
+  return cn(
+    BASE_CLASSES,
+    VARIANT_CLASSES[variant],
+    SIZE_CLASSES[size],
+    fullWidth && 'w-full',
+    className,
+  );
+}
 
 /** Spinner shown in place of nothing while a button's action is in flight. */
 function Spinner() {

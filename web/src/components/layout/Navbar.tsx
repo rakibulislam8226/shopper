@@ -34,7 +34,18 @@ export function Navbar() {
 
           <span className="mx-1 h-5 w-px bg-slate-800" aria-hidden="true" />
 
-          {isAuthenticated ? <UserMenu /> : <ButtonLink to="/login">Sign in</ButtonLink>}
+          {isAuthenticated ? (
+            <>
+              {/* Public pages still show the navbar, so a signed-in visitor
+                  needs a way back into the panel. */}
+              <ButtonLink to="/dashboard" variant="secondary">
+                Dashboard
+              </ButtonLink>
+              <UserMenu />
+            </>
+          ) : (
+            <ButtonLink to="/login">Sign in</ButtonLink>
+          )}
         </nav>
       </div>
     </header>
