@@ -201,6 +201,7 @@ pytest                 # tests
 alembic revision --autogenerate -m "..."   # new migration
 alembic upgrade head   # apply
 alembic downgrade base # full reverse (verified working)
+alembic check         # check is there any unapplied migration
 ```
 
 **When you add a model,** import it in `app/db/models.py`. Alembic only sees

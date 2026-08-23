@@ -21,10 +21,9 @@ if TYPE_CHECKING:
 class User(BaseModel):
     __tablename__ = "users"
 
-    name: Mapped[str] = mapped_column(String(255), nullable=False)
-    email: Mapped[str] = mapped_column(String(320), nullable=False, unique=True, index=True)
-    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
-    phone: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    name: Mapped[str] = mapped_column(String(255))
+    phone: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    password_hash: Mapped[str] = mapped_column(String(255))
 
     # Set on invited/reset accounts; auth (Phase 2+) forces a rotation before
     # any other action is permitted.
@@ -34,11 +33,6 @@ class User(BaseModel):
         default=False,
         server_default="false",
     )
-
-    # Only the membership *held by* this user. ``Membership`` also references
-    # users as inviter and remover, so the join has to be pinned explicitly.
-    # passive_deletes="all" — defer to the DB's ondelete="RESTRICT" rather than
-    # letting the ORM null out a membership's user_id. See the note on
     # Organization's collections.
     memberships: Mapped[list[Membership]] = relationship(
         back_populates="user",
@@ -47,4 +41,4 @@ class User(BaseModel):
     )
 
     def __repr__(self) -> str:  # pragma: no cover - debugging aid
-        return f"<User id={self.id} email={self.email!r}>"
+        return f"<User id={self.id} phone={self.phone!r}>"
