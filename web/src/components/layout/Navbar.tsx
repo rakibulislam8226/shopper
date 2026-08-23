@@ -1,9 +1,7 @@
 import { ButtonLink } from '@components/ui/Button';
-import { useIsAuthenticated } from '@stores/auth';
 import { NavLink } from 'react-router-dom';
 
 import { BrandLogo } from './BrandLogo';
-import { UserMenu } from './UserMenu';
 
 const NAV_ITEMS = [
   { label: 'Home', path: '/' },
@@ -18,8 +16,6 @@ const linkClasses = ({ isActive }: { isActive: boolean }) =>
   }`;
 
 export function Navbar() {
-  const isAuthenticated = useIsAuthenticated();
-
   return (
     <header className="sticky top-0 z-50 w-full border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -34,18 +30,7 @@ export function Navbar() {
 
           <span className="mx-1 h-5 w-px bg-slate-800" aria-hidden="true" />
 
-          {isAuthenticated ? (
-            <>
-              {/* Public pages still show the navbar, so a signed-in visitor
-                  needs a way back into the panel. */}
-              <ButtonLink to="/dashboard" variant="secondary">
-                Dashboard
-              </ButtonLink>
-              <UserMenu />
-            </>
-          ) : (
-            <ButtonLink to="/login">Sign in</ButtonLink>
-          )}
+          <ButtonLink to="/login">Sign in</ButtonLink>
         </nav>
       </div>
     </header>

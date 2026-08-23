@@ -33,6 +33,7 @@
       "@lib/*": ["./src/lib/*"],
       "@pages/*": ["./src/pages/*"],
       "@plugins/*": ["./src/plugins/*"],
+      "@router/*": ["./src/router/*"],
       "@stores/*": ["./src/stores/*"]
     }
   },

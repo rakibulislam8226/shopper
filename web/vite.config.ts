@@ -27,6 +27,7 @@ export default defineConfig(({ mode }) => {
         '@lib': resolve(srcDir, 'lib'),
         '@pages': resolve(srcDir, 'pages'),
         '@plugins': resolve(srcDir, 'plugins'),
+        '@router': resolve(srcDir, 'router'),
         '@stores': resolve(srcDir, 'stores'),
         '@': srcDir,
       },

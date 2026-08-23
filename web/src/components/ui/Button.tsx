@@ -2,10 +2,8 @@ import { cn } from '@lib/cn';
 import { type ButtonHTMLAttributes, type ReactNode } from 'react';
 import { Link, type LinkProps } from 'react-router-dom';
 
-
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'plain';
 export type ButtonSize = 'sm' | 'md' | 'lg' | 'icon';
-
 
 const BASE_CLASSES =
   'inline-flex cursor-pointer select-none items-center justify-center gap-2 rounded-lg font-semibold ' +

@@ -17,7 +17,7 @@ function NavIcon({ children }: { children: ReactNode }) {
       strokeWidth="1.6"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className="h-[18px] w-[18px] shrink-0"
+      className="h-4.5 w-4.5 shrink-0"
       aria-hidden="true"
     >
       {children}
@@ -25,23 +25,19 @@ function NavIcon({ children }: { children: ReactNode }) {
   );
 }
 
+/** Up to two initials for the avatar disc. */
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/).slice(0, 2);
   return parts.map((part) => part.charAt(0).toUpperCase()).join('') || '?';
 }
 
 const linkClasses = ({ isActive }: { isActive: boolean }) =>
-  `group flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors duration-150 ${
+  `flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors duration-150 ${
     isActive
       ? 'bg-indigo-500/10 font-semibold text-indigo-300 ring-1 ring-indigo-500/20'
       : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
   }`;
 
-/**
- * Dashboard sidebar. Rendered twice by the layout — once fixed for desktop,
- * once inside the mobile drawer — so it takes `onNavigate` to let the drawer
- * close itself when a link is followed.
- */
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const navigate = useNavigate();
   const name = useAuthStore((state) => state.name);
@@ -88,24 +84,36 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         ))}
       </nav>
 
-      <div className="shrink-0 border-t border-slate-800/80 p-3">
-        <div className="flex items-center gap-3 rounded-lg px-2 py-2">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-indigo-500 to-purple-600 text-xs font-bold text-white">
-            {initials(name ?? '')}
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-slate-200">{name}</p>
-            <p className="text-xs text-slate-500">Signed in</p>
-          </div>
+      <div className="flex shrink-0 items-center gap-3 border-t border-slate-800/80 p-4">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-indigo-500 to-purple-600 text-xs font-bold text-white">
+          {initials(name ?? '')}
+        </span>
+
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-medium text-slate-200">{name}</p>
+          <p className="text-xs text-slate-500">Signed in</p>
         </div>
+
         <Button
-          variant="ghost"
-          size="md"
-          fullWidth
+          variant="plain"
+          size="icon"
           onClick={handleSignOut}
-          className="mt-1 justify-start"
+          aria-label="Sign out"
+          title="Sign out"
+          className="shrink-0 rounded-lg text-slate-500 hover:bg-slate-800 hover:text-rose-400"
         >
-          Sign out
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-4.5 w-4.5"
+            aria-hidden="true"
+          >
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
+          </svg>
         </Button>
       </div>
     </div>
