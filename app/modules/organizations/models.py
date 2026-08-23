@@ -61,10 +61,11 @@ class Organization(BaseModel):
         server_default="UTC",
     )
 
-    # Nullable only to survive data-integrity edge cases (e.g. a superadmin row
-    # that predates this column). In practice provisioning always sets it.
-    created_by_superadmin_id: Mapped[int | None] = mapped_column(
-        ForeignKey("superadmins.id", ondelete="RESTRICT"),
+    # The superadmin (a user with ``is_superadmin``) who provisioned this org.
+    # Nullable only to survive data-integrity edge cases; in practice
+    # provisioning always sets it.
+    created_by_user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="RESTRICT"),
         nullable=True,
     )
 

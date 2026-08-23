@@ -12,7 +12,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import CheckConstraint, ForeignKey, Index, UniqueConstraint, func
+from sqlalchemy import ForeignKey, Index, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import BaseModel
@@ -38,13 +38,6 @@ class Membership(BaseModel):
         # The hot path: "all ACTIVE owners of org X" (the last-owner
         # resignation guard), "all ACTIVE members of org X", role listings.
         Index("ix_memberships_organization_id_role_status", "organization_id", "role", "status"),
-        # An invite has exactly one inviter, and the inviter is polymorphic —
-        # hence two nullable columns. At most one may be set; a row with both
-        # is a bug, not a valid state.
-        CheckConstraint(
-            "NOT (invited_by_user_id IS NOT NULL AND invited_by_superadmin_id IS NOT NULL)",
-            name="single_inviter",
-        ),
     )
 
     user_id: Mapped[int] = mapped_column(
@@ -71,14 +64,11 @@ class Membership(BaseModel):
         index=True,
     )
 
-    # Provenance: an invite comes from either an org user or a superadmin
-    # (the org's first owner), never both. Enforced application-side.
+    # Provenance: who issued the invite. Always a user — a superadmin
+    # provisioning an org's first owner is a user with ``is_superadmin``.
+    # Null for rows created before invites were tracked.
     invited_by_user_id: Mapped[int | None] = mapped_column(
         ForeignKey("users.id", ondelete="RESTRICT"),
-        nullable=True,
-    )
-    invited_by_superadmin_id: Mapped[int | None] = mapped_column(
-        ForeignKey("superadmins.id", ondelete="RESTRICT"),
         nullable=True,
     )
 
@@ -90,7 +80,7 @@ class Membership(BaseModel):
         nullable=True,
     )
 
-    # Three columns point at ``users``, so both sides pin their join explicitly.
+    # Several columns point at ``users``, so both sides pin their join explicitly.
     user: Mapped[User] = relationship(
         back_populates="memberships",
         foreign_keys=[user_id],

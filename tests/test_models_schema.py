@@ -35,7 +35,6 @@ MONEY_COLUMNS: set[tuple[str, str]] = {
 }
 
 EXPECTED_TABLES = {
-    "superadmins",
     "users",
     "organizations",
     "memberships",
@@ -140,7 +139,6 @@ def test_no_cascade_deletes() -> None:
         ("sales", "ck_sales_quantity_positive"),
         ("sales", "ck_sales_total_amount_non_negative"),
         ("sales", "ck_sales_unit_price_at_sale_non_negative"),
-        ("memberships", "ck_memberships_single_inviter"),
     ],
 )
 def test_check_constraints_present(table_name: str, constraint_name: str) -> None:
@@ -186,10 +184,10 @@ def test_composite_uniques_and_indexes() -> None:
     assert ("entity_type", "entity_id") in audit_indexes
 
 
-def test_audit_actor_id_is_not_a_foreign_key() -> None:
-    """Polymorphic by design — it points at users OR superadmins."""
+def test_audit_actor_is_a_user_foreign_key() -> None:
+    """One identity table, so the actor is a real, validated reference."""
     audit = Base.metadata.tables["audit_logs"]
-    assert audit.columns["actor_id"].foreign_keys == set()
+    actor_fks = {fk.column.table.name for fk in audit.columns["actor_user_id"].foreign_keys}
+    assert actor_fks == {"users"}
+    # entity_id stays polymorphic — it points at whichever table entity_type names.
     assert audit.columns["entity_id"].foreign_keys == set()
-
-

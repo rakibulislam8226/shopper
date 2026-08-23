@@ -16,6 +16,12 @@ from sqlalchemy.ext.asyncio import (
 
 from app.config import settings
 
+# Importing the registry here — not in each entrypoint — is what makes every
+# ORM mapper resolvable. Without it a string relationship like
+# ``Mapped[Organization]`` fails the moment a session runs its first query
+# from a process that imported only one model (the seed CLI, a script).
+from app.db import models as _models  # noqa: F401
+
 engine = create_async_engine(
     settings.database_url,
     echo=False,

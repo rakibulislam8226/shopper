@@ -55,13 +55,6 @@ class ProductStatus(StrEnum):
     DISCONTINUED = "discontinued"
 
 
-class ActorType(StrEnum):
-    """Which table an ``AuditLog.actor_id`` points at."""
-
-    SUPERADMIN = "superadmin"
-    USER = "user"
-
-
 def _enum_values(enum_cls: type[Enum]) -> list[str]:
     """Persist the enum *values* ("owner"), not the member names ("OWNER")."""
     return [str(member.value) for member in enum_cls]
@@ -88,4 +81,3 @@ MEMBERSHIP_ROLE_ENUM = pg_enum(MembershipRole, "membership_role")
 MEMBERSHIP_STATUS_ENUM = pg_enum(MembershipStatus, "membership_status")
 ORGANIZATION_STATUS_ENUM = pg_enum(OrganizationStatus, "organization_status")
 PRODUCT_STATUS_ENUM = pg_enum(ProductStatus, "product_status")
-ACTOR_TYPE_ENUM = pg_enum(ActorType, "actor_type")

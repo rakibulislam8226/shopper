@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -25,6 +27,11 @@ logger = get_logger(__name__)
 # Deliberately identical for "no such phone" and "wrong password" — a distinct
 # message would turn the endpoint into a phone-number oracle.
 _INVALID_CREDENTIALS = "Invalid phone number or password"
+
+# Only ever reached *after* the password checked out, so it tells a legitimate
+# owner why they are locked out without revealing account existence to anyone
+# guessing phone numbers.
+_ACCOUNT_INACTIVE = "This account has been deactivated. Contact your administrator."
 
 # Refresh jtis are tracked in Redis so a session can be revoked (logout, forced
 # sign-out) before the token's own expiry. Key: refresh:<user uid>:<jti>.
@@ -61,11 +68,18 @@ async def login(db: AsyncSession, phone: str, password: str) -> LoginResponse:
         logger.info("login_failed", phone=phone)
         raise AppError(_INVALID_CREDENTIALS, status_code=status.HTTP_401_UNAUTHORIZED)
 
+    if not user.is_active:
+        logger.info("login_rejected_inactive", user_uid=str(user.uid))
+        raise AppError(_ACCOUNT_INACTIVE, status_code=status.HTTP_403_FORBIDDEN)
+
     # Argon2 parameters can be tightened over time; upgrade the stored hash
     # transparently while we legitimately hold the plaintext.
     if needs_rehash(user.password_hash):
         user.password_hash = hash_password(password)
-        await db.commit()
+
+    user.last_login_at = datetime.now(UTC)
+    await db.commit()
+    await db.refresh(user)
 
     tokens = await _issue_tokens(user)
     logger.info("login_succeeded", user_uid=str(user.uid))

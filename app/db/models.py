@@ -19,7 +19,6 @@ from app.modules.memberships.models import Membership
 from app.modules.organizations.models import Organization
 from app.modules.products.models import PriceHistory, Product
 from app.modules.sales.models import Sale
-from app.modules.superadmins.models import SuperAdmin
 from app.modules.users.models import User
 
 __all__ = [
@@ -30,6 +29,5 @@ __all__ = [
     "PriceHistory",
     "Product",
     "Sale",
-    "SuperAdmin",
     "User",
 ]

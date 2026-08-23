@@ -15,7 +15,6 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import BaseModel
-from app.db.enums import ACTOR_TYPE_ENUM, ActorType
 
 
 class AuditLog(BaseModel):
@@ -27,22 +26,21 @@ class AuditLog(BaseModel):
         Index("ix_audit_logs_entity_type_entity_id", "entity_type", "entity_id"),
     )
 
-    # Nullable: platform-level superadmin actions are not tied to any org.
+    # Nullable: platform-level superadmin actions belong to no organization.
     organization_id: Mapped[int | None] = mapped_column(
         ForeignKey("organizations.id", ondelete="RESTRICT"),
         nullable=True,
     )
 
-    actor_type: Mapped[ActorType] = mapped_column(ACTOR_TYPE_ENUM, nullable=False)
-
-    # POLYMORPHIC REFERENCE — intentionally NOT a foreign key.
-    # Points at ``users.id`` when actor_type is USER and ``superadmins.id``
-    # when it is SUPERADMIN. A real FK cannot span two tables, and splitting
-    # this into two nullable FK columns would make every audit query branch.
-    # The trade-off: the database will not validate this value, so the service
-    # layer (later phases) must resolve the actor against the correct table
-    # before writing, and readers must tolerate a dangling id.
-    actor_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    # Every actor is a user now — tenant member or superadmin alike — so this
+    # is a real, database-validated foreign key rather than the polymorphic
+    # id it used to be. Whether the action was platform-level is read from
+    # ``organization_id`` being null, not from a separate actor type.
+    actor_user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+    )
 
     # Dotted action name, e.g. "organization.suspended", "product.price_changed".
     action: Mapped[str] = mapped_column(String(128), nullable=False)
@@ -61,5 +59,5 @@ class AuditLog(BaseModel):
     def __repr__(self) -> str:  # pragma: no cover - debugging aid
         return (
             f"<AuditLog action={self.action!r} entity={self.entity_type}:{self.entity_id} "
-            f"actor={self.actor_type.value}:{self.actor_id}>"
+            f"actor_user_id={self.actor_user_id}>"
         )

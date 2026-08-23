@@ -38,11 +38,12 @@ shopper/
 │   │   └── session.py       async engine, session factory, get_db dependency
 │   ├── redis/
 │   │   └── client.py        redis.asyncio client
+│   ├── cli/
+│   │   └── seed.py          python -m app.cli.seed — bootstraps the superadmin
 │   ├── health/
 │   │   └── router.py        GET /api/health (checks Postgres + Redis)
-│   └── modules/             folder-per-feature; Phase 1 ships models.py only
-│       ├── superadmins/     SuperAdmin
-│       ├── users/           User
+│   └── modules/             folder-per-feature
+│       ├── users/           User + auth (schemas, repository, service, router)
 │       ├── organizations/   Organization
 │       ├── memberships/     Membership (user ↔ organization + role)
 │       ├── products/        Product, PriceHistory
@@ -61,18 +62,23 @@ shopper/
 
 ---
 
-## Data model (Phase 1)
+## Data model
 
-Eight tables. `Organization` is the tenant boundary: every org-scoped row
+Seven tables. `Organization` is the tenant boundary: every org-scoped row
 carries a NOT NULL, indexed `organization_id`, and every query from Phase 2
 onward filters on it.
 
 ```
-SuperAdmin ──creates──> Organization <──┬── Membership ──> User
- (platform)                             ├── Product ──> PriceHistory
-                                        └── Sale ──> Product, User(salesman)
-AuditLog ── organization_id (nullable, null = platform-level action)
+User ──creates──> Organization <──┬── Membership ──> User
+ (is_superadmin)                  ├── Product ──> PriceHistory
+                                  └── Sale ──> Product, User(salesman)
+AuditLog ── actor_user_id, organization_id (nullable, null = platform-level)
 ```
+
+`users` is the **only** identity table — there is no separate superadmin table
+and no email anywhere. A platform operator is a user with `is_superadmin`;
+`phone` is the login identifier. `is_active` is the account-level kill switch
+and is checked on every login.
 
 `Membership` is the only place a role lives — `User` itself has no org and no
 permissions. There is exactly **one membership row per (user, organization)**
@@ -91,7 +97,6 @@ Rules the schema enforces, not just documents:
 | A sale is at least one unit | `CHECK (quantity > 0)` |
 | One membership per user per org | `UNIQUE (user_id, organization_id)` |
 | SKU unique within an org | `UNIQUE (organization_id, sku)` (NULLs allowed) |
-| An invite has one inviter | `CHECK` — user and superadmin columns mutually exclusive |
 
 Historical accuracy comes from two frozen columns on `Sale`:
 `unit_price_at_sale` (never updated, so a later price change cannot rewrite
@@ -136,7 +141,9 @@ pip install -r requirements.txt -r requirements-dev.txt
 # 4. Migrations — creates the full Phase 1 schema
 alembic upgrade head
 
-# 5. Run (dev, auto-reload)
+python -m app.cli.superadmin
+
+# 6. Run (dev, auto-reload)
 uvicorn app.main:app --reload --port 8000
 ```
 
