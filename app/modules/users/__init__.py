@@ -1,1 +1,1 @@
-"""users module — Phase 1 ships models only; router/service/schemas land in later phases."""
+"""users module — model, schemas, repository, service and auth routes."""

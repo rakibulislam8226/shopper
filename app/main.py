@@ -23,8 +23,10 @@ from app.core.exceptions import register_exception_handlers
 from app.core.logging import configure_logging, get_logger
 from app.core.rate_limit import enforce_rate_limit
 from app.core.spa import register_spa
+from app.db import models as _models  # noqa: F401  — registers every ORM mapper
 from app.db.session import engine
 from app.health.router import router as health_router
+from app.modules.users.router import router as users_router
 from app.redis.client import close_redis, redis_client
 
 logger = get_logger(__name__)
@@ -108,4 +110,5 @@ async def request_context_middleware(
 
 
 app.include_router(health_router, prefix="/api/health")
+app.include_router(users_router, prefix="/api/users")
 register_spa(app)
