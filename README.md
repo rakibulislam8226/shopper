@@ -12,9 +12,9 @@ They share nothing at the tooling level and run as separate processes. There
 are exactly two dependency environments: a Python virtualenv for the backend
 and `web/node_modules` for the frontend.
 
-> **Phase 1 — data layer.** The full domain schema exists as SQLAlchemy models
-> and one Alembic migration. There is still no business logic (auth, RBAC,
-> sales, inventory) and no router beyond `GET /api/health`.
+> **Phase 2 — authentication.** The full domain schema exists as SQLAlchemy
+> models and Alembic migrations, and phone + password login with JWT access and
+> refresh tokens is live. RBAC, sales and inventory are still to come.
 
 ---
 
@@ -40,8 +40,6 @@ shopper/
 │   │   └── client.py        redis.asyncio client
 │   ├── cli/
 │   │   └── seed.py          python -m app.cli.seed — bootstraps the superadmin
-│   ├── health/
-│   │   └── router.py        GET /api/health (checks Postgres + Redis)
 │   └── modules/             folder-per-feature
 │       ├── users/           User + auth (schemas, repository, service, router)
 │       ├── organizations/   Organization
@@ -51,7 +49,7 @@ shopper/
 │       └── audit/           AuditLog
 ├── alembic/                 migrations (env.py reads app settings)
 ├── alembic.ini
-├── tests/                   pytest (health smoke test + schema invariants)
+├── tests/                   pytest (schema invariants)
 ├── pyproject.toml           ruff + mypy + pytest config
 ├── requirements.txt         pinned production deps
 ├── requirements-dev.txt     dev-only deps (ruff, mypy, pytest, httpx)
@@ -147,7 +145,6 @@ python -m app.cli.superadmin
 uvicorn app.main:app --reload --port 8000
 ```
 
-- Health → <http://localhost:8000/api/health>
 - Swagger → <http://localhost:8000/docs> (when `ENABLE_DOCS=true`)
 - ReDoc → <http://localhost:8000/redoc>
 

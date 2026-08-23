@@ -1,7 +1,7 @@
 /**
  * Small status badge. The caller picks the tone rather than the pill guessing
- * from the label — "ok" is healthy for a health check, but "discontinued" or
- * "suspended" are the negative values elsewhere.
+ * from the label — "active" is positive for a membership, while
+ * "discontinued" or "suspended" are the negative values elsewhere.
  */
 export type StatusTone = 'positive' | 'negative' | 'neutral';
 

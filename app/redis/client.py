@@ -1,8 +1,8 @@
 """Async Redis client.
 
 A single connection pool is created from ``settings.redis_url`` and shared for
-the process lifetime. Later phases use it for caching, rate limiting and
-refresh-token storage; Phase 0 uses it only for the health check.
+the process lifetime. It backs rate limiting and refresh-token storage today,
+and caching in later phases.
 """
 
 from __future__ import annotations

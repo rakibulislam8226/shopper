@@ -4,7 +4,7 @@ import { type ReactNode } from 'react';
 /**
  * Marketing entry point. Deliberately makes no API calls — a landing page that
  * depends on the backend being up is a landing page that breaks when it most
- * needs to load. Live service state lives on /health instead.
+ * needs to load.
  */
 
 interface Feature {
@@ -133,9 +133,6 @@ export function LandingPage() {
           <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
             <ButtonLink to="/login" size="lg">
               Get started
-            </ButtonLink>
-            <ButtonLink to="/health" size="lg" variant="secondary">
-              System status
             </ButtonLink>
           </div>
 

@@ -1,6 +1,5 @@
 import { EmptySection } from '@components/dashboard/EmptySection';
 import { PageHeader } from '@components/dashboard/PageHeader';
-import { ButtonLink } from '@components/ui/Button';
 import { useAuthStore } from '@stores/auth';
 import { type ReactNode } from 'react';
 
@@ -76,11 +75,6 @@ export function OverviewPage() {
       <PageHeader
         title={`Welcome back, ${name ?? 'there'}`}
         description="Your organizations, inventory and sales at a glance."
-        actions={
-          <ButtonLink to="/health" variant="secondary" size="md">
-            System status
-          </ButtonLink>
-        }
       />
 
       <div className="mb-6 flex items-start gap-3 rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3">

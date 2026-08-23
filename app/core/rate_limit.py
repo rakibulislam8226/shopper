@@ -11,9 +11,9 @@ Override or exempt one endpoint with the ``rate_limit`` decorator:
     @rate_limit(times=5, seconds=60)          # stricter than the global default
     async def login(...): ...
 
-    @router.get("")
+    @router.get("/me")
     @rate_limit(exempt=True)                  # not limited at all
-    async def health(...): ...
+    async def read_me(...): ...
 
 The decorator must sit directly above the endpoint function (below the route
 decorator) so its attribute lands on the exact callable FastAPI stores as

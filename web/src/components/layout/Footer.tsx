@@ -13,9 +13,6 @@ export function Footer() {
           <NavLink to="/" className="transition-colors hover:text-slate-300">
             Home
           </NavLink>
-          <NavLink to="/health" className="transition-colors hover:text-slate-300">
-            Status
-          </NavLink>
           <NavLink to="/login" className="transition-colors hover:text-slate-300">
             Sign in
           </NavLink>

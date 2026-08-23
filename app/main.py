@@ -1,7 +1,7 @@
 """FastAPI application entrypoint.
 
 Wires configuration, structured logging, CORS, global exception handling, a
-request-id logging middleware, and the health router. Startup verifies that
+request-id logging middleware, and the module routers. Startup verifies that
 Postgres and Redis are reachable and logs loudly if they are not.
 """
 
@@ -24,7 +24,6 @@ from app.core.logging import configure_logging, get_logger
 from app.core.rate_limit import enforce_rate_limit
 from app.core.spa import register_spa
 from app.db.session import engine
-from app.health.router import router as health_router
 from app.modules.users.router import router as users_router
 from app.redis.client import close_redis, redis_client
 
@@ -108,6 +107,5 @@ async def request_context_middleware(
     return response
 
 
-app.include_router(health_router, prefix="/api/health")
 app.include_router(users_router, prefix="/api/users")
 register_spa(app)

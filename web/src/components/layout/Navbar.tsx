@@ -3,10 +3,7 @@ import { NavLink } from 'react-router-dom';
 
 import { BrandLogo } from './BrandLogo';
 
-const NAV_ITEMS = [
-  { label: 'Home', path: '/' },
-  { label: 'Status', path: '/health' },
-] as const;
+const NAV_ITEMS = [{ label: 'Home', path: '/' }] as const;
 
 const linkClasses = ({ isActive }: { isActive: boolean }) =>
   `rounded-lg px-3.5 py-1.5 text-sm font-medium transition-all duration-200 ${

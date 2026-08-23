@@ -11,7 +11,6 @@ import { type RouteObject } from 'react-router-dom';
 
 import { type RoutePaths } from '../index';
 
-
 export function createDashboardRoutes(routes: RoutePaths): RouteObject[] {
   return [
     {

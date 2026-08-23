@@ -1,9 +1,8 @@
 import { RedirectAuthenticated } from '@components/auth/RedirectAuthenticated';
 import { AppLayout } from '@components/layout/AppLayout';
-import { HealthPage } from '@pages/HealthPage';
 import { LandingPage } from '@pages/LandingPage';
 import { LoginPage } from '@pages/LoginPage';
-import { type RouteObject } from 'react-router-dom';
+import { Navigate, type RouteObject } from 'react-router-dom';
 
 // Type-only import: erased at build time, so it creates no runtime cycle.
 import { type RoutePaths } from '../index';
@@ -28,8 +27,12 @@ export function createPublicRoutes(routes: RoutePaths): RouteObject[] {
             </RedirectAuthenticated>
           ),
         },
-        { path: routes.health, element: <HealthPage /> },
         { path: routes.login, element: <LoginPage /> },
+
+        // Catch-all. Without it an unknown path — a stale bookmark, a typo, a
+        // route that used to exist — matches nothing and React Router renders
+        // a blank page.
+        { path: '*', element: <Navigate to={routes.home} replace /> },
       ],
     },
   ];
