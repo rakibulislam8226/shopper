@@ -1,5 +1,6 @@
 import { RequireAuth } from '@components/auth/RequireAuth';
 import { DashboardLayout } from '@components/dashboard/DashboardLayout';
+import { AppearancePage } from '@pages/dashboard/AppearancePage';
 import { AuditPage } from '@pages/dashboard/AuditPage';
 import { OrganizationsPage } from '@pages/dashboard/OrganizationsPage';
 import { OverviewPage } from '@pages/dashboard/OverviewPage';
@@ -32,6 +33,7 @@ export function createDashboardRoutes(routes: RoutePaths): RouteObject[] {
             },
             { path: routes.dashboard.settings.profile, element: <ShopProfilePage /> },
             { path: routes.dashboard.settings.documents, element: <ShopDocumentsPage /> },
+            { path: routes.dashboard.settings.appearance, element: <AppearancePage /> },
           ],
         },
       ],

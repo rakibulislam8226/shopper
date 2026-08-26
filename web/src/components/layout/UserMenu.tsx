@@ -1,6 +1,4 @@
-import { useTheme } from '@app/ThemeProvider';
-import { Button } from '@components/ui/Button';
-import { MoonIcon, SunIcon } from '@components/ui/icons';
+import { Button, ButtonLink } from '@components/ui/Button';
 import { clearStoredSession } from '@lib/session';
 import { useAuthStore } from '@stores/auth';
 import { useState } from 'react';
@@ -17,8 +15,6 @@ export function UserMenu() {
   const navigate = useNavigate();
   const name = useAuthStore((state) => state.name);
   const [open, setOpen] = useState(false);
-  const { resolved, setMode } = useTheme();
-  const isDark = resolved === 'dark';
 
   if (!name) return null;
 
@@ -60,17 +56,17 @@ export function UserMenu() {
               <p className="truncate text-sm font-semibold text-text-primary">{name}</p>
             </div>
 
-            <Button
+            <ButtonLink
+              to="/dashboard/settings/appearance"
               variant="ghost"
               size="lg"
               fullWidth
               role="menuitem"
-              onClick={() => setMode(isDark ? 'light' : 'dark')}
-              className="justify-between rounded-none"
+              onClick={() => setOpen(false)}
+              className="justify-start rounded-none"
             >
-              <span>{isDark ? 'Dark mode' : 'Light mode'}</span>
-              {isDark ? <MoonIcon className="h-4 w-4" /> : <SunIcon className="h-4 w-4" />}
-            </Button>
+              Appearance
+            </ButtonLink>
 
             <Button
               variant="ghost"

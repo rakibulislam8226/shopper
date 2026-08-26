@@ -20,6 +20,7 @@ export const ROUTES = {
       root: '/dashboard/settings',
       profile: '/dashboard/settings/profile',
       documents: '/dashboard/settings/documents',
+      appearance: '/dashboard/settings/appearance',
     },
   },
 } as const;

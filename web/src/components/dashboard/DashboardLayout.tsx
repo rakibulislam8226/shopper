@@ -96,7 +96,7 @@ export function DashboardLayout() {
           <div className="flex-1" />
 
           <span className="hidden items-center gap-2 rounded-full border border-edge-strong bg-panel px-3 py-1 text-xs text-text-muted sm:inline-flex">
-            <span className="h-1.5 w-1.5 rounded-full bg-amber-400" aria-hidden="true" />
+            <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
             Preview build
           </span>
         </header>

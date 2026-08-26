@@ -12,6 +12,12 @@
     height: 100%;
   }
 
+  html {
+    /* ~17px base instead of the browser default 16px — every rem-based
+       Tailwind text utility scales up from here, app-wide. */
+    font-size: 106.25%;
+  }
+
   body {
     margin: 0;
     font-family: var(--font-sans);

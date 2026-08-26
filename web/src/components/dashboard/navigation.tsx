@@ -39,6 +39,9 @@ const paths = {
     <path d="M2 7h20M2 5h20a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zM6 15h4" />
   ),
   file: <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8ZM14 2v6h6" />,
+  sun: (
+    <path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+  ),
 };
 
 export const NAV_SECTIONS: { heading: string; items: NavItem[] }[] = [
@@ -75,6 +78,7 @@ export const NAV_SECTIONS: { heading: string; items: NavItem[] }[] = [
         children: [
           { label: 'Shop details', path: '/dashboard/settings/profile', icon: paths.card },
           { label: 'Documents', path: '/dashboard/settings/documents', icon: paths.file },
+          { label: 'Appearance', path: '/dashboard/settings/appearance', icon: paths.sun },
         ],
       },
     ],

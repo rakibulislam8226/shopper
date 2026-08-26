@@ -57,12 +57,12 @@ export function OverviewPage() {
         description="Your organizations, inventory and sales at a glance."
       />
 
-      <div className="mb-6 flex items-start gap-3 rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3">
-        <span className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-amber-400" aria-hidden="true" />
-        <p className="text-sm text-amber-200/80">
-          <span className="font-medium">Frontend preview.</span> Authentication is live; the
-          reporting, product and sales endpoints are not built yet, so every figure below reads as
-          unavailable rather than showing sample data.
+      <div className="mb-6 flex items-start gap-3 rounded-xl border border-brand-ring bg-brand-soft px-4 py-3">
+        <span className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-brand" aria-hidden="true" />
+        <p className="text-sm text-text-secondary">
+          <span className="font-medium text-text-primary">Frontend preview.</span> Authentication
+          is live; the reporting, product and sales endpoints are not built yet, so every figure
+          below reads as unavailable rather than showing sample data.
         </p>
       </div>
 
