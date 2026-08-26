@@ -43,7 +43,7 @@ const METRICS: Metric[] = [
 
 function MetricCard({ label, hint, icon }: Metric) {
   return (
-    <article className="rounded-2xl border border-slate-700/70 bg-slate-800/40 p-5">
+    <article className="rounded-2xl border border-edge-strong bg-card p-5">
       <div className="mb-3 flex items-center justify-between">
         <span className="text-sm text-slate-400">{label}</span>
         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-700/60 text-slate-400">
@@ -103,7 +103,7 @@ export function OverviewPage() {
 
         <section>
           <h2 className="mb-3 text-sm font-semibold text-slate-300">Account</h2>
-          <div className="rounded-2xl border border-slate-700/70 bg-slate-800/40 p-5">
+          <div className="rounded-2xl border border-edge-strong bg-card p-5">
             <dl className="space-y-3 text-sm">
               <div className="flex items-center justify-between gap-4">
                 <dt className="text-slate-500">Signed in as</dt>
@@ -118,7 +118,7 @@ export function OverviewPage() {
                 <dd className="font-medium text-slate-300">Automatic</dd>
               </div>
             </dl>
-            <p className="mt-4 border-t border-slate-700/60 pt-4 text-xs leading-relaxed text-slate-600">
+            <p className="mt-4 border-t border-edge pt-4 text-xs leading-relaxed text-slate-600">
               Your access token refreshes in the background. You stay signed in until the refresh
               token expires.
             </p>

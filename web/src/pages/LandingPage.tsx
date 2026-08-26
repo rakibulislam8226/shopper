@@ -76,8 +76,8 @@ const STATS = [
 
 function FeatureCard({ title, description, icon: glyph }: Feature) {
   return (
-    <article className="group relative rounded-2xl border border-slate-700/70 bg-slate-800/40 p-6 transition-colors duration-200 hover:border-slate-700 hover:bg-slate-800/60">
-      <span className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-400 ring-1 ring-indigo-500/20 transition-colors group-hover:bg-indigo-500/15">
+    <article className="group relative rounded-2xl border border-edge-strong bg-card p-6 transition-colors duration-200 hover:border-slate-700 hover:bg-panel">
+      <span className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-brand-soft text-indigo-400 ring-1 ring-brand-ring transition-colors group-hover:bg-brand-hover/15">
         <svg
           viewBox="0 0 24 24"
           fill="none"
@@ -113,7 +113,7 @@ export function LandingPage() {
         />
 
         <div className="relative mx-auto flex max-w-3xl flex-col items-center text-center">
-          <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-slate-700/70 bg-slate-800/60 px-3 py-1 text-xs font-medium text-slate-300 backdrop-blur">
+          <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-edge-strong bg-panel px-3 py-1 text-xs font-medium text-slate-300 backdrop-blur">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden="true" />
             Multi-tenant shop management
           </span>
@@ -136,7 +136,7 @@ export function LandingPage() {
             </ButtonLink>
           </div>
 
-          <dl className="mt-14 grid w-full grid-cols-3 gap-4 border-t border-slate-700/60 pt-8">
+          <dl className="mt-14 grid w-full grid-cols-3 gap-4 border-t border-edge pt-8">
             {STATS.map((stat) => (
               <div key={stat.label} className="flex flex-col items-center gap-1">
                 <dt className="text-xl font-semibold text-slate-100 sm:text-2xl">{stat.value}</dt>
@@ -148,7 +148,7 @@ export function LandingPage() {
       </section>
 
       {/* ---- Features ---- */}
-      <section className="border-t border-slate-700/60 px-6 py-20 sm:py-24">
+      <section className="border-t border-edge px-6 py-20 sm:py-24">
         <div className="mx-auto max-w-6xl">
           <div className="mx-auto mb-14 max-w-2xl text-center">
             <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
@@ -169,8 +169,8 @@ export function LandingPage() {
       </section>
 
       {/* ---- Closing call to action ---- */}
-      <section className="border-t border-slate-700/60 px-6 py-20">
-        <div className="relative mx-auto max-w-4xl overflow-hidden rounded-3xl border border-slate-700/70 bg-slate-800/40 px-8 py-14 text-center">
+      <section className="border-t border-edge px-6 py-20">
+        <div className="relative mx-auto max-w-4xl overflow-hidden rounded-3xl border border-edge-strong bg-card px-8 py-14 text-center">
           <div
             aria-hidden="true"
             className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_60%_at_50%_100%,rgba(139,92,246,0.16),transparent_70%)]"

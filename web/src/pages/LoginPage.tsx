@@ -51,7 +51,7 @@ export function LoginPage() {
 
         <form
           onSubmit={handleSubmit}
-          className="flex flex-col gap-4 rounded-xl border border-slate-700/70 bg-slate-800/40 p-6"
+          className="flex flex-col gap-4 rounded-xl border border-edge-strong bg-card p-6"
         >
           <label className="flex flex-col gap-1.5">
             <span className="text-xs font-medium text-slate-400">Phone</span>
@@ -64,7 +64,7 @@ export function LoginPage() {
               autoComplete="tel"
               autoFocus
               placeholder="01XXXXXXXXX"
-              className="rounded-lg border border-slate-600/70 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 outline-none transition-colors placeholder:text-slate-600 focus:border-indigo-500"
+              className="rounded-lg border border-edge-strong bg-inset px-3 py-2 text-sm text-slate-100 outline-none transition-colors placeholder:text-slate-600 focus:border-indigo-500"
             />
           </label>
 
@@ -78,7 +78,7 @@ export function LoginPage() {
               required
               autoComplete="current-password"
               placeholder="••••••••"
-              className="rounded-lg border border-slate-600/70 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 outline-none transition-colors placeholder:text-slate-600 focus:border-indigo-500"
+              className="rounded-lg border border-edge-strong bg-inset px-3 py-2 text-sm text-slate-100 outline-none transition-colors placeholder:text-slate-600 focus:border-indigo-500"
             />
           </label>
 

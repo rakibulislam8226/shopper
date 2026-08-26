@@ -5,7 +5,7 @@ const YEAR = new Date().getFullYear();
 /** Site footer. Kept in the layout so every page ends the same way. */
 export function Footer() {
   return (
-    <footer className="border-t border-slate-700/60 px-6 py-8">
+    <footer className="border-t border-edge px-6 py-8">
       <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 text-xs text-slate-500 sm:flex-row">
         <p>© {YEAR} shopper — multi-tenant shop management.</p>
 

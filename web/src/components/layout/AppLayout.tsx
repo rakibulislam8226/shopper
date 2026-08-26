@@ -10,7 +10,7 @@ import { Navbar } from './Navbar';
  */
 export function AppLayout() {
   return (
-    <div className="flex min-h-screen flex-col bg-slate-900 text-slate-100">
+    <div className="flex min-h-screen flex-col bg-surface text-slate-100">
       <Navbar />
       <main className="flex flex-1 flex-col">
         <Outlet />

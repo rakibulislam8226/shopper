@@ -8,15 +8,15 @@ export type ButtonSize = 'sm' | 'md' | 'lg' | 'icon';
 const BASE_CLASSES =
   'inline-flex cursor-pointer select-none items-center justify-center gap-2 rounded-lg font-semibold ' +
   'transition-all duration-200 outline-none ' +
-  'focus-visible:ring-2 focus-visible:ring-indigo-500/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ' +
+  'focus-visible:ring-2 focus-visible:ring-indigo-500/70 focus-visible:ring-offset-2 focus-visible:ring-offset-surface ' +
   'active:scale-[0.98] ' +
   'disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100 ' +
   'aria-disabled:cursor-not-allowed aria-disabled:opacity-60';
 
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
-  primary: 'bg-indigo-600 text-white shadow-sm hover:bg-indigo-500',
-  secondary: 'border border-slate-700 bg-slate-800/80 text-slate-200 hover:bg-slate-700/80',
-  ghost: 'text-slate-300 hover:bg-slate-800 hover:text-slate-100',
+  primary: 'bg-brand text-white shadow-sm hover:bg-brand-hover',
+  secondary: 'border border-edge-strong bg-elevated/80 text-slate-200 hover:bg-elevated',
+  ghost: 'text-slate-300 hover:bg-panel hover:text-slate-100',
   danger: 'bg-rose-600 text-white shadow-sm hover:bg-rose-500',
   plain: '',
 };

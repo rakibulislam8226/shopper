@@ -1,6 +1,10 @@
 @import 'tailwindcss';
+@import './theme.css';
 
-/* Base theme tokens. Extend via Tailwind v4's @theme in later phases. */
+/*
+ * Base element styles only. Every colour and type decision lives in
+ * `theme.css` — keep this file about layout primitives.
+ */
 @layer base {
   html,
   body,
@@ -10,12 +14,9 @@
 
   body {
     margin: 0;
-    font-family:
-      system-ui,
-      -apple-system,
-      'Segoe UI',
-      Roboto,
-      sans-serif;
+    font-family: var(--font-sans);
+    background-color: var(--color-surface);
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }

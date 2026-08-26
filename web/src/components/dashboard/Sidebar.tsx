@@ -57,18 +57,18 @@ export function Sidebar({
   };
 
   const linkClasses = ({ isActive }: { isActive: boolean }) =>
-    `flex items-center rounded-lg text-sm transition-colors duration-150 ${
+    `flex items-center rounded-lg text-nav transition-colors duration-150 ${
       collapsed ? 'justify-center px-0 py-2.5' : 'gap-3 px-3 py-2'
     } ${
       isActive
-        ? 'bg-indigo-500/10 font-semibold text-indigo-300 ring-1 ring-indigo-500/20'
-        : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
+        ? 'bg-brand-soft font-semibold text-brand-text ring-1 ring-brand-ring'
+        : 'text-slate-400 hover:bg-panel hover:text-slate-200'
     }`;
 
   return (
-    <div className="flex h-full flex-col border-r border-slate-700/60 bg-slate-800/40">
+    <div className="flex h-full flex-col border-r border-edge bg-card">
       <div
-        className={`flex h-16 shrink-0 items-center border-b border-slate-700/60 ${
+        className={`flex h-16 shrink-0 items-center border-b border-edge ${
           collapsed ? 'justify-center px-0' : 'px-5'
         }`}
       >
@@ -81,9 +81,9 @@ export function Sidebar({
             {collapsed ? (
               // A heading has nothing to say without its labels; the divider
               // keeps the grouping readable in the rail.
-              <div className="mx-2 mb-2 border-t border-slate-700/60" aria-hidden="true" />
+              <div className="mx-2 mb-2 border-t border-edge" aria-hidden="true" />
             ) : (
-              <p className="mb-2 px-3 text-[11px] font-semibold tracking-wider text-slate-600 uppercase">
+              <p className="mb-2 px-3 text-[11px] font-semibold tracking-[0.08em] text-slate-500 uppercase">
                 {section.heading}
               </p>
             )}
@@ -106,7 +106,7 @@ export function Sidebar({
                       <>
                         <span className="flex-1">{item.label}</span>
                         {item.badge ? (
-                          <span className="rounded-full bg-slate-700/70 px-1.5 py-0.5 text-[10px] font-medium text-slate-500">
+                          <span className="rounded-full bg-elevated px-1.5 py-0.5 text-[10px] font-medium text-slate-400">
                             {item.badge}
                           </span>
                         ) : null}
@@ -121,7 +121,7 @@ export function Sidebar({
       </nav>
 
       <div
-        className={`flex shrink-0 border-t border-slate-700/60 ${
+        className={`flex shrink-0 border-t border-edge ${
           collapsed ? 'flex-col items-center gap-2 p-3' : 'items-center gap-3 p-4'
         }`}
       >
@@ -134,7 +134,7 @@ export function Sidebar({
 
         {collapsed ? null : (
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-slate-200">{name}</p>
+            <p className="truncate text-nav text-slate-200">{name}</p>
             <p className="text-xs text-slate-500">Signed in</p>
           </div>
         )}
@@ -147,7 +147,7 @@ export function Sidebar({
           onClick={handleSignOut}
           aria-label="Sign out"
           title="Sign out"
-          className="shrink-0 rounded-lg text-slate-500 hover:bg-slate-800 hover:text-rose-400"
+          className="shrink-0 rounded-lg text-slate-500 hover:bg-panel hover:text-rose-400"
         >
           <svg
             viewBox="0 0 24 24"

@@ -1,0 +1,55 @@
+/**
+ * Theme configuration — the single place colours and type are decided.
+ *
+ * Every token below becomes a real Tailwind utility at build time, so
+ * `--color-surface` is usable as `bg-surface`, `text-surface`,
+ * `border-surface`, and so on. Components reference these semantic names
+ * instead of raw palette steps: changing the whole look is editing this file,
+ * not sweeping a dozen components.
+ *
+ * Naming is by ROLE, not by shade. `surface` stays "the page background" even
+ * if it later turns light, whereas a name like `slate-900` would become a lie
+ * the moment the value moved.
+ */
+@theme {
+  /* ---- Surfaces, from furthest back to closest to the reader ---- */
+
+  /* The page itself. */
+  --color-surface: #0f172a;
+  /* Sticky chrome (navbar, topbar) — the page colour, translucent over content. */
+  --color-surface-overlay: rgb(15 23 42 / 0.85);
+  /* Sidebar and other standing chrome, lifted a step off the page. */
+  --color-panel: rgb(30 41 59 / 0.4);
+  /* Cards and sections sitting on the page. */
+  --color-card: rgb(30 41 59 / 0.4);
+  /* Menus and popovers — opaque, because they float over other content. */
+  --color-elevated: #1e293b;
+  /* Recessed areas: form inputs, wells. Darker than whatever holds them. */
+  --color-inset: rgb(2 6 23 / 0.6);
+  /* Scrim behind the mobile drawer. */
+  --color-scrim: rgb(2 6 23 / 0.7);
+
+  /* ---- Edges ---- */
+  --color-edge: rgb(51 65 85 / 0.6);
+  --color-edge-strong: rgb(51 65 85 / 0.7);
+
+  /* ---- Brand and accents ---- */
+  --color-brand: #4f46e5;
+  --color-brand-hover: #6366f1;
+  --color-brand-soft: rgb(99 102 241 / 0.1);
+  --color-brand-ring: rgb(99 102 241 / 0.2);
+  --color-brand-text: #a5b4fc;
+
+  /* ---- Typography ----
+     Inter is the interface face: designed for screens, with the tall x-height
+     and unambiguous 1/l/I that a data-dense admin panel needs. The stack falls
+     back to the platform UI font, so nothing breaks if the webfont is absent. */
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+
+  /* Sidebar navigation type. Named rather than inlined so the whole nav
+     re-sizes from one line. */
+  --text-nav: 0.9375rem; /* 15px — a step up from the 14px body default */
+  --text-nav--line-height: 1.25rem;
+  --text-nav--font-weight: 500;
+  --text-nav--letter-spacing: -0.006em;
+}
