@@ -12,7 +12,14 @@ from app.core.response import success_response
 from app.db.session import get_db
 from app.modules.users import service
 from app.modules.users.models import User
-from app.modules.users.schemas import LoginRequest, RefreshRequest, SwitchActiveShopRequest
+from app.modules.users.schemas import (
+    ForgotPasswordRequest,
+    LoginRequest,
+    RefreshRequest,
+    ResetPasswordRequest,
+    SwitchActiveShopRequest,
+    VerifyResetOtpRequest,
+)
 
 router = APIRouter(tags=["users-auth"])
 
@@ -55,5 +62,48 @@ async def switch_active_shop(
     return success_response(
         data=result.model_dump(mode="json"),
         message="Active shop switched",
+        status_code=status.HTTP_200_OK,
+    )
+
+
+@router.post("/forgot-password", summary="Request a password-reset OTP")
+@rate_limit(times=3, seconds=60)  # SMS is the expensive/abusable path
+async def forgot_password(
+    payload: ForgotPasswordRequest,
+    db: AsyncSession = Depends(get_db),
+) -> JSONResponse:
+    await service.forgot_password(db, payload)
+    # Always the same response, whether or not the phone is registered.
+    return success_response(
+        data=None,
+        message="If that phone number is registered, an OTP has been sent.",
+        status_code=status.HTTP_200_OK,
+    )
+
+
+@router.post("/verify-reset-otp", summary="Verify a password-reset OTP")
+@rate_limit(times=10, seconds=60)  # a handful of typo retries, not a brute-force window
+async def verify_reset_otp(
+    payload: VerifyResetOtpRequest,
+    db: AsyncSession = Depends(get_db),
+) -> JSONResponse:
+    result = await service.verify_reset_otp(db, payload)
+    return success_response(
+        data=result.model_dump(mode="json"),
+        message="OTP verified",
+        status_code=status.HTTP_200_OK,
+    )
+
+
+@router.post("/reset-password", summary="Set a new password with a verified reset token")
+@rate_limit(times=10, seconds=60)
+async def reset_password(
+    payload: ResetPasswordRequest,
+    db: AsyncSession = Depends(get_db),
+) -> JSONResponse:
+    await service.reset_password(db, payload)
+    return success_response(
+        data=None,
+        message="Password reset successfully",
         status_code=status.HTTP_200_OK,
     )

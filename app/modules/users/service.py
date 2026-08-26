@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import secrets
 from datetime import UTC, datetime
 from uuid import UUID
 
@@ -11,6 +12,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import settings
 from app.core.exceptions import AppError
 from app.core.logging import get_logger
+from app.core.otp import send_otp
+from app.core.otp import verify_otp as verify_otp_code
 from app.core.security import (
     TokenError,
     create_access_token,
@@ -26,15 +29,27 @@ from app.modules.shops.repository import get_shop_by_uid
 from app.modules.users.models import User
 from app.modules.users.repository import get_user_by_phone, get_user_by_uid
 from app.modules.users.schemas import (
+    ForgotPasswordRequest,
     LoginResponse,
     RefreshResponse,
+    ResetPasswordRequest,
     SwitchActiveShopResponse,
     TokenPair,
     UserPublic,
+    VerifyResetOtpRequest,
+    VerifyResetOtpResponse,
 )
 from app.redis.client import redis_client
 
 logger = get_logger(__name__)
+
+_PASSWORD_RESET_OTP_PURPOSE = "password_reset"
+
+# Separate from the OTP's own TTL: the reset token is minted only after the
+# OTP already verified, so this window is "how long to finish typing a new
+# password", not "how long the SMS code is valid".
+_RESET_TOKEN_TTL_SECONDS = 300
+_RESET_TOKEN_KEY = "password_reset_token:{token}"
 
 # Deliberately identical for "no such phone" and "wrong password" — a distinct
 # message would turn the endpoint into a phone-number oracle.
@@ -189,6 +204,70 @@ async def switch_active_shop(
 
     logger.info("shop_switched", user_uid=str(user.uid), shop_uid=str(shop.uid))
     return SwitchActiveShopResponse(user=UserPublic.model_validate(user))
+
+
+async def forgot_password(db: AsyncSession, payload: ForgotPasswordRequest) -> None:
+    """Send a password-reset OTP if ``payload.phone`` belongs to a user.
+
+    Always succeeds from the caller's point of view — silently doing nothing
+    for an unregistered phone is deliberate: a distinct response here would
+    let anyone use this endpoint to discover which phone numbers have
+    accounts.
+    """
+    user = await get_user_by_phone(db, payload.phone)
+    if user is None:
+        logger.info("forgot_password_unknown_phone", phone=payload.phone)
+        return
+
+    await send_otp(payload.phone, _PASSWORD_RESET_OTP_PURPOSE)
+    logger.info("forgot_password_otp_sent", user_uid=str(user.uid))
+
+
+async def verify_reset_otp(
+    db: AsyncSession, payload: VerifyResetOtpRequest
+) -> VerifyResetOtpResponse:
+    """Verify a password-reset OTP and mint a short-lived, single-use reset token.
+
+    The token — not the phone — is what `reset_password` trusts, so the
+    client never has to resend the phone number (or the OTP) alongside the
+    new password.
+    """
+    user = await get_user_by_phone(db, payload.phone)
+    if user is None or not await verify_otp_code(
+        payload.phone, _PASSWORD_RESET_OTP_PURPOSE, payload.code
+    ):
+        logger.info("reset_otp_verify_failed", phone=payload.phone)
+        raise AppError("Invalid or expired OTP", status_code=status.HTTP_400_BAD_REQUEST)
+
+    token = secrets.token_urlsafe(32)
+    await redis_client.set(
+        _RESET_TOKEN_KEY.format(token=token), str(user.uid), ex=_RESET_TOKEN_TTL_SECONDS
+    )
+
+    logger.info("reset_otp_verified", user_uid=str(user.uid))
+    return VerifyResetOtpResponse(reset_token=token, expires_in=_RESET_TOKEN_TTL_SECONDS)
+
+
+async def reset_password(db: AsyncSession, payload: ResetPasswordRequest) -> None:
+    """Consume a reset token and set the account's new password.
+
+    The token is deleted before the password is touched: a retried or raced
+    request with the same token fails cleanly instead of resetting twice.
+    """
+    key = _RESET_TOKEN_KEY.format(token=payload.reset_token)
+    user_uid = await redis_client.get(key)
+    if user_uid is None:
+        raise AppError("Invalid or expired reset link", status_code=status.HTTP_400_BAD_REQUEST)
+    await redis_client.delete(key)
+
+    user = await get_user_by_uid(db, UUID(user_uid))
+    if user is None:
+        raise AppError("Invalid or expired reset link", status_code=status.HTTP_400_BAD_REQUEST)
+
+    user.password_hash = hash_password(payload.new_password)
+    await db.commit()
+
+    logger.info("password_reset_succeeded", user_uid=str(user.uid))
 
 
 def _shop_unavailable_message(shop_status: ShopStatus) -> str:

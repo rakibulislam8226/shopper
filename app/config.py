@@ -70,6 +70,15 @@ class Settings(BaseSettings):
     aws_secret_access_key: str = ""
     aws_s3_base_url: str = ""
 
+    # ---- OTP (password reset) ----
+    # Dev/staging convenience: every OTP is the fixed code below instead of a
+    # random one, and no SMS is sent — no SMS provider credentials are needed.
+    # Must be false in production.
+    use_fixed_otp: bool = True
+    fixed_otp: str = "1234"
+    otp_length: int = Field(default=4, ge=4, le=8)
+    otp_ttl_seconds: int = Field(default=120, gt=0)
+
     # ---- Rate limiting (wired in later phases) ----
     rate_limit_times: int = 20
     rate_limit_seconds: int = 60

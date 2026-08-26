@@ -51,6 +51,67 @@ export function useLogin() {
   });
 }
 
+export interface ForgotPasswordPayload {
+  phone: string;
+}
+
+/**
+ * POST /api/users/forgot-password — requests an OTP for the given phone.
+ * Always resolves the same way whether or not the phone is registered, so
+ * the UI must not branch on the response to reveal account existence.
+ */
+export function useForgotPassword() {
+  return useMutation({
+    mutationFn: async (payload: ForgotPasswordPayload) => {
+      const response = await axios.post<ApiResponse<null>>('/users/forgot-password', payload, {
+        toast: { error: 'Unable to send the code' },
+      });
+      return response.data;
+    },
+  });
+}
+
+export interface VerifyResetOtpPayload {
+  phone: string;
+  code: string;
+}
+
+export interface VerifyResetOtpData {
+  reset_token: string;
+  expires_in: number;
+}
+
+/** POST /api/users/verify-reset-otp — trades a correct OTP for a one-time reset token. */
+export function useVerifyResetOtp() {
+  return useMutation({
+    mutationFn: async (payload: VerifyResetOtpPayload) => {
+      const response = await axios.post<ApiResponse<VerifyResetOtpData>>(
+        '/users/verify-reset-otp',
+        payload,
+        { toast: { error: 'Unable to verify the code' } },
+      );
+      return response.data;
+    },
+  });
+}
+
+export interface ResetPasswordPayload {
+  reset_token: string;
+  new_password: string;
+}
+
+/** POST /api/users/reset-password — consumes the reset token, sets the new password. */
+export function useResetPassword() {
+  return useMutation({
+    mutationFn: async (payload: ResetPasswordPayload) => {
+      const response = await axios.post<ApiResponse<null>>('/users/reset-password', payload, {
+        toast: { error: 'Unable to reset password' },
+      });
+      return response.data;
+    },
+  });
+}
+
 export interface SwitchActiveShopPayload {
   shop_uid: string;
 }

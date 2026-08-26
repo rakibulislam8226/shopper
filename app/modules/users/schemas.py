@@ -79,3 +79,34 @@ class SwitchActiveShopResponse(BaseModel):
     """Payload placed in the standard envelope's `data` field on shop switch."""
 
     user: UserPublic
+
+
+class ForgotPasswordRequest(BaseModel):
+    """Body for `POST /api/users/forgot-password`."""
+
+    phone: str = Field(min_length=3, max_length=32, examples=["+8801700000000"])
+
+
+class VerifyResetOtpRequest(BaseModel):
+    """Body for `POST /api/users/verify-reset-otp`."""
+
+    phone: str = Field(min_length=3, max_length=32)
+    code: str = Field(min_length=4, max_length=8)
+
+
+class VerifyResetOtpResponse(BaseModel):
+    """Payload placed in the standard envelope's `data` field on OTP success.
+
+    ``reset_token`` proves phone ownership for the *next* call only — it is
+    not an access token and grants no API access beyond `reset-password`.
+    """
+
+    reset_token: str
+    expires_in: int
+
+
+class ResetPasswordRequest(BaseModel):
+    """Body for `POST /api/users/reset-password`."""
+
+    reset_token: str = Field(min_length=1)
+    new_password: str = Field(min_length=8, max_length=128, examples=["N3wSecret!"])
