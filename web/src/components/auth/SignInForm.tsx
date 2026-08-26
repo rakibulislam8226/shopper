@@ -79,7 +79,7 @@ export function SignInForm() {
         fullWidth
         isLoading={login.isPending}
         loadingText="Signing in…"
-        className="mt-1"
+        className="mt-1 shadow-lg shadow-indigo-500/25 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-indigo-500/30"
       >
         Sign in
       </Button>

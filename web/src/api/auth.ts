@@ -57,8 +57,8 @@ export interface ForgotPasswordPayload {
 
 /**
  * POST /api/users/forgot-password — requests an OTP for the given phone.
- * Always resolves the same way whether or not the phone is registered, so
- * the UI must not branch on the response to reveal account existence.
+ * Rejects with a distinct "phone not registered" error (surfaced via the
+ * `toast` config) when the phone has no account.
  */
 export function useForgotPassword() {
   return useMutation({
@@ -98,6 +98,7 @@ export function useVerifyResetOtp() {
 export interface ResetPasswordPayload {
   reset_token: string;
   new_password: string;
+  confirm_password: string;
 }
 
 /** POST /api/users/reset-password — consumes the reset token, sets the new password. */

@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 if TYPE_CHECKING:
     from app.modules.shops.schemas import ShopPublic
@@ -110,3 +110,10 @@ class ResetPasswordRequest(BaseModel):
 
     reset_token: str = Field(min_length=1)
     new_password: str = Field(min_length=8, max_length=128, examples=["N3wSecret!"])
+    confirm_password: str = Field(min_length=8, max_length=128, examples=["N3wSecret!"])
+
+    @model_validator(mode="after")
+    def _passwords_must_match(self) -> ResetPasswordRequest:
+        if self.new_password != self.confirm_password:
+            raise ValueError("Password and confirm password do not match")
+        return self

@@ -26,6 +26,15 @@ export function AuthShell({
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 mask-[radial-gradient(ellipse_50%_40%_at_50%_0%,black,transparent)] bg-[linear-gradient(to_right,rgba(148,163,184,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.06)_1px,transparent_1px)] bg-size-[56px_56px]"
       />
+      <div
+        aria-hidden="true"
+        className="animate-drift pointer-events-none absolute top-1/3 left-[12%] h-64 w-64 rounded-full bg-indigo-500/10 blur-3xl"
+      />
+      <div
+        aria-hidden="true"
+        style={{ animationDuration: '18s', animationDirection: 'reverse' }}
+        className="animate-drift pointer-events-none absolute right-[12%] bottom-1/4 h-72 w-72 rounded-full bg-purple-500/10 blur-3xl"
+      />
 
       <div className="relative w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center gap-3 text-center">
@@ -36,7 +45,7 @@ export function AuthShell({
           </div>
         </div>
 
-        <div className="rounded-2xl border border-edge-strong bg-card p-6 shadow-2xl shadow-black/20 backdrop-blur">
+        <div className="rounded-3xl border border-edge-strong bg-card p-6 shadow-2xl shadow-black/20 backdrop-blur">
           {children}
         </div>
       </div>

@@ -21,6 +21,7 @@ export interface RegisterShopPayload {
   owner_name: string;
   phone: string;
   password: string;
+  confirm_password: string;
   shop_name: string;
   shop_email?: string;
   shop_phone?: string;

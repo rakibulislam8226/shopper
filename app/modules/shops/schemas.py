@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.db.enums import ShopDocumentType, ShopStatus
 from app.modules.users.schemas import TokenPair, UserPublic
@@ -25,12 +25,19 @@ class ShopRegisterRequest(BaseModel):
     owner_name: str = Field(min_length=1, max_length=255)
     phone: str = Field(min_length=3, max_length=32, examples=["+8801700000000"])
     password: str = Field(min_length=8, max_length=128, examples=["S3cret!pass"])
+    confirm_password: str = Field(min_length=8, max_length=128, examples=["S3cret!pass"])
 
     shop_name: str = Field(min_length=1, max_length=255)
     shop_email: str | None = Field(default=None, max_length=255)
     shop_phone: str | None = Field(default=None, max_length=32)
     shop_address: str | None = Field(default=None, max_length=500)
     shop_logo: str | None = Field(default=None, max_length=500)
+
+    @model_validator(mode="after")
+    def _passwords_must_match(self) -> ShopRegisterRequest:
+        if self.password != self.confirm_password:
+            raise ValueError("Password and confirm password do not match")
+        return self
 
 
 class ShopPublic(BaseModel):

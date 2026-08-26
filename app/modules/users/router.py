@@ -73,10 +73,9 @@ async def forgot_password(
     db: AsyncSession = Depends(get_db),
 ) -> JSONResponse:
     await service.forgot_password(db, payload)
-    # Always the same response, whether or not the phone is registered.
     return success_response(
         data=None,
-        message="If that phone number is registered, an OTP has been sent.",
+        message="An OTP has been sent to your phone.",
         status_code=status.HTTP_200_OK,
     )
 

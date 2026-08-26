@@ -209,15 +209,14 @@ async def switch_active_shop(
 async def forgot_password(db: AsyncSession, payload: ForgotPasswordRequest) -> None:
     """Send a password-reset OTP if ``payload.phone`` belongs to a user.
 
-    Always succeeds from the caller's point of view — silently doing nothing
-    for an unregistered phone is deliberate: a distinct response here would
-    let anyone use this endpoint to discover which phone numbers have
-    accounts.
+    Deliberately reveals whether the phone is registered (raises 404 if not)
+    — a product choice made for clearer UX on this internal shop-management
+    tool, at the cost of the usual enumeration protection on this endpoint.
     """
     user = await get_user_by_phone(db, payload.phone)
     if user is None:
         logger.info("forgot_password_unknown_phone", phone=payload.phone)
-        return
+        raise AppError("This phone number is not registered", status_code=status.HTTP_404_NOT_FOUND)
 
     await send_otp(payload.phone, _PASSWORD_RESET_OTP_PURPOSE)
     logger.info("forgot_password_otp_sent", user_uid=str(user.uid))

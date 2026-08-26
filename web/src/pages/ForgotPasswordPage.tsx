@@ -27,10 +27,13 @@ export function ForgotPasswordPage() {
   const [code, setCode] = useState('');
   const [resetToken, setResetToken] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   const forgotPassword = useForgotPassword();
   const verifyOtp = useVerifyResetOtp();
   const resetPassword = useResetPassword();
+
+  const passwordsMismatch = confirmPassword.length > 0 && newPassword !== confirmPassword;
 
   const handleRequestOtp = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -54,8 +57,9 @@ export function ForgotPasswordPage() {
 
   const handleResetPassword = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (passwordsMismatch) return;
     resetPassword.mutate(
-      { reset_token: resetToken, new_password: newPassword },
+      { reset_token: resetToken, new_password: newPassword, confirm_password: confirmPassword },
       { onSuccess: () => setStep('done') },
     );
   };
@@ -84,7 +88,7 @@ export function ForgotPasswordPage() {
             fullWidth
             isLoading={forgotPassword.isPending}
             loadingText="Sending code…"
-            className="mt-1"
+            className="mt-1 shadow-lg shadow-indigo-500/25 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-indigo-500/30"
           >
             Send code
           </Button>
@@ -123,7 +127,7 @@ export function ForgotPasswordPage() {
             fullWidth
             isLoading={verifyOtp.isPending}
             loadingText="Verifying…"
-            className="mt-1"
+            className="mt-1 shadow-lg shadow-indigo-500/25 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-indigo-500/30"
           >
             Verify code
           </Button>
@@ -163,13 +167,26 @@ export function ForgotPasswordPage() {
             placeholder="At least 8 characters"
           />
 
+          <AuthInput
+            label="Confirm new password"
+            icon={<LockIcon />}
+            type="password"
+            value={confirmPassword}
+            onChange={(event) => setConfirmPassword(event.target.value)}
+            required
+            minLength={8}
+            autoComplete="new-password"
+            placeholder="Type it once more"
+            error={passwordsMismatch ? "Passwords don't match" : undefined}
+          />
+
           <Button
             type="submit"
             size="lg"
             fullWidth
             isLoading={resetPassword.isPending}
             loadingText="Resetting…"
-            className="mt-1"
+            className="mt-1 shadow-lg shadow-indigo-500/25 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-indigo-500/30"
           >
             Reset password
           </Button>
