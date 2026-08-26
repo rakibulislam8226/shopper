@@ -8,7 +8,7 @@ export type ButtonSize = 'sm' | 'md' | 'lg' | 'icon';
 const BASE_CLASSES =
   'inline-flex cursor-pointer select-none items-center justify-center gap-2 rounded-lg font-semibold ' +
   'transition-all duration-200 outline-none ' +
-  'focus-visible:ring-2 focus-visible:ring-indigo-500/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 ' +
+  'focus-visible:ring-2 focus-visible:ring-indigo-500/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ' +
   'active:scale-[0.98] ' +
   'disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100 ' +
   'aria-disabled:cursor-not-allowed aria-disabled:opacity-60';

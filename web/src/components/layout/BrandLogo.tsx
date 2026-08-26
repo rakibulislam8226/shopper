@@ -12,7 +12,7 @@ export function BrandLogo({ iconOnly = false }: { iconOnly?: boolean }) {
       className="group flex items-center gap-2"
       title={iconOnly ? 'shopper' : undefined}
     >
-      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-md shadow-indigo-500/20 transition-transform duration-200 group-hover:scale-105">
+      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-linear-to-br from-indigo-500 to-purple-600 text-white shadow-md shadow-indigo-500/20 transition-transform duration-200 group-hover:scale-105">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"

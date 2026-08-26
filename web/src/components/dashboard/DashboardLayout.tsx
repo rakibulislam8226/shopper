@@ -26,7 +26,7 @@ export function DashboardLayout() {
   const toggleSidebar = useUiStore((state) => state.toggleSidebar);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
+    <div className="min-h-screen bg-slate-900 text-slate-100">
       {/* Desktop sidebar: full panel, or an icon rail when collapsed. */}
       <aside
         className={`fixed inset-y-0 left-0 z-30 hidden transition-[width] duration-200 ease-out lg:block ${
@@ -45,7 +45,7 @@ export function DashboardLayout() {
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           aria-expanded={!collapsed}
-          className="absolute top-[3.25rem] right-0 z-40 h-8 w-8 translate-x-1/2 rounded-lg border-slate-700 bg-slate-900 shadow-lg"
+          className="absolute top-[3.25rem] right-0 z-40 h-8 w-8 translate-x-1/2 rounded-lg border-slate-700 bg-slate-800 shadow-lg"
         >
           <PanelIcon collapsed={collapsed} />
         </Button>
@@ -71,7 +71,7 @@ export function DashboardLayout() {
           collapsed ? 'lg:pl-16' : 'lg:pl-64'
         }`}
       >
-        <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-slate-800/80 bg-slate-950/80 px-4 backdrop-blur-md sm:px-6">
+        <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-slate-700/60 bg-slate-900/85 px-4 backdrop-blur-md sm:px-6">
           {/* Below lg the sidebar is a drawer, so the trigger lives here. */}
           <Button
             variant="secondary"
@@ -95,7 +95,7 @@ export function DashboardLayout() {
 
           <div className="flex-1" />
 
-          <span className="hidden items-center gap-2 rounded-full border border-slate-800 bg-slate-900/70 px-3 py-1 text-xs text-slate-400 sm:inline-flex">
+          <span className="hidden items-center gap-2 rounded-full border border-slate-700/70 bg-slate-800/60 px-3 py-1 text-xs text-slate-400 sm:inline-flex">
             <span className="h-1.5 w-1.5 rounded-full bg-amber-400" aria-hidden="true" />
             Preview build
           </span>

@@ -50,9 +50,9 @@ export function UserMenu() {
 
           <div
             role="menu"
-            className="absolute right-0 z-50 mt-2 w-60 overflow-hidden rounded-xl border border-slate-800 bg-slate-900 shadow-xl"
+            className="absolute right-0 z-50 mt-2 w-60 overflow-hidden rounded-xl border border-slate-700/70 bg-slate-800 shadow-xl"
           >
-            <div className="border-b border-slate-800 px-4 py-3">
+            <div className="border-b border-slate-700/60 px-4 py-3">
               <p className="truncate text-sm font-semibold text-slate-100">{name}</p>
               <p className="text-xs text-slate-400">Signed in</p>
             </div>

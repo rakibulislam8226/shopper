@@ -66,9 +66,9 @@ export function Sidebar({
     }`;
 
   return (
-    <div className="flex h-full flex-col border-r border-slate-800/80 bg-slate-900/40">
+    <div className="flex h-full flex-col border-r border-slate-700/60 bg-slate-800/40">
       <div
-        className={`flex h-16 shrink-0 items-center border-b border-slate-800/80 ${
+        className={`flex h-16 shrink-0 items-center border-b border-slate-700/60 ${
           collapsed ? 'justify-center px-0' : 'px-5'
         }`}
       >
@@ -81,7 +81,7 @@ export function Sidebar({
             {collapsed ? (
               // A heading has nothing to say without its labels; the divider
               // keeps the grouping readable in the rail.
-              <div className="mx-2 mb-2 border-t border-slate-800/80" aria-hidden="true" />
+              <div className="mx-2 mb-2 border-t border-slate-700/60" aria-hidden="true" />
             ) : (
               <p className="mb-2 px-3 text-[11px] font-semibold tracking-wider text-slate-600 uppercase">
                 {section.heading}
@@ -106,7 +106,7 @@ export function Sidebar({
                       <>
                         <span className="flex-1">{item.label}</span>
                         {item.badge ? (
-                          <span className="rounded-full bg-slate-800 px-1.5 py-0.5 text-[10px] font-medium text-slate-500">
+                          <span className="rounded-full bg-slate-700/70 px-1.5 py-0.5 text-[10px] font-medium text-slate-500">
                             {item.badge}
                           </span>
                         ) : null}
@@ -121,7 +121,7 @@ export function Sidebar({
       </nav>
 
       <div
-        className={`flex shrink-0 border-t border-slate-800/80 ${
+        className={`flex shrink-0 border-t border-slate-700/60 ${
           collapsed ? 'flex-col items-center gap-2 p-3' : 'items-center gap-3 p-4'
         }`}
       >
