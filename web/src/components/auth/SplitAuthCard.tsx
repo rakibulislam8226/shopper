@@ -5,6 +5,8 @@ interface SplitAuthCardProps {
   panelTitle: string;
   /** Supporting copy under the panel title. */
   panelBody: string;
+  /** Icon badge above the title. Defaults to a lock, fitting the password-reset flow. */
+  panelIcon?: ReactNode;
   children: ReactNode;
 }
 
@@ -15,7 +17,7 @@ interface SplitAuthCardProps {
  * without the slide animation — forgot-password only ever shows one form at
  * a time, so there is nothing to slide between.
  */
-export function SplitAuthCard({ panelTitle, panelBody, children }: SplitAuthCardProps) {
+export function SplitAuthCard({ panelTitle, panelBody, panelIcon, children }: SplitAuthCardProps) {
   return (
     <div className="relative flex flex-1 items-center justify-center overflow-hidden px-6 py-12">
       <div
@@ -51,7 +53,7 @@ export function SplitAuthCard({ panelTitle, panelBody, children }: SplitAuthCard
             <SparkleIcon className="pointer-events-none absolute top-10 left-10 h-4 w-4 text-white/60" />
             <SparkleIcon className="pointer-events-none absolute right-14 bottom-16 h-3 w-3 text-white/40" />
             <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 text-white ring-1 ring-white/20 backdrop-blur">
-              <LockIcon />
+              {panelIcon ?? <LockIcon />}
             </span>
             <h2 className="text-2xl font-bold tracking-tight text-white">{panelTitle}</h2>
             <p className="max-w-xs text-sm leading-relaxed text-white/85">{panelBody}</p>

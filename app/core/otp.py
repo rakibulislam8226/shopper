@@ -66,4 +66,6 @@ async def verify_otp(phone: str, purpose: str, code: str) -> bool:
         return False
 
     await redis_client.delete(key)
-    return secrets.compare_digest(stored, code)
+    # redis_client is created with decode_responses=True, so this is always
+    # str at runtime — the client's stubs just don't express that.
+    return secrets.compare_digest(str(stored), code)

@@ -259,7 +259,9 @@ async def reset_password(db: AsyncSession, payload: ResetPasswordRequest) -> Non
         raise AppError("Invalid or expired reset link", status_code=status.HTTP_400_BAD_REQUEST)
     await redis_client.delete(key)
 
-    user = await get_user_by_uid(db, UUID(user_uid))
+    # redis_client is created with decode_responses=True, so this is always
+    # str at runtime — the client's stubs just don't express that.
+    user = await get_user_by_uid(db, UUID(str(user_uid)))
     if user is None:
         raise AppError("Invalid or expired reset link", status_code=status.HTTP_400_BAD_REQUEST)
 

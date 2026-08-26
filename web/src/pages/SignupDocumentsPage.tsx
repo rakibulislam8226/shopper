@@ -1,6 +1,6 @@
 import { type RegisterShopPayload, type ShopDocumentType, useRegisterShop } from '@api/shops';
-import { AuthShell } from '@components/auth/AuthShell';
 import { type SignupDetails } from '@components/auth/SignUpForm';
+import { SplitAuthCard } from '@components/auth/SplitAuthCard';
 import { Button } from '@components/ui/Button';
 import { useAuthStore, useIsAuthenticated } from '@stores/auth';
 import { useState } from 'react';
@@ -10,14 +10,36 @@ interface DocumentField {
   key: 'ownerNid' | 'tradeLicense' | 'tinCertificate' | 'otherDocument';
   type: ShopDocumentType;
   label: string;
+  description: string;
   required?: boolean;
 }
 
 const DOCUMENT_FIELDS: DocumentField[] = [
-  { key: 'ownerNid', type: 'owner_nid', label: 'Owner NID', required: true },
-  { key: 'tradeLicense', type: 'trade_license', label: 'Trade License' },
-  { key: 'tinCertificate', type: 'tin_certificate', label: 'TIN Certificate' },
-  { key: 'otherDocument', type: 'other', label: 'Other document' },
+  {
+    key: 'ownerNid',
+    type: 'owner_nid',
+    label: 'Owner NID',
+    description: 'A government-issued ID confirming who owns this shop.',
+    required: true,
+  },
+  {
+    key: 'tradeLicense',
+    type: 'trade_license',
+    label: 'Trade License',
+    description: 'Proof your business is registered to trade.',
+  },
+  {
+    key: 'tinCertificate',
+    type: 'tin_certificate',
+    label: 'TIN Certificate',
+    description: 'Your tax identification, for financial verification.',
+  },
+  {
+    key: 'otherDocument',
+    type: 'other',
+    label: 'Other document',
+    description: 'Anything else that supports your application.',
+  },
 ];
 
 /**
@@ -68,84 +90,184 @@ export function SignupDocumentsPage() {
   };
 
   return (
-    <AuthShell title="Verify your business" subtitle="The owner NID is required to continue">
-      <div className="flex flex-col gap-4">
-        <div className="flex items-start gap-3 rounded-lg border border-edge-strong bg-inset px-3.5 py-3">
-          <span
-            className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400"
-            aria-hidden="true"
+    <SplitAuthCard
+      panelTitle="Verify your business"
+      panelBody="A quick document check keeps every shop on the platform legitimate — most approvals clear within one business day."
+      panelIcon={<ShieldIcon />}
+    >
+      <div>
+        <h1 className="text-xl font-semibold tracking-tight text-slate-100">
+          Submit your documents
+        </h1>
+        <p className="mt-1 text-sm text-slate-400">
+          The owner NID is required; the rest can wait until later if you're in a hurry.
+        </p>
+      </div>
+
+      <div className="mt-5 flex flex-col gap-3">
+        {DOCUMENT_FIELDS.map(({ key, label, description, required }) => (
+          <DocumentRow
+            key={key}
+            label={label}
+            description={description}
+            required={required}
+            file={files[key]}
+            onSelect={(file) => setFiles((prev) => ({ ...prev, [key]: file }))}
           />
-          <p className="text-xs leading-relaxed text-slate-400">
-            Your shop will stay <span className="font-medium text-slate-200">pending review</span>{' '}
-            until a superuser approves it. Trade license, TIN certificate, and other documents are
-            optional and can be added later from settings.
-          </p>
-        </div>
+        ))}
+      </div>
 
-        <div className="flex flex-col gap-3">
-          {DOCUMENT_FIELDS.map(({ key, label, required }) => (
-            <div
-              key={key}
-              className="flex items-center justify-between gap-3 rounded-lg border border-edge-strong bg-inset px-3.5 py-3"
-            >
-              <div className="flex min-w-0 flex-col gap-1">
-                <span className="text-xs font-medium text-slate-300">
-                  {label}
-                  {required && <span className="ml-1 text-rose-400">*</span>}
-                </span>
-                <label className="w-fit cursor-pointer text-xs text-slate-500 hover:text-slate-300">
-                  <span className="truncate">
-                    {files[key]?.name ?? 'Choose a file (PDF, JPG, PNG)'}
-                  </span>
-                  <input
-                    type="file"
-                    accept=".pdf,.jpg,.jpeg,.png,.webp"
-                    onChange={(event) =>
-                      setFiles((prev) => ({ ...prev, [key]: event.target.files?.[0] }))
-                    }
-                    className="hidden"
-                  />
-                </label>
-              </div>
-              {files[key] && (
-                <button
-                  type="button"
-                  onClick={() => setFiles((prev) => ({ ...prev, [key]: undefined }))}
-                  className="shrink-0 text-xs font-medium text-slate-500 hover:text-slate-300"
-                >
-                  Remove
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
+      <Button
+        type="button"
+        size="lg"
+        fullWidth
+        disabled={!canSubmit}
+        isLoading={registerShop.isPending}
+        loadingText="Creating your shop…"
+        onClick={handleSubmit}
+        className="mt-5 shadow-lg shadow-indigo-500/25 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-indigo-500/30"
+      >
+        Create shop
+      </Button>
+      {!canSubmit && (
+        <p className="mt-2 text-center text-xs text-slate-500">
+          Attach the owner NID above to continue.
+        </p>
+      )}
 
-        <Button
-          type="button"
-          size="lg"
-          fullWidth
-          disabled={!canSubmit}
-          isLoading={registerShop.isPending}
-          loadingText="Creating your shop…"
-          onClick={handleSubmit}
-          className="mt-1 shadow-lg shadow-indigo-500/25 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-indigo-500/30"
-        >
-          Create shop
-        </Button>
-        {!canSubmit && (
-          <p className="text-center text-xs text-slate-500">
-            Attach the owner NID above to continue.
-          </p>
-        )}
+      <button
+        type="button"
+        onClick={() => void navigate('/signup')}
+        className="mt-3 w-full text-center text-xs font-medium text-slate-500 hover:text-slate-300"
+      >
+        Back to account details
+      </button>
+    </SplitAuthCard>
+  );
+}
 
+function DocumentRow({
+  label,
+  description,
+  required,
+  file,
+  onSelect,
+}: {
+  label: string;
+  description: string;
+  required?: boolean;
+  file: File | undefined;
+  onSelect: (file: File | undefined) => void;
+}) {
+  return (
+    <label
+      className={`group flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3.5 transition-colors ${
+        file
+          ? 'border-emerald-500/40 bg-emerald-500/5'
+          : 'border-edge-strong bg-inset hover:border-slate-600'
+      }`}
+    >
+      <span
+        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition-colors ${
+          file
+            ? 'bg-emerald-500/15 text-emerald-400'
+            : 'bg-elevated text-slate-500 group-hover:text-slate-300'
+        }`}
+      >
+        {file ? <CheckIcon /> : <FileIcon />}
+      </span>
+
+      <span className="min-w-0 flex-1">
+        <span className="flex items-center gap-1.5">
+          <span className="text-sm font-medium text-slate-200">{label}</span>
+          {required && (
+            <span className="rounded-full bg-rose-500/15 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-rose-400 uppercase">
+              Required
+            </span>
+          )}
+        </span>
+        <span className="mt-0.5 block truncate text-xs text-slate-500">
+          {file ? file.name : description}
+        </span>
+      </span>
+
+      {file ? (
         <button
           type="button"
-          onClick={() => void navigate('/signup')}
-          className="text-center text-xs font-medium text-slate-500 hover:text-slate-300"
+          onClick={(event) => {
+            event.preventDefault();
+            onSelect(undefined);
+          }}
+          className="shrink-0 text-xs font-medium text-slate-500 hover:text-rose-400"
         >
-          Back to account details
+          Remove
         </button>
-      </div>
-    </AuthShell>
+      ) : (
+        <span className="shrink-0 text-xs font-medium text-indigo-400 group-hover:text-indigo-300">
+          Choose file
+        </span>
+      )}
+
+      <input
+        type="file"
+        accept=".pdf,.jpg,.jpeg,.png,.webp"
+        onChange={(event) => onSelect(event.target.files?.[0])}
+        className="hidden"
+      />
+    </label>
+  );
+}
+
+function ShieldIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-6 w-6"
+      aria-hidden="true"
+    >
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
+      <path d="m9 12 2 2 4-4" />
+    </svg>
+  );
+}
+
+function FileIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-5 w-5"
+      aria-hidden="true"
+    >
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" />
+      <path d="M14 2v6h6" />
+    </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-5 w-5"
+      aria-hidden="true"
+    >
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
   );
 }
