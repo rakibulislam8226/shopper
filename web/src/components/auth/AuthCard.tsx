@@ -2,6 +2,9 @@ import { BrandMarkIcon, SparkleIcon } from '@components/ui/icons';
 import { type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 
+import signinShopImage from '@/assets/signin-shop.jpeg';
+import signupShopImage from '@/assets/signup-shop.jpeg';
+
 export type AuthMode = 'signin' | 'signup';
 
 interface AuthCardProps {
@@ -10,18 +13,23 @@ interface AuthCardProps {
   signUp: ReactNode;
 }
 
-const BRAND_COPY: Record<AuthMode, { title: string; body: string; to: string; cta: string }> = {
+const BRAND_COPY: Record<
+  AuthMode,
+  { title: string; body: string; to: string; cta: string; image: string }
+> = {
   signin: {
     title: 'New here?',
     body: 'Create a shop in minutes — inventory, staff roles, and sales, all in one place.',
     to: '/signup',
     cta: 'Create an account',
+    image: signupShopImage,
   },
   signup: {
     title: 'Welcome back',
     body: 'Sign in to pick up where you left off — your shop is waiting.',
     to: '/login',
     cta: 'Sign in instead',
+    image: signinShopImage,
   },
 };
 
@@ -58,7 +66,7 @@ export function AuthCard({ mode, signIn, signUp }: AuthCardProps) {
         className="animate-drift pointer-events-none absolute right-[10%] bottom-1/4 h-80 w-80 rounded-full bg-purple-500/10 blur-3xl"
       />
 
-      <div className="relative grid h-136 w-full max-w-4xl grid-cols-1 overflow-hidden rounded-3xl border border-edge-strong bg-card shadow-2xl shadow-black/30 md:grid-cols-2">
+      <div className="relative grid h-160 w-full max-w-5xl grid-cols-1 overflow-hidden rounded-3xl border border-edge-strong bg-card shadow-2xl shadow-black/30 md:grid-cols-2">
         {/* ---- Form layer: both forms always mounted, cross-faded by mode. ---- */}
         <div className="relative col-span-1 md:col-span-2 md:grid md:grid-cols-2">
           <FormPane active={mode === 'signin'} side="left">
@@ -77,6 +85,16 @@ export function AuthCard({ mode, signIn, signUp }: AuthCardProps) {
           }`}
         >
           <div className="relative flex h-full flex-col items-center justify-center gap-4 overflow-hidden bg-linear-to-br from-indigo-600 via-indigo-500 to-purple-600 px-10 text-center">
+            <img
+              src={copy.image}
+              alt=""
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+            />
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 bg-linear-to-t from-indigo-950/85 via-indigo-900/60 to-purple-900/40"
+            />
             <div
               aria-hidden="true"
               className="pointer-events-none absolute -top-24 -right-24 h-64 w-64 rounded-full bg-white/15 blur-2xl"
@@ -87,14 +105,16 @@ export function AuthCard({ mode, signIn, signUp }: AuthCardProps) {
             />
             <SparkleIcon className="pointer-events-none absolute top-10 left-10 h-4 w-4 text-white/60" />
             <SparkleIcon className="pointer-events-none absolute right-14 bottom-16 h-3 w-3 text-white/40" />
-            <span className="pointer-events-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 text-white ring-1 ring-white/20 backdrop-blur">
+            <span className="pointer-events-auto relative flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 text-white ring-1 ring-white/20 backdrop-blur">
               <BrandMarkIcon className="h-6 w-6" />
             </span>
-            <h2 className="text-2xl font-bold tracking-tight text-white">{copy.title}</h2>
-            <p className="max-w-xs text-sm leading-relaxed text-white/85">{copy.body}</p>
+            <h2 className="relative text-2xl font-bold tracking-tight text-white">
+              {copy.title}
+            </h2>
+            <p className="relative max-w-xs text-sm leading-relaxed text-white/85">{copy.body}</p>
             <Link
               to={copy.to}
-              className="pointer-events-auto mt-2 inline-flex items-center justify-center rounded-lg border border-white/30 px-4 py-2 text-sm font-semibold text-white transition-all duration-200 hover:scale-[1.03] hover:bg-white/10 active:scale-[0.98]"
+              className="pointer-events-auto relative mt-2 inline-flex items-center justify-center rounded-lg border border-white/30 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm transition-all duration-200 hover:scale-[1.03] hover:bg-white/10 active:scale-[0.98]"
             >
               {copy.cta}
             </Link>

@@ -35,6 +35,7 @@ export default defineConfig(({ mode }) => {
     server: {
       port,
       host: true,
+      origin: env.WEB_BASE_URL || `http://localhost:${port}`,
     },
     preview: {
       port,
