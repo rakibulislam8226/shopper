@@ -1,21 +1,46 @@
 import { useForgotPassword, useResetPassword, useVerifyResetOtp } from '@api/auth';
 import { AuthInput, LockIcon, PhoneIcon } from '@components/auth/AuthInput';
-import { AuthShell } from '@components/auth/AuthShell';
+import { SplitAuthCard } from '@components/auth/SplitAuthCard';
 import { Button } from '@components/ui/Button';
 import { type FormEvent, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 type Step = 'phone' | 'otp' | 'password' | 'done';
 
-const STEP_COPY: Record<Step, { title: string; subtitle: string }> = {
-  phone: { title: 'Reset your password', subtitle: 'Enter the phone number on your account' },
-  otp: { title: 'Check your phone', subtitle: 'Enter the code we sent you' },
-  password: { title: 'Set a new password', subtitle: 'Choose something you haven’t used before' },
-  done: { title: 'Password reset', subtitle: 'You can now sign in with your new password' },
+const STEP_COPY: Record<
+  Step,
+  { formTitle: string; formSubtitle: string; panelTitle: string; panelBody: string }
+> = {
+  phone: {
+    formTitle: 'Reset your password',
+    formSubtitle: 'Enter the phone number on your account',
+    panelTitle: 'Forgot your password?',
+    panelBody: "No problem — we'll send a verification code to get you back into your shop.",
+  },
+  otp: {
+    formTitle: 'Check your phone',
+    formSubtitle: 'Enter the code we sent you',
+    panelTitle: 'Almost there',
+    panelBody: 'The code only takes a couple of minutes to arrive — and to expire, so be quick.',
+  },
+  password: {
+    formTitle: 'Set a new password',
+    formSubtitle: 'Choose something you haven’t used before',
+    panelTitle: 'One last step',
+    panelBody: 'A strong, fresh password keeps your shop and your customers safe.',
+  },
+  done: {
+    formTitle: 'Password reset',
+    formSubtitle: 'You can now sign in with your new password',
+    panelTitle: 'All set',
+    panelBody: 'Your account is secured with your new password. Welcome back.',
+  },
 };
 
 /**
- * Phone → OTP → new password, three steps in one page. The OTP itself never
+ * Phone → OTP → new password, three steps in one page, sharing the same
+ * split-panel look as sign-in/sign-up (`SplitAuthCard`) rather than the
+ * plain centered card the rest of the app used to use. The OTP itself never
  * leaves the phone step's response — verifying it returns a short-lived
  * `reset_token` that step three submits instead, so the code can't be
  * replayed against a different phone number client-side.
@@ -64,12 +89,17 @@ export function ForgotPasswordPage() {
     );
   };
 
-  const { title, subtitle } = STEP_COPY[step];
+  const { formTitle, formSubtitle, panelTitle, panelBody } = STEP_COPY[step];
 
   return (
-    <AuthShell title={title} subtitle={subtitle}>
+    <SplitAuthCard panelTitle={panelTitle} panelBody={panelBody}>
+      <div className="mb-1">
+        <h1 className="text-xl font-semibold tracking-tight text-slate-100">{formTitle}</h1>
+        <p className="mt-1 text-sm text-slate-400">{formSubtitle}</p>
+      </div>
+
       {step === 'phone' && (
-        <form onSubmit={handleRequestOtp} className="flex flex-col gap-4">
+        <form onSubmit={handleRequestOtp} className="mt-5 flex flex-col gap-4">
           <AuthInput
             label="Phone number"
             icon={<PhoneIcon />}
@@ -103,7 +133,7 @@ export function ForgotPasswordPage() {
       )}
 
       {step === 'otp' && (
-        <form onSubmit={handleVerifyOtp} className="flex flex-col gap-4">
+        <form onSubmit={handleVerifyOtp} className="mt-5 flex flex-col gap-4">
           <p className="text-sm leading-relaxed text-slate-400">
             We sent a code to <span className="text-slate-200">{phone}</span>. It expires in a
             couple of minutes.
@@ -153,7 +183,7 @@ export function ForgotPasswordPage() {
       )}
 
       {step === 'password' && (
-        <form onSubmit={handleResetPassword} className="flex flex-col gap-4">
+        <form onSubmit={handleResetPassword} className="mt-5 flex flex-col gap-4">
           <AuthInput
             label="New password"
             icon={<LockIcon />}
@@ -194,7 +224,7 @@ export function ForgotPasswordPage() {
       )}
 
       {step === 'done' && (
-        <div className="flex flex-col items-center gap-4 text-center">
+        <div className="mt-5 flex flex-col items-center gap-4 text-center">
           <span className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20">
             <CheckIcon />
           </span>
@@ -206,12 +236,13 @@ export function ForgotPasswordPage() {
             size="lg"
             fullWidth
             onClick={() => void navigate('/login', { replace: true })}
+            className="shadow-lg shadow-indigo-500/25 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-indigo-500/30"
           >
             Back to sign in
           </Button>
         </div>
       )}
-    </AuthShell>
+    </SplitAuthCard>
   );
 }
 
