@@ -15,8 +15,14 @@ import sys
 
 from app.cli.seed_shop import (
     DEFAULT_NAME as SHOP_OWNER_NAME,
+)
+from app.cli.seed_shop import (
     DEFAULT_PASSWORD as SHOP_OWNER_PASSWORD,
+)
+from app.cli.seed_shop import (
     DEFAULT_PHONE as SHOP_OWNER_PHONE,
+)
+from app.cli.seed_shop import (
     DEFAULT_SHOP_NAME,
     seed_owner_shop,
 )

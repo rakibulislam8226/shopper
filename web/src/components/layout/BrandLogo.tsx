@@ -1,4 +1,4 @@
-import { BrandMarkIcon } from '@components/ui/icons';
+import logo from '../../assets/logo.jpeg';
 import { NavLink } from 'react-router-dom';
 
 /**
@@ -13,8 +13,8 @@ export function BrandLogo({ iconOnly = false }: { iconOnly?: boolean }) {
       className="group flex items-center gap-2"
       title={iconOnly ? 'Shopper' : undefined}
     >
-      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-linear-to-br from-indigo-500 to-purple-600 text-white shadow-md shadow-indigo-500/20 transition-transform duration-200 group-hover:scale-105">
-        <BrandMarkIcon />
+      <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl shadow-md shadow-indigo-500/20 transition-transform duration-200 group-hover:scale-105">
+        <img src={logo} alt="" className="h-full w-full object-cover" />
       </span>
       <span
         className={
