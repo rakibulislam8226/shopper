@@ -4,6 +4,7 @@ import { type CSSProperties, type ReactNode } from 'react';
 import { Toaster } from 'sonner';
 
 import { queryClient } from './queryClient';
+import { ThemeProvider } from './ThemeProvider';
 
 /**
  * Sonner ties the close button's side to text direction (LTR → left) rather
@@ -17,15 +18,17 @@ const toasterStyle = {
 } as CSSProperties;
 
 /**
- * Root provider composition. Additional providers (theme, auth, i18n) are
- * layered here as later phases introduce them.
+ * Root provider composition. Additional providers (auth, i18n) are layered
+ * here as later phases introduce them.
  */
 export function AppProviders({ children }: { children: ReactNode }) {
   return (
-    <QueryClientProvider client={queryClient}>
-      {children}
-      <Toaster position="top-right" richColors closeButton style={toasterStyle} />
-      {import.meta.env.DEV ? <ReactQueryDevtools initialIsOpen={false} /> : null}
-    </QueryClientProvider>
+    <ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        {children}
+        <Toaster position="top-right" richColors closeButton style={toasterStyle} />
+        {import.meta.env.DEV ? <ReactQueryDevtools initialIsOpen={false} /> : null}
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 }

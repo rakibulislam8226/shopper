@@ -51,8 +51,8 @@ export function SignUpForm() {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
       <div>
-        <h1 className="text-xl font-semibold tracking-tight text-slate-100">Create your shop</h1>
-        <p className="mt-1 text-sm text-slate-400">Set up your account and start selling</p>
+        <h1 className="text-xl font-semibold tracking-tight text-text-primary">Create your shop</h1>
+        <p className="mt-1 text-sm text-text-muted">Set up your account and start selling</p>
       </div>
 
       <AuthInput
@@ -122,7 +122,7 @@ export function SignUpForm() {
         Continue
       </Button>
 
-      <p className="text-center text-xs text-slate-500 md:hidden">
+      <p className="text-center text-xs text-text-muted md:hidden">
         Already have an account?{' '}
         <Link to="/login" className="font-medium text-indigo-400 hover:text-indigo-300">
           Sign in

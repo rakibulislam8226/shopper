@@ -36,13 +36,13 @@ function MetricCard({ label, hint, icon: Icon }: Metric) {
   return (
     <article className="rounded-2xl border border-edge-strong bg-card p-5">
       <div className="mb-3 flex items-center justify-between">
-        <span className="text-sm text-slate-400">{label}</span>
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-700/60 text-slate-400">
+        <span className="text-sm text-text-muted">{label}</span>
+        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-elevated text-text-muted">
           <Icon strokeWidth={1.6} className="h-4 w-4" />
         </span>
       </div>
-      <p className="text-2xl font-semibold text-slate-600">—</p>
-      <p className="mt-1 text-xs text-slate-600">{hint}</p>
+      <p className="text-2xl font-semibold text-text-faint">—</p>
+      <p className="mt-1 text-xs text-text-faint">{hint}</p>
     </article>
   );
 }
@@ -74,7 +74,7 @@ export function OverviewPage() {
 
       <div className="grid gap-4 lg:grid-cols-3">
         <section className="lg:col-span-2">
-          <h2 className="mb-3 text-sm font-semibold text-slate-300">Recent sales</h2>
+          <h2 className="mb-3 text-sm font-semibold text-text-secondary">Recent sales</h2>
           <EmptySection
             title="No sales to show"
             description="Once the sales module ships, the latest transactions for your organization will appear here."
@@ -82,23 +82,23 @@ export function OverviewPage() {
         </section>
 
         <section>
-          <h2 className="mb-3 text-sm font-semibold text-slate-300">Account</h2>
+          <h2 className="mb-3 text-sm font-semibold text-text-secondary">Account</h2>
           <div className="rounded-2xl border border-edge-strong bg-card p-5">
             <dl className="space-y-3 text-sm">
               <div className="flex items-center justify-between gap-4">
-                <dt className="text-slate-500">Signed in as</dt>
-                <dd className="truncate font-medium text-slate-200">{name}</dd>
+                <dt className="text-text-muted">Signed in as</dt>
+                <dd className="truncate font-medium text-text-secondary">{name}</dd>
               </div>
               <div className="flex items-center justify-between gap-4">
-                <dt className="text-slate-500">Session</dt>
+                <dt className="text-text-muted">Session</dt>
                 <dd className="font-medium text-emerald-400">Active</dd>
               </div>
               <div className="flex items-center justify-between gap-4">
-                <dt className="text-slate-500">Token renewal</dt>
-                <dd className="font-medium text-slate-300">Automatic</dd>
+                <dt className="text-text-muted">Token renewal</dt>
+                <dd className="font-medium text-text-secondary">Automatic</dd>
               </div>
             </dl>
-            <p className="mt-4 border-t border-edge pt-4 text-xs leading-relaxed text-slate-600">
+            <p className="mt-4 border-t border-edge pt-4 text-xs leading-relaxed text-text-faint">
               Your access token refreshes in the background. You stay signed in until the refresh
               token expires.
             </p>

@@ -26,7 +26,7 @@ export function DashboardLayout() {
   const toggleSidebar = useUiStore((state) => state.toggleSidebar);
 
   return (
-    <div className="min-h-screen bg-surface text-slate-100">
+    <div className="min-h-screen bg-surface text-text-primary">
       {/* Desktop sidebar: full panel, or an icon rail when collapsed. */}
       <aside
         className={`fixed inset-y-0 left-0 z-30 hidden transition-[width] duration-200 ease-out lg:block ${
@@ -45,7 +45,7 @@ export function DashboardLayout() {
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           aria-expanded={!collapsed}
-          className="absolute top-13 right-0 z-40 h-8 w-8 translate-x-1/2 rounded-lg border-slate-700 bg-elevated shadow-lg"
+          className="absolute top-13 right-0 z-40 h-8 w-8 translate-x-1/2 rounded-lg border-edge-strong bg-elevated shadow-lg"
         >
           <PanelIcon collapsed={collapsed} />
         </Button>
@@ -95,7 +95,7 @@ export function DashboardLayout() {
 
           <div className="flex-1" />
 
-          <span className="hidden items-center gap-2 rounded-full border border-edge-strong bg-panel px-3 py-1 text-xs text-slate-400 sm:inline-flex">
+          <span className="hidden items-center gap-2 rounded-full border border-edge-strong bg-panel px-3 py-1 text-xs text-text-muted sm:inline-flex">
             <span className="h-1.5 w-1.5 rounded-full bg-amber-400" aria-hidden="true" />
             Preview build
           </span>

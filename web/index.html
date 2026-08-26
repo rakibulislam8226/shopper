@@ -14,6 +14,25 @@
     />
   </head>
   <body>
+    <!-- Applies the theme class before first paint so there's no flash of
+         the wrong theme while React hydrates. Mirrors the logic in
+         src/lib/theme.ts — kept inline and dependency-free since it must
+         run synchronously, ahead of any bundled script. -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('shopper:theme');
+          var resolved =
+            stored === 'light' || stored === 'dark'
+              ? stored
+              : window.matchMedia('(prefers-color-scheme: dark)').matches
+                ? 'dark'
+                : 'light';
+          document.documentElement.classList.toggle('dark', resolved === 'dark');
+          document.documentElement.style.colorScheme = resolved;
+        } catch (e) {}
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

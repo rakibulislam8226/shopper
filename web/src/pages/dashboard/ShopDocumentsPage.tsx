@@ -47,7 +47,7 @@ function DocumentsSection({ shopUid }: { shopUid: string }) {
   const [pendingUpload, setPendingUpload] = useState<ShopDocumentType | null>(null);
 
   if (isLoading) {
-    return <p className="text-sm text-slate-500">Loading documents…</p>;
+    return <p className="text-sm text-text-muted">Loading documents…</p>;
   }
 
   if (isError || !data) {
@@ -72,7 +72,7 @@ function DocumentsSection({ shopUid }: { shopUid: string }) {
       ))}
 
       {data.documents.length === 0 && (
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-text-muted">
           No documents submitted yet. The owner NID is required for approval.
         </p>
       )}
@@ -100,13 +100,13 @@ function DocumentRow({
           className={
             existingFileUrl
               ? 'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-400'
-              : 'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-elevated text-slate-500'
+              : 'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-elevated text-text-muted'
           }
         >
           {existingFileUrl ? <CheckIcon className="h-4 w-4" /> : <FileIcon className="h-4 w-4" />}
         </span>
         <div className="min-w-0">
-          <p className="text-sm font-medium text-slate-200">{label}</p>
+          <p className="text-sm font-medium text-text-secondary">{label}</p>
           {existingFileUrl ? (
             <a
               href={existingFileUrl}
@@ -117,7 +117,7 @@ function DocumentRow({
               View uploaded file
             </a>
           ) : (
-            <p className="text-xs text-slate-500">Not submitted yet</p>
+            <p className="text-xs text-text-muted">Not submitted yet</p>
           )}
         </div>
       </div>

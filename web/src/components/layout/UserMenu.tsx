@@ -1,4 +1,6 @@
+import { useTheme } from '@app/ThemeProvider';
 import { Button } from '@components/ui/Button';
+import { MoonIcon, SunIcon } from '@components/ui/icons';
 import { clearStoredSession } from '@lib/session';
 import { useAuthStore } from '@stores/auth';
 import { useState } from 'react';
@@ -15,6 +17,8 @@ export function UserMenu() {
   const navigate = useNavigate();
   const name = useAuthStore((state) => state.name);
   const [open, setOpen] = useState(false);
+  const { resolved, setMode } = useTheme();
+  const isDark = resolved === 'dark';
 
   if (!name) return null;
 
@@ -53,7 +57,7 @@ export function UserMenu() {
             className="absolute right-0 z-50 mt-2 w-60 overflow-hidden rounded-xl border border-edge-strong bg-elevated shadow-xl"
           >
             <div className="border-b border-edge px-4 py-3">
-              <p className="truncate text-sm font-semibold text-slate-100">{name}</p>
+              <p className="truncate text-sm font-semibold text-text-primary">{name}</p>
             </div>
 
             <Button
@@ -61,8 +65,20 @@ export function UserMenu() {
               size="lg"
               fullWidth
               role="menuitem"
+              onClick={() => setMode(isDark ? 'light' : 'dark')}
+              className="justify-between rounded-none"
+            >
+              <span>{isDark ? 'Dark mode' : 'Light mode'}</span>
+              {isDark ? <MoonIcon className="h-4 w-4" /> : <SunIcon className="h-4 w-4" />}
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="lg"
+              fullWidth
+              role="menuitem"
               onClick={handleSignOut}
-              className="justify-start rounded-none hover:text-rose-400"
+              className="justify-start rounded-none border-t border-edge hover:text-rose-400"
             >
               Sign out
             </Button>

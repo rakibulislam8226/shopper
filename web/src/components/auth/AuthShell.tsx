@@ -40,8 +40,8 @@ export function AuthShell({
         <div className="mb-8 flex flex-col items-center gap-3 text-center">
           <BrandLogo />
           <div>
-            <h1 className="text-xl font-semibold tracking-tight text-slate-100">{title}</h1>
-            <p className="mt-1 text-sm text-slate-400">{subtitle}</p>
+            <h1 className="text-xl font-semibold tracking-tight text-text-primary">{title}</h1>
+            <p className="mt-1 text-sm text-text-muted">{subtitle}</p>
           </div>
         </div>
 

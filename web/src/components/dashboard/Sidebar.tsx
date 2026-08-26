@@ -95,7 +95,7 @@ export function Sidebar({
       collapsed ? 'justify-center px-0 py-2.5' : 'gap-3 px-3 py-2',
       isActive
         ? 'bg-brand-soft font-semibold text-brand-text ring-1 ring-brand-ring'
-        : 'text-slate-400 hover:bg-panel hover:text-slate-200',
+        : 'text-text-muted hover:bg-panel hover:text-text-secondary',
     );
 
   return (
@@ -116,7 +116,7 @@ export function Sidebar({
               // keeps the grouping readable in the rail.
               <div className="mx-2 mb-2 border-t border-edge" aria-hidden="true" />
             ) : (
-              <p className="mb-2 px-3 text-[11px] font-semibold tracking-[0.08em] text-slate-500 uppercase">
+              <p className="mb-2 px-3 text-[11px] font-semibold tracking-[0.08em] text-text-muted uppercase">
                 {section.heading}
               </p>
             )}
@@ -162,7 +162,7 @@ export function Sidebar({
 
         {collapsed ? null : (
           <div className="min-w-0 flex-1">
-            <p className="truncate text-nav text-slate-200">{name}</p>
+            <p className="truncate text-nav text-text-secondary">{name}</p>
           </div>
         )}
 
@@ -174,7 +174,7 @@ export function Sidebar({
           onClick={handleSignOut}
           aria-label="Sign out"
           title="Sign out"
-          className="shrink-0 rounded-lg text-slate-500 hover:bg-panel hover:text-rose-400"
+          className="shrink-0 rounded-lg text-text-muted hover:bg-panel hover:text-rose-400"
         >
           <svg
             viewBox="0 0 24 24"
@@ -230,7 +230,7 @@ function NavLeaf({
           <>
             <span className="flex-1">{item.label}</span>
             {item.badge ? (
-              <span className="rounded-full bg-elevated px-1.5 py-0.5 text-[10px] font-medium text-slate-400">
+              <span className="rounded-full bg-elevated px-1.5 py-0.5 text-[10px] font-medium text-text-muted">
                 {item.badge}
               </span>
             ) : null}
@@ -282,7 +282,7 @@ function NavParent({
         type="button"
         onClick={onToggle}
         aria-expanded={open}
-        className="flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-nav text-slate-400 transition-colors duration-150 hover:bg-panel hover:text-slate-200"
+        className="flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-nav text-text-muted transition-colors duration-150 hover:bg-panel hover:text-text-secondary"
       >
         <NavIcon>{item.icon}</NavIcon>
         <span className="flex-1 text-left">{item.label}</span>

@@ -56,7 +56,7 @@ function ShopProfileForm({ shopUid }: { shopUid: string }) {
   }
 
   if (isLoading) {
-    return <p className="text-sm text-slate-500">Loading shop profile…</p>;
+    return <p className="text-sm text-text-muted">Loading shop profile…</p>;
   }
 
   if (isError || !data) {
@@ -82,12 +82,12 @@ function ShopProfileForm({ shopUid }: { shopUid: string }) {
       className="flex flex-col gap-4 rounded-2xl border border-edge-strong bg-card p-6"
     >
       <div className="flex items-center justify-between">
-        <span className="text-xs text-slate-500">Approval status</span>
+        <span className="text-xs text-text-muted">Approval status</span>
         <StatusPill label={status.label} tone={status.tone} />
       </div>
 
       <div className="flex items-center gap-4">
-        <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-edge-strong bg-inset text-slate-500">
+        <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-edge-strong bg-inset text-text-muted">
           {data.shop.logo ? (
             <img src={data.shop.logo} alt="" className="h-full w-full object-cover" />
           ) : (
@@ -95,7 +95,7 @@ function ShopProfileForm({ shopUid }: { shopUid: string }) {
           )}
         </span>
         <div className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-slate-400">Logo</span>
+          <span className="text-xs font-medium text-text-muted">Logo</span>
           <Button
             type="button"
             variant="secondary"
@@ -122,46 +122,46 @@ function ShopProfileForm({ shopUid }: { shopUid: string }) {
       </div>
 
       <label className="flex flex-col gap-1.5">
-        <span className="text-xs font-medium text-slate-400">Shop name</span>
+        <span className="text-xs font-medium text-text-muted">Shop name</span>
         <input
           type="text"
           value={name}
           onChange={(event) => setName(event.target.value)}
           required
-          className="rounded-lg border border-edge-strong bg-inset px-3 py-2 text-sm text-slate-100 outline-none transition-colors focus:border-indigo-500 focus:ring-4 focus:ring-brand-ring"
+          className="rounded-lg border border-edge-strong bg-inset px-3 py-2 text-sm text-text-primary outline-none transition-colors focus:border-indigo-500 focus:ring-4 focus:ring-brand-ring"
         />
       </label>
 
       <label className="flex flex-col gap-1.5">
-        <span className="text-xs font-medium text-slate-400">Email</span>
+        <span className="text-xs font-medium text-text-muted">Email</span>
         <input
           type="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="shop@example.com"
-          className="rounded-lg border border-edge-strong bg-inset px-3 py-2 text-sm text-slate-100 outline-none transition-colors placeholder:text-slate-600 focus:border-indigo-500 focus:ring-4 focus:ring-brand-ring"
+          className="rounded-lg border border-edge-strong bg-inset px-3 py-2 text-sm text-text-primary outline-none transition-colors placeholder:text-text-faint focus:border-indigo-500 focus:ring-4 focus:ring-brand-ring"
         />
       </label>
 
       <label className="flex flex-col gap-1.5">
-        <span className="text-xs font-medium text-slate-400">Phone</span>
+        <span className="text-xs font-medium text-text-muted">Phone</span>
         <input
           type="tel"
           value={phone}
           onChange={(event) => setPhone(event.target.value)}
           placeholder="01XXXXXXXXX"
-          className="rounded-lg border border-edge-strong bg-inset px-3 py-2 text-sm text-slate-100 outline-none transition-colors placeholder:text-slate-600 focus:border-indigo-500 focus:ring-4 focus:ring-brand-ring"
+          className="rounded-lg border border-edge-strong bg-inset px-3 py-2 text-sm text-text-primary outline-none transition-colors placeholder:text-text-faint focus:border-indigo-500 focus:ring-4 focus:ring-brand-ring"
         />
       </label>
 
       <label className="flex flex-col gap-1.5">
-        <span className="text-xs font-medium text-slate-400">Address</span>
+        <span className="text-xs font-medium text-text-muted">Address</span>
         <input
           type="text"
           value={address}
           onChange={(event) => setAddress(event.target.value)}
           placeholder="123 Market St"
-          className="rounded-lg border border-edge-strong bg-inset px-3 py-2 text-sm text-slate-100 outline-none transition-colors placeholder:text-slate-600 focus:border-indigo-500 focus:ring-4 focus:ring-brand-ring"
+          className="rounded-lg border border-edge-strong bg-inset px-3 py-2 text-sm text-text-primary outline-none transition-colors placeholder:text-text-faint focus:border-indigo-500 focus:ring-4 focus:ring-brand-ring"
         />
       </label>
 

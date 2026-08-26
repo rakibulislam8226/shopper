@@ -20,7 +20,7 @@ export function BrandLogo({ iconOnly = false }: { iconOnly?: boolean }) {
         className={
           iconOnly
             ? 'sr-only'
-            : 'text-lg font-bold tracking-tight text-slate-100 transition-colors group-hover:text-indigo-400'
+            : 'text-lg font-bold tracking-tight text-text-primary transition-colors group-hover:text-indigo-400'
         }
       >
         shopper

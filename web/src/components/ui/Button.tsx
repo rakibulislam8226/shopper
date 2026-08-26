@@ -15,8 +15,8 @@ const BASE_CLASSES =
 
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   primary: 'bg-brand text-white shadow-sm hover:bg-brand-hover',
-  secondary: 'border border-edge-strong bg-elevated/80 text-slate-200 hover:bg-elevated',
-  ghost: 'text-slate-300 hover:bg-panel hover:text-slate-100',
+  secondary: 'border border-edge-strong bg-elevated/80 text-text-secondary hover:bg-elevated',
+  ghost: 'text-text-secondary hover:bg-panel hover:text-text-primary',
   danger: 'bg-rose-600 text-white shadow-sm hover:bg-rose-500',
   plain: '',
 };

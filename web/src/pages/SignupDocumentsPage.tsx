@@ -99,10 +99,10 @@ export function SignupDocumentsPage() {
       panelIcon={<ShieldIcon className="h-6 w-6" />}
     >
       <div>
-        <h1 className="text-xl font-semibold tracking-tight text-slate-100">
+        <h1 className="text-xl font-semibold tracking-tight text-text-primary">
           Submit your documents
         </h1>
-        <p className="mt-1 text-sm text-slate-400">
+        <p className="mt-1 text-sm text-text-muted">
           The owner NID is required; the rest can wait until later if you're in a hurry.
         </p>
       </div>
@@ -140,7 +140,7 @@ export function SignupDocumentsPage() {
         Create shop
       </Button>
       {!canSubmit && (
-        <p className="mt-2 text-center text-xs text-slate-500">
+        <p className="mt-2 text-center text-xs text-text-muted">
           Attach the owner NID above to continue.
         </p>
       )}
@@ -148,7 +148,7 @@ export function SignupDocumentsPage() {
       <button
         type="button"
         onClick={() => void navigate('/signup', { state: details })}
-        className="mt-4 flex w-full items-center justify-center gap-1.5 text-sm font-medium text-slate-300 hover:text-slate-100"
+        className="mt-4 flex w-full items-center justify-center gap-1.5 text-sm font-medium text-text-secondary hover:text-text-primary"
       >
         <ArrowLeftIcon className="h-3.5 w-3.5" />
         Back to account details
@@ -177,14 +177,14 @@ function DocumentRow({
       className={`group flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3.5 transition-colors ${
         file
           ? 'border-emerald-500/40 bg-emerald-500/5'
-          : 'border-edge-strong bg-inset hover:border-slate-600'
+          : 'border-edge-strong bg-inset hover:border-brand-ring'
       }`}
     >
       <span
         className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition-colors ${
           file
             ? 'bg-emerald-500/15 text-emerald-400'
-            : 'bg-elevated text-slate-500 group-hover:text-slate-300'
+            : 'bg-elevated text-text-muted group-hover:text-text-secondary'
         }`}
       >
         {file ? <CheckIcon className="h-5 w-5" /> : <FileIcon className="h-5 w-5" />}
@@ -192,14 +192,14 @@ function DocumentRow({
 
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-1.5">
-          <span className="text-sm font-medium text-slate-200">{label}</span>
+          <span className="text-sm font-medium text-text-secondary">{label}</span>
           {required && (
             <span className="rounded-full bg-rose-500/15 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-rose-400 uppercase">
               Required
             </span>
           )}
         </span>
-        <span className="mt-0.5 block truncate text-xs text-slate-500">
+        <span className="mt-0.5 block truncate text-xs text-text-muted">
           {file ? file.name : description}
         </span>
       </span>
@@ -211,7 +211,7 @@ function DocumentRow({
             event.preventDefault();
             onSelect(undefined);
           }}
-          className="shrink-0 text-xs font-medium text-slate-500 hover:text-rose-400"
+          className="shrink-0 text-xs font-medium text-text-muted hover:text-rose-400"
         >
           Remove
         </button>

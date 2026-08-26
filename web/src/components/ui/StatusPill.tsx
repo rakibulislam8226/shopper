@@ -8,7 +8,7 @@ export type StatusTone = 'positive' | 'negative' | 'neutral';
 const TONE_CLASSES: Record<StatusTone, string> = {
   positive: 'bg-emerald-500/15 text-emerald-400',
   negative: 'bg-rose-500/15 text-rose-400',
-  neutral: 'bg-slate-500/15 text-slate-400',
+  neutral: 'bg-slate-500/15 text-text-muted',
 };
 
 interface StatusPillProps {

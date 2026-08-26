@@ -139,7 +139,8 @@ pip install -r requirements.txt -r requirements-dev.txt
 # 4. Migrations — creates the full Phase 1 schema
 alembic upgrade head
 
-python -m app.cli.superadmin
+python -m app.cli # seed all data
+python -m app.cli.superadmin # create individual superadmin
 
 # 6. Run (dev, auto-reload)
 uvicorn app.main:app --reload --port 8000

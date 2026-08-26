@@ -38,8 +38,8 @@ export function SignInForm() {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div>
-        <h1 className="text-xl font-semibold tracking-tight text-slate-100">Welcome back</h1>
-        <p className="mt-1 text-sm text-slate-400">Sign in to your account</p>
+        <h1 className="text-xl font-semibold tracking-tight text-text-primary">Welcome back</h1>
+        <p className="mt-1 text-sm text-text-muted">Sign in to your account</p>
       </div>
 
       <AuthInput
@@ -68,7 +68,7 @@ export function SignInForm() {
         />
         <Link
           to="/forgot-password"
-          className="mt-1.5 inline-block text-xs font-medium text-slate-500 hover:text-indigo-400"
+          className="mt-1.5 inline-block text-xs font-medium text-text-muted hover:text-indigo-400"
         >
           Forgot password?
         </Link>
@@ -85,7 +85,7 @@ export function SignInForm() {
         Sign in
       </Button>
 
-      <p className="text-center text-xs text-slate-500 md:hidden">
+      <p className="text-center text-xs text-text-muted md:hidden">
         Don&apos;t have a shop yet?{' '}
         <Link to="/signup" className="font-medium text-indigo-400 hover:text-indigo-300">
           Create one

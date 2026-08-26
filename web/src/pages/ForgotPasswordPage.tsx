@@ -101,8 +101,8 @@ export function ForgotPasswordPage() {
       panelImage={forgotPasswordShopImage}
     >
       <div className="mb-1">
-        <h1 className="text-xl font-semibold tracking-tight text-slate-100">{formTitle}</h1>
-        <p className="mt-1 text-sm text-slate-400">{formSubtitle}</p>
+        <h1 className="text-xl font-semibold tracking-tight text-text-primary">{formTitle}</h1>
+        <p className="mt-1 text-sm text-text-muted">{formSubtitle}</p>
       </div>
 
       {step === 'phone' && (
@@ -132,7 +132,7 @@ export function ForgotPasswordPage() {
 
           <Link
             to="/login"
-            className="text-center text-xs font-medium text-slate-500 hover:text-indigo-400"
+            className="text-center text-xs font-medium text-text-muted hover:text-indigo-400"
           >
             Back to sign in
           </Link>
@@ -141,8 +141,8 @@ export function ForgotPasswordPage() {
 
       {step === 'otp' && (
         <form onSubmit={handleVerifyOtp} className="mt-5 flex flex-col gap-4">
-          <p className="text-sm leading-relaxed text-slate-400">
-            We sent a code to <span className="text-slate-200">{phone}</span>. It expires in a
+          <p className="text-sm leading-relaxed text-text-muted">
+            We sent a code to <span className="text-text-secondary">{phone}</span>. It expires in a
             couple of minutes.
           </p>
 
@@ -173,7 +173,7 @@ export function ForgotPasswordPage() {
             <button
               type="button"
               onClick={() => setStep('phone')}
-              className="font-medium text-slate-500 hover:text-slate-300"
+              className="font-medium text-text-muted hover:text-text-secondary"
             >
               Change number
             </button>
@@ -235,7 +235,7 @@ export function ForgotPasswordPage() {
           <span className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20">
             <CheckIcon className="h-5 w-5" />
           </span>
-          <p className="text-sm leading-relaxed text-slate-400">
+          <p className="text-sm leading-relaxed text-text-muted">
             Your password has been reset. Sign in with your new password to continue.
           </p>
           <Button

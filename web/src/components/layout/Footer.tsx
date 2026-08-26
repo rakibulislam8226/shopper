@@ -6,14 +6,14 @@ const YEAR = new Date().getFullYear();
 export function Footer() {
   return (
     <footer className="border-t border-edge px-6 py-8">
-      <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 text-xs text-slate-500 sm:flex-row">
+      <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 text-xs text-text-muted sm:flex-row">
         <p>© {YEAR} shopper — multi-tenant shop management.</p>
 
         <nav className="flex items-center gap-5">
-          <NavLink to="/" className="transition-colors hover:text-slate-300">
+          <NavLink to="/" className="transition-colors hover:text-text-secondary">
             Home
           </NavLink>
-          <NavLink to="/login" className="transition-colors hover:text-slate-300">
+          <NavLink to="/login" className="transition-colors hover:text-text-secondary">
             Sign in
           </NavLink>
         </nav>

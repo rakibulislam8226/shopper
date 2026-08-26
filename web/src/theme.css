@@ -10,35 +10,36 @@
  * Naming is by ROLE, not by shade. `surface` stays "the page background" even
  * if it later turns light, whereas a name like `slate-900` would become a lie
  * the moment the value moved.
+ *
+ * Light is the default palette (`:root`); dark overrides live under `.dark`,
+ * toggled by `ThemeProvider` (see `src/lib/theme.ts`). Every `--color-*`
+ * token is declared here as a bare custom property (not inside `@theme`) so
+ * both blocks can redefine it — `@theme` values are inlined at build time
+ * and can't be overridden by a runtime class.
  */
 @theme {
-  /* ---- Surfaces, from furthest back to closest to the reader ---- */
+  --color-surface: var(--color-surface);
+  --color-surface-overlay: var(--color-surface-overlay);
+  --color-panel: var(--color-panel);
+  --color-card: var(--color-card);
+  --color-elevated: var(--color-elevated);
+  --color-inset: var(--color-inset);
+  --color-scrim: var(--color-scrim);
 
-  /* The page itself. */
-  --color-surface: #0f172a;
-  /* Sticky chrome (navbar, topbar) — the page colour, translucent over content. */
-  --color-surface-overlay: rgb(15 23 42 / 0.85);
-  /* Sidebar and other standing chrome, lifted a step off the page. */
-  --color-panel: rgb(30 41 59 / 0.4);
-  /* Cards and sections sitting on the page. */
-  --color-card: rgb(30 41 59 / 0.4);
-  /* Menus and popovers — opaque, because they float over other content. */
-  --color-elevated: #1e293b;
-  /* Recessed areas: form inputs, wells. Darker than whatever holds them. */
-  --color-inset: rgb(2 6 23 / 0.6);
-  /* Scrim behind the mobile drawer. */
-  --color-scrim: rgb(2 6 23 / 0.7);
+  --color-edge: var(--color-edge);
+  --color-edge-strong: var(--color-edge-strong);
 
-  /* ---- Edges ---- */
-  --color-edge: rgb(51 65 85 / 0.6);
-  --color-edge-strong: rgb(51 65 85 / 0.7);
+  --color-brand: var(--color-brand);
+  --color-brand-hover: var(--color-brand-hover);
+  --color-brand-soft: var(--color-brand-soft);
+  --color-brand-ring: var(--color-brand-ring);
+  --color-brand-text: var(--color-brand-text);
 
-  /* ---- Brand and accents ---- */
-  --color-brand: #4f46e5;
-  --color-brand-hover: #6366f1;
-  --color-brand-soft: rgb(99 102 241 / 0.1);
-  --color-brand-ring: rgb(99 102 241 / 0.2);
-  --color-brand-text: #a5b4fc;
+  /* ---- Text, from most to least prominent ---- */
+  --color-text-primary: var(--color-text-primary);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-text-muted: var(--color-text-muted);
+  --color-text-faint: var(--color-text-faint);
 
   /* ---- Typography ----
      Inter is the interface face: designed for screens, with the tall x-height
@@ -56,6 +57,56 @@
   /* Slow ambient drift for background blobs (auth pages) — registering it
      here makes `animate-drift` a real Tailwind utility. */
   --animate-drift: drift 14s ease-in-out infinite;
+}
+
+/* ---- Light palette (default) ---- */
+:root {
+  --color-surface: #f8fafc;
+  --color-surface-overlay: rgb(248 250 252 / 0.85);
+  --color-panel: rgb(226 232 240 / 0.5);
+  --color-card: #ffffff;
+  --color-elevated: #ffffff;
+  --color-inset: rgb(226 232 240 / 0.6);
+  --color-scrim: rgb(15 23 42 / 0.4);
+
+  --color-edge: rgb(203 213 225 / 0.8);
+  --color-edge-strong: rgb(148 163 184 / 0.6);
+
+  --color-brand: #4f46e5;
+  --color-brand-hover: #4338ca;
+  --color-brand-soft: rgb(79 70 229 / 0.08);
+  --color-brand-ring: rgb(79 70 229 / 0.18);
+  --color-brand-text: #4338ca;
+
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-muted: #64748b;
+  --color-text-faint: #94a3b8;
+}
+
+/* ---- Dark palette ---- */
+.dark {
+  --color-surface: #0f172a;
+  --color-surface-overlay: rgb(15 23 42 / 0.85);
+  --color-panel: rgb(30 41 59 / 0.4);
+  --color-card: rgb(30 41 59 / 0.4);
+  --color-elevated: #1e293b;
+  --color-inset: rgb(2 6 23 / 0.6);
+  --color-scrim: rgb(2 6 23 / 0.7);
+
+  --color-edge: rgb(51 65 85 / 0.6);
+  --color-edge-strong: rgb(51 65 85 / 0.7);
+
+  --color-brand: #4f46e5;
+  --color-brand-hover: #6366f1;
+  --color-brand-soft: rgb(99 102 241 / 0.1);
+  --color-brand-ring: rgb(99 102 241 / 0.2);
+  --color-brand-text: #a5b4fc;
+
+  --color-text-primary: #f1f5f9;
+  --color-text-secondary: #cbd5e1;
+  --color-text-muted: #94a3b8;
+  --color-text-faint: #64748b;
 }
 
 @keyframes drift {
