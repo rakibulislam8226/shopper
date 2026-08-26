@@ -17,43 +17,6 @@ export interface Shop {
   created_at: string;
 }
 
-export interface RegisterShopPayload {
-  owner_name: string;
-  phone: string;
-  password: string;
-  confirm_password: string;
-  shop_name: string;
-  shop_email?: string;
-  shop_phone?: string;
-  shop_address?: string;
-  shop_logo?: string;
-}
-
-export interface RegisterShopData {
-  user: AuthUser;
-  shop: Shop;
-  tokens: TokenPair;
-}
-
-/**
- * POST /api/shops/register — creates the owner (or reuses one by phone) and
- * their shop, and issues tokens right away. The shop itself starts PENDING
- * and stays unusable until a superuser approves the documents submitted for
- * it (`useUploadShopDocument`).
- */
-export function useRegisterShop() {
-  return useMutation({
-    mutationFn: async (payload: RegisterShopPayload) => {
-      const response = await axios.post<ApiResponse<RegisterShopData>>(
-        '/shops/register',
-        payload,
-        { toast: { error: 'Unable to register shop' } },
-      );
-      return response.data;
-    },
-  });
-}
-
 /** Mirrors `ShopDocumentType` in `app/db/enums.py`. */
 export type ShopDocumentType = 'owner_nid' | 'trade_license' | 'tin_certificate' | 'other';
 
@@ -65,13 +28,75 @@ export interface ShopDocument {
   created_at: string;
 }
 
+export interface RegisterShopPayload {
+  owner_name: string;
+  phone: string;
+  password: string;
+  confirm_password: string;
+  shop_name: string;
+  shop_email?: string;
+  shop_phone?: string;
+  shop_address?: string;
+  shop_logo?: string;
+  /** Required — registration is rejected without it. */
+  ownerNid: File;
+  tradeLicense?: File;
+  tinCertificate?: File;
+  otherDocument?: File;
+}
+
+export interface RegisterShopData {
+  user: AuthUser;
+  shop: Shop;
+  tokens: TokenPair;
+  documents: ShopDocument[];
+}
+
+/**
+ * POST /api/shops/register — one multipart request carrying the owner + shop
+ * fields together with the owner NID (required) and any optional supporting
+ * documents. Issues tokens right away; the shop itself starts PENDING and
+ * stays unusable until a superuser approves it.
+ */
+export function useRegisterShop() {
+  return useMutation({
+    mutationFn: async (payload: RegisterShopPayload) => {
+      const form = new FormData();
+      form.append('owner_name', payload.owner_name);
+      form.append('phone', payload.phone);
+      form.append('password', payload.password);
+      form.append('confirm_password', payload.confirm_password);
+      form.append('shop_name', payload.shop_name);
+      if (payload.shop_email) form.append('shop_email', payload.shop_email);
+      if (payload.shop_phone) form.append('shop_phone', payload.shop_phone);
+      if (payload.shop_address) form.append('shop_address', payload.shop_address);
+      if (payload.shop_logo) form.append('shop_logo', payload.shop_logo);
+
+      form.append('owner_nid', payload.ownerNid);
+      if (payload.tradeLicense) form.append('trade_license', payload.tradeLicense);
+      if (payload.tinCertificate) form.append('tin_certificate', payload.tinCertificate);
+      if (payload.otherDocument) form.append('other_document', payload.otherDocument);
+
+      const response = await axios.post<ApiResponse<RegisterShopData>>(
+        '/shops/register',
+        form,
+        { toast: { error: 'Unable to register shop' } },
+      );
+      return response.data;
+    },
+  });
+}
+
 export interface UploadShopDocumentPayload {
   shopUid: string;
   type: ShopDocumentType;
   file: File;
 }
 
-/** POST /api/shops/{shop_uid}/documents — submits one document for shop approval. */
+/**
+ * POST /api/shops/{shop_uid}/documents — attaches one more document to an
+ * already-registered shop (e.g. adding a trade license later from settings).
+ */
 export function useUploadShopDocument() {
   return useMutation({
     mutationFn: async ({ shopUid, type, file }: UploadShopDocumentPayload) => {

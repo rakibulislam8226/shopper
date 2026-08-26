@@ -12,14 +12,21 @@ from app.modules.users.schemas import TokenPair, UserPublic
 
 
 class ShopRegisterRequest(BaseModel):
-    """Body for `POST /api/shops/register` — owner + shop, created together.
+    """Form fields for `POST /api/shops/register` — owner + shop + documents,
+    submitted together as one `multipart/form-data` request (the owner NID
+    file rides alongside these as a separate `UploadFile` parameter, not a
+    field on this model — Pydantic models don't carry file parts themselves).
 
     If ``phone`` already belongs to an existing user, ``password`` must match
     that account and the new shop is attached to it as an additional
     ownership rather than creating a second user. Tokens are issued right
     away — the shop itself starts PENDING and stays unusable (see
-    `POST /api/users/active-shop`) until a superuser approves the documents
-    submitted for it (`POST /api/shops/{shop_uid}/documents`).
+    `POST /api/users/active-shop`) until a superuser approves it.
+
+    The owner NID is required at the *application* layer (this endpoint
+    rejects a request without one) but every `shop_documents` row and column
+    stays nullable in the schema — "required" is a form rule, not a data
+    constraint, so it can change without a migration.
     """
 
     owner_name: str = Field(min_length=1, max_length=255)
@@ -56,14 +63,6 @@ class ShopPublic(BaseModel):
     created_at: datetime
 
 
-class ShopRegisterResponse(BaseModel):
-    """Payload placed in the standard envelope's `data` field on registration."""
-
-    user: UserPublic
-    shop: ShopPublic
-    tokens: TokenPair
-
-
 class ShopDocumentPublic(BaseModel):
     """Shop document fields safe to expose to a client."""
 
@@ -73,6 +72,15 @@ class ShopDocumentPublic(BaseModel):
     type: ShopDocumentType
     file_url: str
     created_at: datetime
+
+
+class ShopRegisterResponse(BaseModel):
+    """Payload placed in the standard envelope's `data` field on registration."""
+
+    user: UserPublic
+    shop: ShopPublic
+    tokens: TokenPair
+    documents: list[ShopDocumentPublic]
 
 
 # UserPublic.active_shop is a forward reference ("ShopPublic | None") to break

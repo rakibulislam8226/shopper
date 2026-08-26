@@ -1,53 +1,74 @@
-import { type ShopDocumentType, useUploadShopDocument } from '@api/shops';
+import { type RegisterShopPayload, type ShopDocumentType, useRegisterShop } from '@api/shops';
 import { AuthShell } from '@components/auth/AuthShell';
+import { type SignupDetails } from '@components/auth/SignUpForm';
 import { Button } from '@components/ui/Button';
 import { useAuthStore, useIsAuthenticated } from '@stores/auth';
 import { useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 
-const DOCUMENT_TYPES: { value: ShopDocumentType; label: string }[] = [
-  { value: 'owner_nid', label: 'Owner NID' },
-  { value: 'trade_license', label: 'Trade License' },
-  { value: 'tin_certificate', label: 'TIN Certificate' },
-];
-
-interface LocationState {
-  shopUid?: string;
+interface DocumentField {
+  key: 'ownerNid' | 'tradeLicense' | 'tinCertificate' | 'otherDocument';
+  type: ShopDocumentType;
+  label: string;
+  required?: boolean;
 }
 
+const DOCUMENT_FIELDS: DocumentField[] = [
+  { key: 'ownerNid', type: 'owner_nid', label: 'Owner NID', required: true },
+  { key: 'tradeLicense', type: 'trade_license', label: 'Trade License' },
+  { key: 'tinCertificate', type: 'tin_certificate', label: 'TIN Certificate' },
+  { key: 'otherDocument', type: 'other', label: 'Other document' },
+];
+
 /**
- * Post-registration step: optionally attach approval documents before
- * landing in the dashboard. `shopUid` arrives via router state from
- * `SignUpForm` — a direct visit (refresh, bookmark) with no state just skips
- * ahead, since there is nothing to upload against.
+ * Step 2 of signup: attach the owner NID (required) and any optional
+ * supporting documents, then fire the single `POST /shops/register` that
+ * actually creates the account — step 1 never calls the API, it only
+ * collects fields and hands them here via router state. A visit with no
+ * state (refresh, direct link, back button after submit) bounces to
+ * `/signup`: there is nothing to submit without the fields from step 1.
  */
 export function SignupDocumentsPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const isAuthenticated = useIsAuthenticated();
-  const name = useAuthStore((state) => state.name);
-  const shopUid = (location.state as LocationState | null)?.shopUid;
+  const setSession = useAuthStore((state) => state.setSession);
+  const details = location.state as SignupDetails | null;
 
-  const uploadDocument = useUploadShopDocument();
-  const [files, setFiles] = useState<Partial<Record<ShopDocumentType, File>>>({});
-  const [uploadedTypes, setUploadedTypes] = useState<Set<ShopDocumentType>>(new Set());
+  const registerShop = useRegisterShop();
+  const [files, setFiles] = useState<Partial<Record<DocumentField['key'], File>>>({});
 
-  if (!isAuthenticated || !name) return <Navigate to="/signup" replace />;
-  if (!shopUid) return <Navigate to="/dashboard" replace />;
+  if (isAuthenticated) return <Navigate to="/dashboard" replace />;
+  if (!details) return <Navigate to="/signup" replace />;
 
-  const handleUpload = (type: ShopDocumentType) => {
-    const file = files[type];
-    if (!file) return;
-    uploadDocument.mutate(
-      { shopUid, type, file },
-      { onSuccess: () => setUploadedTypes((prev) => new Set(prev).add(type)) },
-    );
+  const canSubmit = Boolean(files.ownerNid);
+
+  const handleSubmit = () => {
+    if (!files.ownerNid) return;
+
+    const payload: RegisterShopPayload = {
+      owner_name: details.ownerName,
+      phone: details.phone,
+      password: details.password,
+      confirm_password: details.confirmPassword,
+      shop_name: details.shopName,
+      ownerNid: files.ownerNid,
+      tradeLicense: files.tradeLicense,
+      tinCertificate: files.tinCertificate,
+      otherDocument: files.otherDocument,
+    };
+    registerShop.mutate(payload, {
+      onSuccess: (response) => {
+        const data = response.data;
+        if (!data) return;
+        setSession(data.user.name, data.tokens);
+        void navigate('/dashboard', { replace: true });
+      },
+    });
   };
 
-  const finish = () => void navigate('/dashboard', { replace: true });
-
   return (
-    <AuthShell title="Verify your business" subtitle="A few documents speed up admin review">
+    <AuthShell title="Verify your business" subtitle="The owner NID is required to continue">
       <div className="flex flex-col gap-4">
         <div className="flex items-start gap-3 rounded-lg border border-edge-strong bg-inset px-3.5 py-3">
           <span
@@ -55,80 +76,76 @@ export function SignupDocumentsPage() {
             aria-hidden="true"
           />
           <p className="text-xs leading-relaxed text-slate-400">
-            Your shop is <span className="font-medium text-slate-200">pending review</span>.
-            Submit these documents now to speed up approval — you can also add them later from
-            settings.
+            Your shop will stay <span className="font-medium text-slate-200">pending review</span>{' '}
+            until a superuser approves it. Trade license, TIN certificate, and other documents are
+            optional and can be added later from settings.
           </p>
         </div>
 
         <div className="flex flex-col gap-3">
-          {DOCUMENT_TYPES.map(({ value, label }) => {
-            const isUploaded = uploadedTypes.has(value);
-            return (
-              <div
-                key={value}
-                className="flex items-center justify-between gap-3 rounded-lg border border-edge-strong bg-inset px-3.5 py-3"
-              >
-                <div className="flex min-w-0 flex-col gap-1">
-                  <span className="text-xs font-medium text-slate-300">{label}</span>
-                  <label className="w-fit cursor-pointer text-xs text-slate-500 hover:text-slate-300">
-                    <span className="truncate">
-                      {files[value]?.name ?? 'Choose a file (PDF, JPG, PNG)'}
-                    </span>
-                    <input
-                      type="file"
-                      accept=".pdf,.jpg,.jpeg,.png,.webp"
-                      disabled={isUploaded}
-                      onChange={(event) =>
-                        setFiles((prev) => ({ ...prev, [value]: event.target.files?.[0] }))
-                      }
-                      className="hidden"
-                    />
-                  </label>
-                </div>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={isUploaded ? 'secondary' : 'primary'}
-                  disabled={isUploaded || !files[value]}
-                  isLoading={uploadDocument.isPending}
-                  onClick={() => handleUpload(value)}
-                  className="shrink-0"
-                >
-                  {isUploaded ? (
-                    <>
-                      <CheckIcon /> Uploaded
-                    </>
-                  ) : (
-                    'Upload'
-                  )}
-                </Button>
+          {DOCUMENT_FIELDS.map(({ key, label, required }) => (
+            <div
+              key={key}
+              className="flex items-center justify-between gap-3 rounded-lg border border-edge-strong bg-inset px-3.5 py-3"
+            >
+              <div className="flex min-w-0 flex-col gap-1">
+                <span className="text-xs font-medium text-slate-300">
+                  {label}
+                  {required && <span className="ml-1 text-rose-400">*</span>}
+                </span>
+                <label className="w-fit cursor-pointer text-xs text-slate-500 hover:text-slate-300">
+                  <span className="truncate">
+                    {files[key]?.name ?? 'Choose a file (PDF, JPG, PNG)'}
+                  </span>
+                  <input
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png,.webp"
+                    onChange={(event) =>
+                      setFiles((prev) => ({ ...prev, [key]: event.target.files?.[0] }))
+                    }
+                    className="hidden"
+                  />
+                </label>
               </div>
-            );
-          })}
+              {files[key] && (
+                <button
+                  type="button"
+                  onClick={() => setFiles((prev) => ({ ...prev, [key]: undefined }))}
+                  className="shrink-0 text-xs font-medium text-slate-500 hover:text-slate-300"
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+          ))}
         </div>
 
-        <Button type="button" size="lg" fullWidth onClick={finish} className="mt-1">
-          {uploadedTypes.size > 0 ? 'Continue to dashboard' : 'Skip for now'}
+        <Button
+          type="button"
+          size="lg"
+          fullWidth
+          disabled={!canSubmit}
+          isLoading={registerShop.isPending}
+          loadingText="Creating your shop…"
+          onClick={handleSubmit}
+          className="mt-1 shadow-lg shadow-indigo-500/25 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-indigo-500/30"
+        >
+          Create shop
         </Button>
+        {!canSubmit && (
+          <p className="text-center text-xs text-slate-500">
+            Attach the owner NID above to continue.
+          </p>
+        )}
+
+        <button
+          type="button"
+          onClick={() => void navigate('/signup')}
+          className="text-center text-xs font-medium text-slate-500 hover:text-slate-300"
+        >
+          Back to account details
+        </button>
       </div>
     </AuthShell>
-  );
-}
-
-function CheckIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2.5}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="h-3.5 w-3.5"
-      aria-hidden="true"
-    >
-      <path d="M20 6 9 17l-5-5" />
-    </svg>
   );
 }

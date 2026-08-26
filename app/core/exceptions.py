@@ -27,6 +27,7 @@ from typing import Any
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from pydantic import ValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.logging import get_logger
@@ -92,6 +93,27 @@ async def validation_exception_handler(
     )
 
 
+async def pydantic_validation_exception_handler(
+    request: Request, exc: ValidationError
+) -> JSONResponse:
+    """Handles a bare ``pydantic.ValidationError`` — raised when a route builds
+    a request model itself (e.g. from individually-declared ``Form(...)``
+    fields, to work around FastAPI not flattening a Form-model alongside
+    File() params) rather than letting FastAPI validate it during parameter
+    resolution. Same envelope shape as ``RequestValidationError`` below, so
+    the client can't tell which path produced it.
+    """
+    validation_errors = [
+        {"loc": e.get("loc"), "msg": e.get("msg"), "type": e.get("type")} for e in exc.errors()
+    ]
+    return error_response(
+        message="Validation error",
+        data=validation_errors,
+        error=_build_error_detail(status.HTTP_422_UNPROCESSABLE_ENTITY, request.url.path),
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+    )
+
+
 async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     logger.error(
         "unhandled_exception",
@@ -110,4 +132,5 @@ def register_exception_handlers(app: FastAPI) -> None:
     app.add_exception_handler(AppError, app_error_handler)  # type: ignore[arg-type]
     app.add_exception_handler(StarletteHTTPException, http_exception_handler)  # type: ignore[arg-type]
     app.add_exception_handler(RequestValidationError, validation_exception_handler)  # type: ignore[arg-type]
+    app.add_exception_handler(ValidationError, pydantic_validation_exception_handler)  # type: ignore[arg-type]
     app.add_exception_handler(Exception, unhandled_exception_handler)

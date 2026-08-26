@@ -13,7 +13,7 @@ mutates ``remaining_quantity`` so the two can never drift apart.
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
@@ -33,7 +33,6 @@ from app.db.enums import INVENTORY_MOVEMENT_TYPE_ENUM, InventoryMovementType
 if TYPE_CHECKING:
     from app.modules.products.models import Product
     from app.modules.shops.models import Shop
-    from app.modules.users.models import User
 
 
 class InventoryBatch(BaseModel):

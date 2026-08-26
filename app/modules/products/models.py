@@ -37,7 +37,6 @@ if TYPE_CHECKING:
     from app.modules.inventory.models import InventoryBatch
     from app.modules.sales.models import SaleTransaction
     from app.modules.shops.models import Shop
-    from app.modules.users.models import User
 
 
 class ProductCategory(BaseModel):

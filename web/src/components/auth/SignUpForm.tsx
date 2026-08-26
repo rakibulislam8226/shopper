@@ -1,19 +1,26 @@
-import { type RegisterShopPayload, useRegisterShop } from '@api/shops';
 import { AuthInput, LockIcon, PhoneIcon, StoreIcon, UserIcon } from '@components/auth/AuthInput';
 import { Button } from '@components/ui/Button';
-import { useAuthStore } from '@stores/auth';
 import { type FormEvent, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
+export interface SignupDetails {
+  ownerName: string;
+  phone: string;
+  password: string;
+  confirmPassword: string;
+  shopName: string;
+}
+
 /**
- * The sign-up half of `AuthCard` — owner + shop registration only. On
- * success it hands off to `/signup/documents`, outside the slider, for the
- * optional approval-document step.
+ * The sign-up half of `AuthCard` — collects the owner + shop fields only.
+ * Nothing is submitted here: "Continue" just hands the validated fields to
+ * `/signup/documents` via router state, where the owner NID (required) and
+ * any optional documents are attached before the single, final
+ * `POST /shops/register` call. A page 2 reached without this state (direct
+ * visit, refresh) bounces back here — there is nothing to submit yet.
  */
 export function SignUpForm() {
   const navigate = useNavigate();
-  const setSession = useAuthStore((state) => state.setSession);
-  const registerShop = useRegisterShop();
 
   const [ownerName, setOwnerName] = useState('');
   const [phone, setPhone] = useState('');
@@ -30,24 +37,14 @@ export function SignUpForm() {
     event.preventDefault();
     if (passwordsMismatch) return;
 
-    const payload: RegisterShopPayload = {
-      owner_name: ownerName.trim(),
+    const details: SignupDetails = {
+      ownerName: ownerName.trim(),
       phone: phone.trim(),
       password,
-      confirm_password: confirmPassword,
-      shop_name: shopName.trim(),
+      confirmPassword,
+      shopName: shopName.trim(),
     };
-    registerShop.mutate(payload, {
-      onSuccess: (response) => {
-        const data = response.data;
-        if (!data) return;
-        setSession(data.user.name, data.tokens);
-        void navigate('/signup/documents', {
-          replace: true,
-          state: { shopUid: data.shop.uid },
-        });
-      },
-    });
+    void navigate('/signup/documents', { state: details });
   };
 
   return (
@@ -119,11 +116,9 @@ export function SignUpForm() {
         type="submit"
         size="lg"
         fullWidth
-        isLoading={registerShop.isPending}
-        loadingText="Creating your shop…"
         className="mt-1 shadow-lg shadow-indigo-500/25 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-indigo-500/30"
       >
-        Create shop
+        Continue
       </Button>
 
       <p className="text-center text-xs text-slate-500 md:hidden">
