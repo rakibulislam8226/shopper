@@ -47,7 +47,7 @@ export function SplitAuthCard({
         className="animate-drift pointer-events-none absolute right-[10%] bottom-1/4 h-80 w-80 rounded-full bg-purple-500/10 blur-3xl"
       />
 
-      <div className="relative grid h-136 w-full max-w-4xl grid-cols-1 overflow-hidden rounded-3xl border border-edge-strong bg-card shadow-2xl shadow-black/30 md:grid-cols-2">
+      <div className="relative grid h-136 w-full max-w-4xl grid-cols-1 overflow-hidden rounded-3xl border border-edge-strong shadow-2xl shadow-black/30 md:grid-cols-2">
         {/* ---- Brand panel — fixed on the left, copy changes per step. ---- */}
         <div className="relative hidden md:block">
           <div className="relative flex h-full flex-col items-center justify-center gap-4 overflow-hidden bg-linear-to-br from-indigo-600 via-indigo-500 to-purple-600 px-10 text-center">
@@ -86,7 +86,26 @@ export function SplitAuthCard({
         </div>
 
         {/* ---- Form pane ---- */}
-        <div className="flex flex-col justify-center px-8 py-10 sm:px-12">{children}</div>
+        <div className="relative flex flex-col justify-center overflow-hidden px-8 py-10 backdrop-blur-3xl backdrop-saturate-150 sm:px-12">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_120%_60%_at_20%_0%,rgba(148,163,184,0.16),transparent_60%)]"
+          />
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 bg-linear-to-br from-slate-400/10 via-slate-500/5 to-indigo-500/10"
+          />
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 opacity-[0.15] mix-blend-overlay"
+            style={{
+              backgroundImage:
+                'repeating-radial-gradient(circle at 15% 20%, rgba(255,255,255,0.4) 0, transparent 1.5%), repeating-radial-gradient(circle at 65% 55%, rgba(255,255,255,0.35) 0, transparent 1.2%), repeating-radial-gradient(circle at 40% 85%, rgba(255,255,255,0.3) 0, transparent 1.8%)',
+              backgroundSize: '140px 140px, 180px 180px, 200px 200px',
+            }}
+          />
+          <div className="relative">{children}</div>
+        </div>
       </div>
     </div>
   );
