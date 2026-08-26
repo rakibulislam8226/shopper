@@ -282,7 +282,7 @@ function NavParent({
         type="button"
         onClick={onToggle}
         aria-expanded={open}
-        className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-nav text-slate-400 transition-colors duration-150 hover:bg-panel hover:text-slate-200"
+        className="flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-nav text-slate-400 transition-colors duration-150 hover:bg-panel hover:text-slate-200"
       >
         <NavIcon>{item.icon}</NavIcon>
         <span className="flex-1 text-left">{item.label}</span>
@@ -294,8 +294,16 @@ function NavParent({
         />
       </button>
 
-      {open && (
-        <ul className="mt-0.5 space-y-0.5">
+      {/* Height-animated via a grid-rows trick (0fr ↔ 1fr) rather than
+          conditionally rendering — a mount/unmount swap has no size to
+          transition between, so it can only ever pop open or shut. */}
+      <div
+        className={cn(
+          'grid transition-all duration-200 ease-out',
+          open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0',
+        )}
+      >
+        <ul className="mt-0.5 space-y-0.5 overflow-hidden">
           {children.map((child) => (
             <NavLeaf
               key={child.path}
@@ -307,7 +315,7 @@ function NavParent({
             />
           ))}
         </ul>
-      )}
+      </div>
     </li>
   );
 }
