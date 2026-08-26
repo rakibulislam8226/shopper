@@ -135,7 +135,6 @@ export function Sidebar({
         {collapsed ? null : (
           <div className="min-w-0 flex-1">
             <p className="truncate text-nav text-slate-200">{name}</p>
-            <p className="text-xs text-slate-500">Signed in</p>
           </div>
         )}
 

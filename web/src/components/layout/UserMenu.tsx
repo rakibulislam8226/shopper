@@ -54,7 +54,6 @@ export function UserMenu() {
           >
             <div className="border-b border-edge px-4 py-3">
               <p className="truncate text-sm font-semibold text-slate-100">{name}</p>
-              <p className="text-xs text-slate-400">Signed in</p>
             </div>
 
             <Button

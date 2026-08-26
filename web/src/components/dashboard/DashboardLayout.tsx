@@ -45,7 +45,7 @@ export function DashboardLayout() {
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           aria-expanded={!collapsed}
-          className="absolute top-[3.25rem] right-0 z-40 h-8 w-8 translate-x-1/2 rounded-lg border-slate-700 bg-elevated shadow-lg"
+          className="absolute top-13 right-0 z-40 h-8 w-8 translate-x-1/2 rounded-lg border-slate-700 bg-elevated shadow-lg"
         >
           <PanelIcon collapsed={collapsed} />
         </Button>
