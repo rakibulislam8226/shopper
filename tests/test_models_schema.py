@@ -49,6 +49,7 @@ EXPECTED_TABLES = {
     "purchase_returns",
     "expense_categories",
     "shop_expenses",
+    "shop_documents",
     "audit_logs",
 }
 
@@ -219,3 +220,29 @@ def test_audit_actor_is_a_user_foreign_key() -> None:
     assert actor_fks == {"users"}
     # entity_id stays polymorphic — it points at whichever table entity_type names.
     assert audit.columns["entity_id"].foreign_keys == set()
+
+
+def test_shop_document_types() -> None:
+    from app.db.enums import ShopDocumentType
+
+    assert set(ShopDocumentType) == {
+        ShopDocumentType.OWNER_NID,
+        ShopDocumentType.TRADE_LICENSE,
+        ShopDocumentType.TIN_CERTIFICATE,
+        ShopDocumentType.OTHER,
+    }
+
+
+def test_shop_status_defaults_to_pending() -> None:
+    """Every shop starts PENDING — approval is a separate, later action."""
+    from app.db.enums import ShopStatus
+
+    column = Base.metadata.tables["shops"].columns["status"]
+    assert column.default.arg == ShopStatus.PENDING
+    assert set(ShopStatus) == {
+        ShopStatus.PENDING,
+        ShopStatus.ACTIVE,
+        ShopStatus.SUSPENDED,
+        ShopStatus.REJECTED,
+        ShopStatus.REMOVED,
+    }

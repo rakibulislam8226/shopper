@@ -1,8 +1,8 @@
-"""shop-based retail schema: shops, memberships, products, inventory, sales, purchases, expenses
+"""shop-based retail schema with document approval workflow
 
-Revision ID: 8a4b5b322107
+Revision ID: 0f27d41b03f3
 Revises: 
-Create Date: 2026-08-26 09:41:41.304546
+Create Date: 2026-08-26 11:09:46.174986
 """
 
 from __future__ import annotations
@@ -14,7 +14,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = '8a4b5b322107'
+revision: str = '0f27d41b03f3'
 down_revision: str | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -31,7 +31,7 @@ def upgrade() -> None:
     sa.Column('phone', sa.String(length=32), nullable=True),
     sa.Column('address', sa.String(length=500), nullable=True),
     sa.Column('logo', sa.String(length=500), nullable=True),
-    sa.Column('status', sa.Enum('active', 'suspended', 'removed', name='shop_status'), server_default='active', nullable=False),
+    sa.Column('status', sa.Enum('pending', 'active', 'suspended', 'rejected', 'removed', name='shop_status'), server_default='pending', nullable=False),
     sa.Column('created_by_user_id', sa.Integer(), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
@@ -112,6 +112,23 @@ def upgrade() -> None:
     )
     op.create_index(op.f('ix_product_categories_shop_id'), 'product_categories', ['shop_id'], unique=False)
     op.create_index(op.f('ix_product_categories_uid'), 'product_categories', ['uid'], unique=True)
+    op.create_table('shop_documents',
+    sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
+    sa.Column('uid', sa.Uuid(), nullable=False),
+    sa.Column('shop_id', sa.Integer(), nullable=False),
+    sa.Column('type', sa.Enum('owner_nid', 'trade_license', 'tin_certificate', 'other', name='shop_document_type'), nullable=False),
+    sa.Column('file_url', sa.String(length=500), nullable=False),
+    sa.Column('uploaded_by_user_id', sa.Integer(), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('deleted_at', sa.DateTime(timezone=True), nullable=True),
+    sa.ForeignKeyConstraint(['shop_id'], ['shops.id'], name=op.f('fk_shop_documents_shop_id_shops'), ondelete='RESTRICT'),
+    sa.ForeignKeyConstraint(['uploaded_by_user_id'], ['users.id'], name=op.f('fk_shop_documents_uploaded_by_user_id_users'), ondelete='RESTRICT'),
+    sa.PrimaryKeyConstraint('id', name=op.f('pk_shop_documents'))
+    )
+    op.create_index(op.f('ix_shop_documents_shop_id'), 'shop_documents', ['shop_id'], unique=False)
+    op.create_index('ix_shop_documents_shop_id_type', 'shop_documents', ['shop_id', 'type'], unique=False)
+    op.create_index(op.f('ix_shop_documents_uid'), 'shop_documents', ['uid'], unique=True)
     op.create_table('shop_memberships',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('uid', sa.Uuid(), nullable=False),
@@ -390,6 +407,10 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_shop_memberships_shop_id'), table_name='shop_memberships')
     op.drop_index(op.f('ix_shop_memberships_role'), table_name='shop_memberships')
     op.drop_table('shop_memberships')
+    op.drop_index(op.f('ix_shop_documents_uid'), table_name='shop_documents')
+    op.drop_index('ix_shop_documents_shop_id_type', table_name='shop_documents')
+    op.drop_index(op.f('ix_shop_documents_shop_id'), table_name='shop_documents')
+    op.drop_table('shop_documents')
     op.drop_index(op.f('ix_product_categories_uid'), table_name='product_categories')
     op.drop_index(op.f('ix_product_categories_shop_id'), table_name='product_categories')
     op.drop_table('product_categories')

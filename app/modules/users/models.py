@@ -54,8 +54,10 @@ class User(BaseModel):
         server_default="false",
     )
 
-    # The shop last selected in the UI; convenience default for the next
-    # login. Null before first selection or if that shop was later removed.
+    # The shop currently selected for this user — a user operates inside
+    # exactly one shop at a time, switched via `POST /api/users/active-shop`
+    # (see users/service.py:switch_active_shop). Only an ACTIVE shop may be
+    # selected. Null before first selection or if that shop was later removed.
     last_active_shop_id: Mapped[int | None] = mapped_column(
         ForeignKey("shops.id", ondelete="SET NULL"),
         nullable=True,
@@ -63,7 +65,7 @@ class User(BaseModel):
 
     last_login_at: Mapped[datetime | None] = mapped_column(nullable=True)
 
-    last_active_shop: Mapped[Shop | None] = relationship(foreign_keys=[last_active_shop_id])
+    active_shop: Mapped[Shop | None] = relationship(foreign_keys=[last_active_shop_id])
     memberships: Mapped[list[ShopMembership]] = relationship(
         back_populates="user",
         foreign_keys="ShopMembership.user_id",

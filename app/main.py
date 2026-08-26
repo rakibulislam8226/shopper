@@ -11,10 +11,12 @@ import time
 import uuid
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 import structlog
 from fastapi import Depends, FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 from starlette.middleware.base import RequestResponseEndpoint
 
@@ -110,4 +112,13 @@ async def request_context_middleware(
 
 app.include_router(users_router, prefix="/api/users")
 app.include_router(shops_router, prefix="/api/shops")
+
+# Serves whatever app.core.storage.save_upload wrote to disk. Only relevant
+# for media_storage_driver="local" — an S3 deployment serves files from the
+# bucket directly and needs no local mount.
+if settings.media_storage_driver == "local":
+    media_dir = Path(settings.media_local_upload_dir)
+    media_dir.mkdir(parents=True, exist_ok=True)
+    app.mount("/media", StaticFiles(directory=media_dir), name="media")
+
 register_spa(app)

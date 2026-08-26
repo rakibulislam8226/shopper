@@ -27,7 +27,10 @@ export function Navbar() {
 
           <span className="mx-1 h-5 w-px bg-edge-strong" aria-hidden="true" />
 
-          <ButtonLink to="/login">Sign in</ButtonLink>
+          <ButtonLink to="/login" variant="secondary">
+            Sign in
+          </ButtonLink>
+          <ButtonLink to="/signup">Sign up</ButtonLink>
         </nav>
       </div>
     </header>

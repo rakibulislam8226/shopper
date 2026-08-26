@@ -3,9 +3,13 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
+
+if TYPE_CHECKING:
+    from app.modules.shops.schemas import ShopPublic
 
 
 class LoginRequest(BaseModel):
@@ -22,7 +26,12 @@ class RefreshRequest(BaseModel):
 
 
 class UserPublic(BaseModel):
-    """User fields safe to expose to a client. Never carries `password_hash`."""
+    """User fields safe to expose to a client. Never carries `password_hash`.
+
+    Carries the *public* shop object, not ``last_active_shop_id`` — the
+    latter is an internal integer FK and never crosses the API boundary (see
+    every other ``*Public`` schema's use of ``uid``).
+    """
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -32,6 +41,7 @@ class UserPublic(BaseModel):
     is_superuser: bool
     is_active: bool
     must_change_password: bool
+    active_shop: ShopPublic | None = None
     last_login_at: datetime | None
     created_at: datetime
 
@@ -57,3 +67,15 @@ class RefreshResponse(BaseModel):
     """Payload placed in the standard envelope's `data` field on refresh."""
 
     tokens: TokenPair
+
+
+class SwitchActiveShopRequest(BaseModel):
+    """Body for `POST /api/users/active-shop`."""
+
+    shop_uid: UUID
+
+
+class SwitchActiveShopResponse(BaseModel):
+    """Payload placed in the standard envelope's `data` field on shop switch."""
+
+    user: UserPublic

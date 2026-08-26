@@ -20,9 +20,18 @@ from app.core.security import (
     needs_rehash,
     verify_password,
 )
+from app.db.enums import ShopStatus
+from app.modules.memberships.repository import get_active_membership
+from app.modules.shops.repository import get_shop_by_uid
 from app.modules.users.models import User
 from app.modules.users.repository import get_user_by_phone, get_user_by_uid
-from app.modules.users.schemas import LoginResponse, RefreshResponse, TokenPair, UserPublic
+from app.modules.users.schemas import (
+    LoginResponse,
+    RefreshResponse,
+    SwitchActiveShopResponse,
+    TokenPair,
+    UserPublic,
+)
 from app.redis.client import redis_client
 
 logger = get_logger(__name__)
@@ -51,7 +60,7 @@ def _refresh_key(subject: str, jti: str) -> str:
     return _REFRESH_KEY.format(subject=subject, jti=jti)
 
 
-async def _issue_tokens(user: User) -> TokenPair:
+async def issue_tokens(user: User) -> TokenPair:
     """Mint an access/refresh pair for ``user`` and register the refresh jti."""
     subject = str(user.uid)
     access = create_access_token(subject)
@@ -95,7 +104,7 @@ async def login(db: AsyncSession, phone: str, password: str) -> LoginResponse:
     await db.commit()
     await db.refresh(user)
 
-    tokens = await _issue_tokens(user)
+    tokens = await issue_tokens(user)
     logger.info("login_succeeded", user_uid=str(user.uid))
 
     return LoginResponse(user=UserPublic.model_validate(user), tokens=tokens)
@@ -140,6 +149,53 @@ async def refresh(db: AsyncSession, refresh_token: str) -> RefreshResponse:
         logger.info("refresh_rejected_inactive", user_uid=subject)
         raise AppError(_ACCOUNT_INACTIVE, status_code=status.HTTP_403_FORBIDDEN)
 
-    tokens = await _issue_tokens(user)
+    tokens = await issue_tokens(user)
     logger.info("refresh_succeeded", user_uid=subject)
     return RefreshResponse(tokens=tokens)
+
+
+async def switch_active_shop(
+    db: AsyncSession, user: User, shop_uid: UUID
+) -> SwitchActiveShopResponse:
+    """Select ``shop_uid`` as the caller's active shop.
+
+    Requires an ACTIVE ShopMembership on that shop *and* the shop itself
+    being ACTIVE — a PENDING/REJECTED/SUSPENDED/REMOVED shop cannot be
+    selected, which is the actual enforcement point for "you can't use a
+    shop under review": login always succeeds, but switching into it does not.
+    """
+    shop = await get_shop_by_uid(db, shop_uid)
+    if shop is None:
+        raise AppError("Shop not found", status_code=status.HTTP_404_NOT_FOUND)
+
+    membership = await get_active_membership(db, user_id=user.id, shop_id=shop.id)
+    if membership is None:
+        raise AppError("You are not a member of this shop", status_code=status.HTTP_403_FORBIDDEN)
+
+    if shop.status != ShopStatus.ACTIVE:
+        logger.info(
+            "shop_switch_rejected_not_active",
+            user_uid=str(user.uid),
+            shop_uid=str(shop.uid),
+            shop_status=shop.status.value,
+        )
+        raise AppError(
+            _shop_unavailable_message(shop.status), status_code=status.HTTP_403_FORBIDDEN
+        )
+
+    user.active_shop = shop
+    await db.commit()
+    await db.refresh(user)
+
+    logger.info("shop_switched", user_uid=str(user.uid), shop_uid=str(shop.uid))
+    return SwitchActiveShopResponse(user=UserPublic.model_validate(user))
+
+
+def _shop_unavailable_message(shop_status: ShopStatus) -> str:
+    if shop_status == ShopStatus.PENDING:
+        return "This shop is under admin review and is not yet active."
+    if shop_status == ShopStatus.REJECTED:
+        return "This shop's approval was rejected. Contact support."
+    if shop_status == ShopStatus.SUSPENDED:
+        return "This shop has been suspended. Contact your administrator."
+    return "This shop is no longer available."

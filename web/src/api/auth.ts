@@ -1,3 +1,4 @@
+import { type Shop } from '@api/shops';
 import { axios } from '@plugins/axios';
 import { useMutation } from '@tanstack/react-query';
 
@@ -8,9 +9,10 @@ export interface AuthUser {
   uid: string;
   name: string;
   phone: string;
-  is_superadmin: boolean;
+  is_superuser: boolean;
   is_active: boolean;
   must_change_password: boolean;
+  active_shop: Shop | null;
   last_login_at: string | null;
   created_at: string;
 }
@@ -44,6 +46,32 @@ export function useLogin() {
       const response = await axios.post<ApiResponse<LoginData>>('/users/login', payload, {
         toast: { error: 'Unable to sign in' },
       });
+      return response.data;
+    },
+  });
+}
+
+export interface SwitchActiveShopPayload {
+  shop_uid: string;
+}
+
+export interface SwitchActiveShopData {
+  user: AuthUser;
+}
+
+/**
+ * POST /api/users/active-shop — selects which shop the caller operates in.
+ * Only an ACTIVE shop can be selected; a PENDING/REJECTED/SUSPENDED/REMOVED
+ * shop is refused with a message explaining why.
+ */
+export function useSwitchActiveShop() {
+  return useMutation({
+    mutationFn: async (payload: SwitchActiveShopPayload) => {
+      const response = await axios.post<ApiResponse<SwitchActiveShopData>>(
+        '/users/active-shop',
+        payload,
+        { toast: { error: 'Unable to switch shop' } },
+      );
       return response.data;
     },
   });

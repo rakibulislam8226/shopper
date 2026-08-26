@@ -1,20 +1,25 @@
-"""Shops — the tenant boundary.
+"""Shops — the tenant boundary — and the documents submitted for their approval.
 
 Every shop-scoped row in the system carries this table's ``id``. Shops are
 never hard-deleted: ``status`` moves to SUSPENDED (reversible lock) or REMOVED
 (soft, longer-term), so the financial history underneath stays intact and
 auditable.
+
+Every shop starts PENDING and needs explicit superuser approval (via
+``ShopDocument`` review) before it goes ACTIVE. A user can log in with a
+PENDING shop, but selecting it as their active shop is refused — see
+``users/service.py:switch_active_shop``.
 """
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, String
+from sqlalchemy import ForeignKey, Index, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import BaseModel
-from app.db.enums import SHOP_STATUS_ENUM, ShopStatus
+from app.db.enums import SHOP_DOCUMENT_TYPE_ENUM, SHOP_STATUS_ENUM, ShopDocumentType, ShopStatus
 
 if TYPE_CHECKING:
     from app.modules.expenses.models import ExpenseCategory, ShopExpense
@@ -38,8 +43,8 @@ class Shop(BaseModel):
     status: Mapped[ShopStatus] = mapped_column(
         SHOP_STATUS_ENUM,
         nullable=False,
-        default=ShopStatus.ACTIVE,
-        server_default=ShopStatus.ACTIVE.value,
+        default=ShopStatus.PENDING,
+        server_default=ShopStatus.PENDING.value,
         index=True,
     )
 
@@ -80,6 +85,35 @@ class Shop(BaseModel):
         back_populates="shop", passive_deletes="all"
     )
     expenses: Mapped[list[ShopExpense]] = relationship(back_populates="shop", passive_deletes="all")
+    documents: Mapped[list[ShopDocument]] = relationship(
+        back_populates="shop", passive_deletes="all"
+    )
 
     def __repr__(self) -> str:  # pragma: no cover - debugging aid
         return f"<Shop id={self.id} name={self.name!r} status={self.status.value}>"
+
+
+class ShopDocument(BaseModel):
+    """A file submitted for shop approval (owner NID, trade license, ...).
+
+    Optional and addable at any time after registration — a shop can exist
+    with zero documents; a superuser simply won't approve it until the
+    documents they need to see are present.
+    """
+
+    __tablename__ = "shop_documents"
+    __table_args__ = (Index("ix_shop_documents_shop_id_type", "shop_id", "type"),)
+
+    shop_id: Mapped[int] = mapped_column(
+        ForeignKey("shops.id", ondelete="RESTRICT"), nullable=False, index=True
+    )
+    type: Mapped[ShopDocumentType] = mapped_column(SHOP_DOCUMENT_TYPE_ENUM, nullable=False)
+    file_url: Mapped[str] = mapped_column(String(500), nullable=False)
+    uploaded_by_user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="RESTRICT"), nullable=False
+    )
+
+    shop: Mapped[Shop] = relationship(back_populates="documents")
+
+    def __repr__(self) -> str:  # pragma: no cover - debugging aid
+        return f"<ShopDocument id={self.id} shop_id={self.shop_id} type={self.type.value}>"

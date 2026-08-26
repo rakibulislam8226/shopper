@@ -21,7 +21,7 @@ from app.modules.memberships.models import ShopMembership
 from app.modules.products.models import Product, ProductCategory
 from app.modules.purchases.models import PurchaseReturn
 from app.modules.sales.models import SaleReturn, SaleTransaction
-from app.modules.shops.models import Shop
+from app.modules.shops.models import Shop, ShopDocument
 from app.modules.users.models import User
 
 __all__ = [
@@ -36,6 +36,7 @@ __all__ = [
     "SaleReturn",
     "SaleTransaction",
     "Shop",
+    "ShopDocument",
     "ShopExpense",
     "ShopMembership",
     "User",

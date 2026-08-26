@@ -42,11 +42,28 @@ class MembershipStatus(StrEnum):
 
 
 class ShopStatus(StrEnum):
-    """Lifecycle of a shop. Both non-active states are reversible."""
+    """Lifecycle of a shop.
 
+    Every shop starts PENDING, awaiting superuser review of its submitted
+    ShopDocuments. A user may still log in while their shop is PENDING, but
+    cannot select it as their active shop (see
+    ``users/service.py:switch_active_shop``) until it is ACTIVE.
+    """
+
+    PENDING = "pending"  # awaiting superuser approval
     ACTIVE = "active"
     SUSPENDED = "suspended"  # reversible lock
+    REJECTED = "rejected"  # approval denied
     REMOVED = "removed"  # soft, longer-term removal
+
+
+class ShopDocumentType(StrEnum):
+    """A document submitted in support of a shop's approval."""
+
+    OWNER_NID = "owner_nid"
+    TRADE_LICENSE = "trade_license"
+    TIN_CERTIFICATE = "tin_certificate"
+    OTHER = "other"
 
 
 class ProductStatus(StrEnum):
@@ -91,5 +108,6 @@ def pg_enum(enum_cls: type[Enum], name: str) -> SAEnum:
 MEMBERSHIP_ROLE_ENUM = pg_enum(MembershipRole, "membership_role")
 MEMBERSHIP_STATUS_ENUM = pg_enum(MembershipStatus, "membership_status")
 SHOP_STATUS_ENUM = pg_enum(ShopStatus, "shop_status")
+SHOP_DOCUMENT_TYPE_ENUM = pg_enum(ShopDocumentType, "shop_document_type")
 PRODUCT_STATUS_ENUM = pg_enum(ProductStatus, "product_status")
 INVENTORY_MOVEMENT_TYPE_ENUM = pg_enum(InventoryMovementType, "inventory_movement_type")

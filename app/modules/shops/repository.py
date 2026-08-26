@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from uuid import UUID
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -16,3 +18,9 @@ async def get_shop_by_slug(db: AsyncSession, slug: str) -> Shop | None:
 
 async def slug_exists(db: AsyncSession, slug: str) -> bool:
     return await get_shop_by_slug(db, slug) is not None
+
+
+async def get_shop_by_uid(db: AsyncSession, uid: UUID) -> Shop | None:
+    """Return the active (not soft-deleted) shop with this public uid, if any."""
+    result = await db.execute(select(Shop).where(Shop.uid == uid, Shop.deleted_at.is_(None)))
+    return result.scalar_one_or_none()

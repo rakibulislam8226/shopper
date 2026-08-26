@@ -82,8 +82,7 @@ async def validation_exception_handler(
     request: Request, exc: RequestValidationError
 ) -> JSONResponse:
     validation_errors = [
-        {"loc": e.get("loc"), "msg": e.get("msg"), "type": e.get("type")}
-        for e in exc.errors()
+        {"loc": e.get("loc"), "msg": e.get("msg"), "type": e.get("type")} for e in exc.errors()
     ]
     return error_response(
         message="Validation error",

@@ -6,11 +6,13 @@ from fastapi import APIRouter, Depends, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.deps import get_current_user
 from app.core.rate_limit import rate_limit
 from app.core.response import success_response
 from app.db.session import get_db
 from app.modules.users import service
-from app.modules.users.schemas import LoginRequest, RefreshRequest
+from app.modules.users.models import User
+from app.modules.users.schemas import LoginRequest, RefreshRequest, SwitchActiveShopRequest
 
 router = APIRouter(tags=["users-auth"])
 
@@ -39,5 +41,19 @@ async def refresh(
     return success_response(
         data=result.model_dump(mode="json"),
         message="Token refreshed",
+        status_code=status.HTTP_200_OK,
+    )
+
+
+@router.post("/active-shop", summary="Switch the caller's active shop")
+async def switch_active_shop(
+    payload: SwitchActiveShopRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> JSONResponse:
+    result = await service.switch_active_shop(db, current_user, payload.shop_uid)
+    return success_response(
+        data=result.model_dump(mode="json"),
+        message="Active shop switched",
         status_code=status.HTTP_200_OK,
     )

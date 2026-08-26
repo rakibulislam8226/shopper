@@ -2,6 +2,7 @@ import { RedirectAuthenticated } from '@components/auth/RedirectAuthenticated';
 import { AppLayout } from '@components/layout/AppLayout';
 import { LandingPage } from '@pages/LandingPage';
 import { LoginPage } from '@pages/LoginPage';
+import { SignupPage } from '@pages/SignupPage';
 import { Navigate, type RouteObject } from 'react-router-dom';
 
 // Type-only import: erased at build time, so it creates no runtime cycle.
@@ -28,6 +29,7 @@ export function createPublicRoutes(routes: RoutePaths): RouteObject[] {
           ),
         },
         { path: routes.login, element: <LoginPage /> },
+        { path: routes.signup, element: <SignupPage /> },
 
         // Catch-all. Without it an unknown path — a stale bookmark, a typo, a
         // route that used to exist — matches nothing and React Router renders

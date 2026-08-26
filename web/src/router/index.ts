@@ -6,6 +6,7 @@ import { createPublicRoutes } from './public/router';
 export const ROUTES = {
   home: '/',
   login: '/login',
+  signup: '/signup',
 
   dashboard: {
     root: '/dashboard',
