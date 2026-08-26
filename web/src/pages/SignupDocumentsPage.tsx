@@ -84,7 +84,7 @@ export function SignupDocumentsPage() {
       onSuccess: (response) => {
         const data = response.data;
         if (!data) return;
-        setSession(data.user.name, data.tokens);
+        setSession(data.user.name, data.tokens, data.shop.uid);
         void navigate('/dashboard', { replace: true });
       },
     });

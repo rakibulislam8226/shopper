@@ -1,11 +1,13 @@
 import { BrandLogo } from '@components/layout/BrandLogo';
 import { Button } from '@components/ui/Button';
+import { ChevronDownIcon } from '@components/ui/icons';
+import { cn } from '@lib/cn';
 import { clearStoredSession } from '@lib/session';
 import { useAuthStore } from '@stores/auth';
-import { type ReactNode } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { type ReactNode, useState } from 'react';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 
-import { NAV_SECTIONS } from './navigation';
+import { NAV_SECTIONS, type NavItem } from './navigation';
 
 /** Wrapper giving every nav glyph the same size and stroke. */
 function NavIcon({ children }: { children: ReactNode }) {
@@ -31,14 +33,27 @@ function initials(name: string): string {
   return parts.map((part) => part.charAt(0).toUpperCase()).join('') || '?';
 }
 
+/** True if this item or any of its descendants matches the current path. */
+function containsPath(item: NavItem, pathname: string): boolean {
+  if (item.path && pathname === item.path) return true;
+  return item.children?.some((child) => containsPath(child, pathname)) ?? false;
+}
+
 /**
  * Dashboard sidebar: brand, grouped navigation, and the signed-in user.
  *
- * `collapsed` narrows it to an icon-only rail — labels, section headings and
- * badges drop out, everything centres, and each row keeps a `title` so a
- * hover still names it. Rendered three ways by the layout: full on desktop,
- * as a rail when collapsed, and full inside the mobile drawer (which passes
- * `onNavigate` so following a link closes it).
+ * A nav item is either a leaf (has `path`, navigates directly) or a parent
+ * (has `children`, toggles open/closed and reveals an indented sub-list —
+ * "Settings" expanding into "Shop details" / "Documents" is the current
+ * example). A parent auto-expands when the current route is inside it, so
+ * following a deep link never leaves its own section collapsed.
+ *
+ * `collapsed` narrows it to an icon-only rail — labels, section headings,
+ * badges and nested children all drop out (there is nowhere to put a
+ * sub-list on a rail), and each row keeps a `title` so a hover still names
+ * it. Rendered three ways by the layout: full on desktop, as a rail when
+ * collapsed, and full inside the mobile drawer (which passes `onNavigate` so
+ * following a link closes it).
  */
 export function Sidebar({
   collapsed = false,
@@ -48,7 +63,25 @@ export function Sidebar({
   onNavigate?: () => void;
 }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const name = useAuthStore((state) => state.name);
+
+  const [openLabels, setOpenLabels] = useState<Set<string>>(
+    () =>
+      new Set(
+        NAV_SECTIONS.flatMap((section) => section.items)
+          .filter((item) => containsPath(item, location.pathname))
+          .map((item) => item.label),
+      ),
+  );
+
+  const toggleOpen = (label: string) =>
+    setOpenLabels((current) => {
+      const next = new Set(current);
+      if (next.has(label)) next.delete(label);
+      else next.add(label);
+      return next;
+    });
 
   const handleSignOut = () => {
     onNavigate?.();
@@ -57,13 +90,13 @@ export function Sidebar({
   };
 
   const linkClasses = ({ isActive }: { isActive: boolean }) =>
-    `flex items-center rounded-lg text-nav transition-colors duration-150 ${
-      collapsed ? 'justify-center px-0 py-2.5' : 'gap-3 px-3 py-2'
-    } ${
+    cn(
+      'flex items-center rounded-lg text-nav transition-colors duration-150',
+      collapsed ? 'justify-center px-0 py-2.5' : 'gap-3 px-3 py-2',
       isActive
         ? 'bg-brand-soft font-semibold text-brand-text ring-1 ring-brand-ring'
-        : 'text-slate-400 hover:bg-panel hover:text-slate-200'
-    }`;
+        : 'text-slate-400 hover:bg-panel hover:text-slate-200',
+    );
 
   return (
     <div className="flex h-full flex-col border-r border-edge bg-card">
@@ -89,32 +122,27 @@ export function Sidebar({
             )}
 
             <ul className="space-y-0.5">
-              {section.items.map((item) => (
-                <li key={item.path}>
-                  <NavLink
-                    to={item.path}
-                    end={item.path === '/dashboard'}
-                    onClick={onNavigate}
-                    className={linkClasses}
-                    title={collapsed ? item.label : undefined}
-                  >
-                    <NavIcon>{item.icon}</NavIcon>
-                    {collapsed ? (
-                      // The icon alone is not an accessible name.
-                      <span className="sr-only">{item.label}</span>
-                    ) : (
-                      <>
-                        <span className="flex-1">{item.label}</span>
-                        {item.badge ? (
-                          <span className="rounded-full bg-elevated px-1.5 py-0.5 text-[10px] font-medium text-slate-400">
-                            {item.badge}
-                          </span>
-                        ) : null}
-                      </>
-                    )}
-                  </NavLink>
-                </li>
-              ))}
+              {section.items.map((item) =>
+                item.children ? (
+                  <NavParent
+                    key={item.label}
+                    item={item}
+                    collapsed={collapsed}
+                    open={openLabels.has(item.label)}
+                    onToggle={() => toggleOpen(item.label)}
+                    linkClasses={linkClasses}
+                    onNavigate={onNavigate}
+                  />
+                ) : (
+                  <NavLeaf
+                    key={item.path}
+                    item={item}
+                    collapsed={collapsed}
+                    linkClasses={linkClasses}
+                    onNavigate={onNavigate}
+                  />
+                ),
+              )}
             </ul>
           </div>
         ))}
@@ -163,5 +191,123 @@ export function Sidebar({
         </Button>
       </div>
     </div>
+  );
+}
+
+type LinkClasses = (props: { isActive: boolean }) => string;
+
+function NavLeaf({
+  item,
+  collapsed,
+  linkClasses,
+  onNavigate,
+  indented = false,
+}: {
+  item: NavItem;
+  collapsed: boolean;
+  linkClasses: LinkClasses;
+  onNavigate?: () => void;
+  indented?: boolean;
+}) {
+  if (!item.path) return null; // A leaf without a path is a data error, not renderable.
+
+  return (
+    <li>
+      <NavLink
+        to={item.path}
+        end={item.path === '/dashboard'}
+        onClick={onNavigate}
+        className={linkClasses}
+        title={collapsed ? item.label : undefined}
+      >
+        <span className={indented && !collapsed ? 'ml-7' : undefined}>
+          <NavIcon>{item.icon}</NavIcon>
+        </span>
+        {collapsed ? (
+          // The icon alone is not an accessible name.
+          <span className="sr-only">{item.label}</span>
+        ) : (
+          <>
+            <span className="flex-1">{item.label}</span>
+            {item.badge ? (
+              <span className="rounded-full bg-elevated px-1.5 py-0.5 text-[10px] font-medium text-slate-400">
+                {item.badge}
+              </span>
+            ) : null}
+          </>
+        )}
+      </NavLink>
+    </li>
+  );
+}
+
+/**
+ * An expandable row with nested children. Collapses to a single icon-only
+ * leaf when the sidebar is a rail — a rail has nowhere to show a sub-list,
+ * so it links straight to the parent's first child instead.
+ */
+function NavParent({
+  item,
+  collapsed,
+  open,
+  onToggle,
+  linkClasses,
+  onNavigate,
+}: {
+  item: NavItem;
+  collapsed: boolean;
+  open: boolean;
+  onToggle: () => void;
+  linkClasses: LinkClasses;
+  onNavigate?: () => void;
+}) {
+  const children = item.children ?? [];
+
+  if (collapsed) {
+    const firstChild = children[0];
+    if (!firstChild?.path) return null;
+    return (
+      <NavLeaf
+        item={{ ...item, path: firstChild.path }}
+        collapsed
+        onNavigate={onNavigate}
+        linkClasses={linkClasses}
+      />
+    );
+  }
+
+  return (
+    <li>
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-nav text-slate-400 transition-colors duration-150 hover:bg-panel hover:text-slate-200"
+      >
+        <NavIcon>{item.icon}</NavIcon>
+        <span className="flex-1 text-left">{item.label}</span>
+        <ChevronDownIcon
+          className={cn(
+            'h-3.5 w-3.5 shrink-0 transition-transform duration-200',
+            open && 'rotate-180',
+          )}
+        />
+      </button>
+
+      {open && (
+        <ul className="mt-0.5 space-y-0.5">
+          {children.map((child) => (
+            <NavLeaf
+              key={child.path}
+              item={child}
+              collapsed={false}
+              linkClasses={linkClasses}
+              onNavigate={onNavigate}
+              indented
+            />
+          ))}
+        </ul>
+      )}
+    </li>
   );
 }

@@ -1,6 +1,6 @@
 import { type AuthUser, type TokenPair } from '@api/auth';
 import { axios } from '@plugins/axios';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { type ApiResponse } from './types';
 
@@ -96,8 +96,12 @@ export interface UploadShopDocumentPayload {
 /**
  * POST /api/shops/{shop_uid}/documents — attaches one more document to an
  * already-registered shop (e.g. adding a trade license later from settings).
+ * Owner-only; invalidates the shop-detail query so Settings reflects the new
+ * document without a manual refetch.
  */
 export function useUploadShopDocument() {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async ({ shopUid, type, file }: UploadShopDocumentPayload) => {
       const form = new FormData();
@@ -110,6 +114,52 @@ export function useUploadShopDocument() {
         { toast: { error: 'Unable to upload document' } },
       );
       return response.data;
+    },
+    onSuccess: (_data, { shopUid }) => {
+      void queryClient.invalidateQueries({ queryKey: ['shop', shopUid] });
+    },
+  });
+}
+
+export interface ShopDetailData {
+  shop: Shop;
+  documents: ShopDocument[];
+}
+
+/** GET /api/shops/{shop_uid} — shop profile plus its documents. Owner-only. */
+export function useShopDetail(shopUid: string | null | undefined) {
+  return useQuery({
+    queryKey: ['shop', shopUid],
+    queryFn: async () => {
+      const response = await axios.get<ApiResponse<ShopDetailData>>(`/shops/${shopUid}`);
+      return response.data.data;
+    },
+    enabled: Boolean(shopUid),
+  });
+}
+
+export interface UpdateShopPayload {
+  shopUid: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  logo?: string;
+}
+
+/** PATCH /api/shops/{shop_uid} — updates only the fields provided. Owner-only. */
+export function useUpdateShop() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ shopUid, ...fields }: UpdateShopPayload) => {
+      const response = await axios.patch<ApiResponse<Shop>>(`/shops/${shopUid}`, fields, {
+        toast: { error: 'Unable to update shop' },
+      });
+      return response.data;
+    },
+    onSuccess: (_data, { shopUid }) => {
+      void queryClient.invalidateQueries({ queryKey: ['shop', shopUid] });
     },
   });
 }

@@ -5,23 +5,28 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 /**
  * Session state, persisted to localStorage so a reload keeps the user signed in.
  *
- * Only three values are kept: the display name and the two tokens. Everything
- * else about the user (phone, flags, timestamps) stays on the server and is
- * fetched when a screen actually needs it — persisted copies go stale, and the
- * less identifying data sitting in localStorage, the smaller the blast radius
- * if a script on this origin is ever compromised.
+ * Only a handful of values are kept: the display name, the active shop's
+ * public uid, and the two tokens. Everything else about the user (phone,
+ * flags, timestamps) stays on the server and is fetched when a screen
+ * actually needs it — persisted copies go stale, and the less identifying
+ * data sitting in localStorage, the smaller the blast radius if a script on
+ * this origin is ever compromised.
  *
  * Read outside React by the axios interceptors via `useAuthStore.getState()`,
  * so every action stays synchronous and side-effect free.
  */
 export interface AuthState {
   name: string | null;
+  /** The shop Settings and other shop-scoped screens operate on. */
+  activeShopUid: string | null;
   accessToken: string | null;
   refreshToken: string | null;
-  /** Sign-in: display name plus the first token pair. */
-  setSession: (name: string, tokens: TokenPair) => void;
+  /** Sign-in: display name, active shop uid, and the first token pair. */
+  setSession: (name: string, tokens: TokenPair, activeShopUid?: string | null) => void;
   /** Refresh: a rotated token pair, same user. */
   setTokens: (tokens: TokenPair) => void;
+  /** After `POST /users/active-shop` succeeds — the shop the user now operates in. */
+  setActiveShopUid: (shopUid: string) => void;
   /** Sign-out, or a refresh that failed for good. */
   clearSession: () => void;
 }
@@ -33,12 +38,14 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       name: null,
+      activeShopUid: null,
       accessToken: null,
       refreshToken: null,
 
-      setSession: (name, tokens) =>
+      setSession: (name, tokens, activeShopUid = null) =>
         set({
           name,
+          activeShopUid,
           accessToken: tokens.access_token,
           refreshToken: tokens.refresh_token,
         }),
@@ -49,20 +56,25 @@ export const useAuthStore = create<AuthState>()(
           refreshToken: tokens.refresh_token,
         }),
 
-      clearSession: () => set({ name: null, accessToken: null, refreshToken: null }),
+      setActiveShopUid: (shopUid) => set({ activeShopUid: shopUid }),
+
+      clearSession: () =>
+        set({ name: null, activeShopUid: null, accessToken: null, refreshToken: null }),
     }),
     {
       name: STORAGE_KEY,
-      version: 2,
+      version: 3,
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         name: state.name,
+        activeShopUid: state.activeShopUid,
         accessToken: state.accessToken,
         refreshToken: state.refreshToken,
       }),
-      // v1 persisted a full user object. Anything older is dropped rather than
-      // migrated — the user simply signs in again once.
-      migrate: () => ({ name: null, accessToken: null, refreshToken: null }),
+      // v1 persisted a full user object, v2 dropped activeShopUid entirely.
+      // Anything older than v3 is dropped rather than migrated — the user
+      // simply signs in again once.
+      migrate: () => ({ name: null, activeShopUid: null, accessToken: null, refreshToken: null }),
     },
   ),
 );

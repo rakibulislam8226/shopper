@@ -28,7 +28,7 @@ export function SignInForm() {
         onSuccess: (response) => {
           const data = response.data;
           if (!data) return;
-          setSession(data.user.name, data.tokens);
+          setSession(data.user.name, data.tokens, data.user.active_shop?.uid);
           void navigate(redirectTo, { replace: true });
         },
       },

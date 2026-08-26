@@ -16,7 +16,11 @@ export const ROUTES = {
     staff: '/dashboard/staff',
     organizations: '/dashboard/organizations',
     audit: '/dashboard/audit',
-    settings: '/dashboard/settings',
+    settings: {
+      root: '/dashboard/settings',
+      profile: '/dashboard/settings/profile',
+      documents: '/dashboard/settings/documents',
+    },
   },
 } as const;
 

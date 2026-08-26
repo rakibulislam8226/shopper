@@ -14,13 +14,16 @@ from app.core.security import hash_password, verify_password
 from app.core.storage import save_upload
 from app.db.enums import MembershipRole, ShopDocumentType
 from app.modules.memberships.models import ShopMembership
+from app.modules.memberships.repository import get_active_membership
 from app.modules.shops.models import Shop, ShopDocument
-from app.modules.shops.repository import get_shop_by_uid, slug_exists
+from app.modules.shops.repository import get_shop_by_uid, get_shop_documents, slug_exists
 from app.modules.shops.schemas import (
+    ShopDetailResponse,
     ShopDocumentPublic,
     ShopPublic,
     ShopRegisterRequest,
     ShopRegisterResponse,
+    ShopUpdateRequest,
 )
 from app.modules.users.models import User
 from app.modules.users.repository import get_user_by_phone
@@ -32,7 +35,28 @@ logger = get_logger(__name__)
 _WRONG_PASSWORD = "Invalid password for this phone number"
 _SHOP_NOT_FOUND = "Shop not found"
 _OWNER_NID_REQUIRED = "Owner NID is required"
+_NOT_SHOP_OWNER = "Only the shop owner can do this"
 _SLUG_INVALID_CHARS = re.compile(r"[^a-z0-9]+")
+
+
+async def require_shop_owner(db: AsyncSession, *, shop_uid: UUID, user_id: int) -> Shop:
+    """Return the shop if ``user_id`` is its ACTIVE owner; raise otherwise.
+
+    Shared by every settings-style endpoint (profile view/edit, document
+    view/upload) — a shop's documents and profile are only ever the
+    concern of the person who owns it, not every member.
+    """
+    shop = await get_shop_by_uid(db, shop_uid)
+    if shop is None:
+        raise AppError(_SHOP_NOT_FOUND, status_code=status.HTTP_404_NOT_FOUND)
+
+    membership = await get_active_membership(db, user_id=user_id, shop_id=shop.id)
+    if membership is None or membership.role != MembershipRole.OWNER:
+        # 404, not 403: confirming a shop UID exists (via a distinct
+        # "forbidden" response) to a non-owner is its own small leak.
+        raise AppError(_SHOP_NOT_FOUND, status_code=status.HTTP_404_NOT_FOUND)
+
+    return shop
 
 
 async def _unique_slug(db: AsyncSession, name: str) -> str:
@@ -191,11 +215,9 @@ async def upload_document(
 
     Documents stay addable at any time — a superuser reviews and approves
     the shop once it has what it needs, regardless of when each document
-    arrived.
+    arrived. Owner-only: see `require_shop_owner`.
     """
-    shop = await get_shop_by_uid(db, shop_uid)
-    if shop is None:
-        raise AppError(_SHOP_NOT_FOUND, status_code=status.HTTP_404_NOT_FOUND)
+    shop = await require_shop_owner(db, shop_uid=shop_uid, user_id=uploaded_by_user_id)
 
     document = await _save_document(
         db,
@@ -213,3 +235,33 @@ async def upload_document(
         document_type=document_type.value,
     )
     return ShopDocumentPublic.model_validate(document)
+
+
+async def get_shop_detail(db: AsyncSession, *, shop_uid: UUID, user_id: int) -> ShopDetailResponse:
+    """Shop profile plus its documents, for the Settings screen. Owner-only."""
+    shop = await require_shop_owner(db, shop_uid=shop_uid, user_id=user_id)
+    documents = await get_shop_documents(db, shop.id)
+
+    return ShopDetailResponse(
+        shop=ShopPublic.model_validate(shop),
+        documents=[ShopDocumentPublic.model_validate(document) for document in documents],
+    )
+
+
+async def update_shop(
+    db: AsyncSession, *, shop_uid: UUID, user_id: int, payload: ShopUpdateRequest
+) -> ShopPublic:
+    """Update shop profile fields. Only fields present in the request change;
+    owner-only, same as every other settings action.
+    """
+    shop = await require_shop_owner(db, shop_uid=shop_uid, user_id=user_id)
+
+    updates = payload.model_dump(exclude_unset=True)
+    for field, value in updates.items():
+        setattr(shop, field, value)
+
+    await db.commit()
+    await db.refresh(shop)
+
+    logger.info("shop_updated", shop_uid=str(shop.uid), fields=list(updates))
+    return ShopPublic.model_validate(shop)

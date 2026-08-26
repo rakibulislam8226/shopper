@@ -83,6 +83,32 @@ class ShopRegisterResponse(BaseModel):
     documents: list[ShopDocumentPublic]
 
 
+class ShopDetailResponse(BaseModel):
+    """Payload for `GET /api/shops/{shop_uid}` — profile plus its documents,
+    for the Settings screen. Owner-only (see `require_shop_owner`).
+    """
+
+    shop: ShopPublic
+    documents: list[ShopDocumentPublic]
+
+
+class ShopUpdateRequest(BaseModel):
+    """Body for `PATCH /api/shops/{shop_uid}`.
+
+    Every field is optional — only what's sent is changed. Absent from the
+    body (Python ``None``, not JSON ``null``) means "leave as is"; there is
+    currently no way to clear ``email``/``phone``/``address``/``logo`` back
+    to null through this endpoint, since the two meanings of "no value" would
+    otherwise collide on an ordinary optional field.
+    """
+
+    name: str | None = Field(default=None, min_length=1, max_length=255)
+    email: str | None = Field(default=None, max_length=255)
+    phone: str | None = Field(default=None, max_length=32)
+    address: str | None = Field(default=None, max_length=500)
+    logo: str | None = Field(default=None, max_length=500)
+
+
 # UserPublic.active_shop is a forward reference ("ShopPublic | None") to break
 # the users<->shops import cycle; rebuild it now that ShopPublic exists here.
 UserPublic.model_rebuild()

@@ -5,9 +5,10 @@ import { OrganizationsPage } from '@pages/dashboard/OrganizationsPage';
 import { OverviewPage } from '@pages/dashboard/OverviewPage';
 import { ProductsPage } from '@pages/dashboard/ProductsPage';
 import { SalesPage } from '@pages/dashboard/SalesPage';
-import { SettingsPage } from '@pages/dashboard/SettingsPage';
+import { ShopDocumentsPage } from '@pages/dashboard/ShopDocumentsPage';
+import { ShopProfilePage } from '@pages/dashboard/ShopProfilePage';
 import { StaffPage } from '@pages/dashboard/StaffPage';
-import { type RouteObject } from 'react-router-dom';
+import { Navigate, type RouteObject } from 'react-router-dom';
 
 import { type RoutePaths } from '../index';
 
@@ -25,7 +26,12 @@ export function createDashboardRoutes(routes: RoutePaths): RouteObject[] {
             { path: routes.dashboard.staff, element: <StaffPage /> },
             { path: routes.dashboard.organizations, element: <OrganizationsPage /> },
             { path: routes.dashboard.audit, element: <AuditPage /> },
-            { path: routes.dashboard.settings, element: <SettingsPage /> },
+            {
+              path: routes.dashboard.settings.root,
+              element: <Navigate to={routes.dashboard.settings.profile} replace />,
+            },
+            { path: routes.dashboard.settings.profile, element: <ShopProfilePage /> },
+            { path: routes.dashboard.settings.documents, element: <ShopDocumentsPage /> },
           ],
         },
       ],

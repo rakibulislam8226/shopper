@@ -8,10 +8,14 @@ import { type ReactNode } from 'react';
  */
 export interface NavItem {
   label: string;
-  path: string;
+  /** Present on a leaf item (navigates) and absent on a parent — a parent's
+   * "path" is nonsensical since it renders no page of its own, just expands. */
+  path?: string;
   icon: ReactNode;
   /** Shown as a muted chip; marks a section whose backend does not exist yet. */
   badge?: string;
+  /** Nested items shown when this row is expanded. Presence makes it a parent. */
+  children?: NavItem[];
 }
 
 /** 24×24 stroke paths, sized by the consumer. */
@@ -31,6 +35,10 @@ const paths = {
   gear: (
     <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2v.1a2 2 0 1 1-4 0v-.1A1.7 1.7 0 0 0 7 19.4a1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0-1.2-2.9H1a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 2.6 7a1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H7a1.7 1.7 0 0 0 1-1.5V1a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V7a1.7 1.7 0 0 0 1.5 1H23a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" />
   ),
+  card: (
+    <path d="M2 7h20M2 5h20a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zM6 15h4" />
+  ),
+  file: <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8ZM14 2v6h6" />,
 };
 
 export const NAV_SECTIONS: { heading: string; items: NavItem[] }[] = [
@@ -60,6 +68,15 @@ export const NAV_SECTIONS: { heading: string; items: NavItem[] }[] = [
   },
   {
     heading: 'Account',
-    items: [{ label: 'Settings', path: '/dashboard/settings', icon: paths.gear, badge: 'Soon' }],
+    items: [
+      {
+        label: 'Settings',
+        icon: paths.gear,
+        children: [
+          { label: 'Shop details', path: '/dashboard/settings/profile', icon: paths.card },
+          { label: 'Documents', path: '/dashboard/settings/documents', icon: paths.file },
+        ],
+      },
+    ],
   },
 ];

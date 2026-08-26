@@ -171,6 +171,15 @@ export function UsersIcon(props: IconProps) {
   );
 }
 
+/** Points down; rotate via `className` (e.g. accordion open/closed state). */
+export function ChevronDownIcon(props: IconProps) {
+  return (
+    <svg {...strokeIconProps(props)}>
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  );
+}
+
 /** Filled 4-point sparkle — decorative accents on auth panels. */
 export function SparkleIcon(props: IconProps) {
   return (

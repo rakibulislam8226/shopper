@@ -15,7 +15,7 @@ from app.core.response import success_response
 from app.db.enums import ShopDocumentType
 from app.db.session import get_db
 from app.modules.shops import service
-from app.modules.shops.schemas import ShopRegisterRequest
+from app.modules.shops.schemas import ShopRegisterRequest, ShopUpdateRequest
 from app.modules.users.models import User
 
 router = APIRouter(tags=["shops"])
@@ -67,6 +67,33 @@ async def register_shop(
         data=result.model_dump(mode="json"),
         message="Shop registered. It is pending review before it can be used.",
         status_code=status.HTTP_201_CREATED,
+    )
+
+
+@router.get("/{shop_uid}", summary="Get a shop's profile and documents (owner only)")
+async def get_shop(
+    shop_uid: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> JSONResponse:
+    result = await service.get_shop_detail(db, shop_uid=shop_uid, user_id=current_user.id)
+    return success_response(data=result.model_dump(mode="json"), status_code=status.HTTP_200_OK)
+
+
+@router.patch("/{shop_uid}", summary="Update a shop's profile (owner only)")
+async def update_shop(
+    shop_uid: UUID,
+    payload: ShopUpdateRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> JSONResponse:
+    result = await service.update_shop(
+        db, shop_uid=shop_uid, user_id=current_user.id, payload=payload
+    )
+    return success_response(
+        data=result.model_dump(mode="json"),
+        message="Shop updated",
+        status_code=status.HTTP_200_OK,
     )
 
 
