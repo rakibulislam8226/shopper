@@ -6,6 +6,8 @@ import { CheckIcon, LockIcon, PhoneIcon } from '@components/ui/icons';
 import { type FormEvent, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
+import forgotPasswordShopImage from '@/assets/forgot-pass-shop.jpeg';
+
 type Step = 'phone' | 'otp' | 'password' | 'done';
 
 const STEP_COPY: Record<
@@ -93,7 +95,11 @@ export function ForgotPasswordPage() {
   const { formTitle, formSubtitle, panelTitle, panelBody } = STEP_COPY[step];
 
   return (
-    <SplitAuthCard panelTitle={panelTitle} panelBody={panelBody}>
+    <SplitAuthCard
+      panelTitle={panelTitle}
+      panelBody={panelBody}
+      panelImage={forgotPasswordShopImage}
+    >
       <div className="mb-1">
         <h1 className="text-xl font-semibold tracking-tight text-slate-100">{formTitle}</h1>
         <p className="mt-1 text-sm text-slate-400">{formSubtitle}</p>

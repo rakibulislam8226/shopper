@@ -8,6 +8,8 @@ interface SplitAuthCardProps {
   panelBody: string;
   /** Icon badge above the title. Defaults to a lock, fitting the password-reset flow. */
   panelIcon?: ReactNode;
+  /** Background photo behind the gradient, e.g. forgot-password's shop image. */
+  panelImage?: string;
   children: ReactNode;
 }
 
@@ -18,7 +20,13 @@ interface SplitAuthCardProps {
  * without the slide animation — forgot-password only ever shows one form at
  * a time, so there is nothing to slide between.
  */
-export function SplitAuthCard({ panelTitle, panelBody, panelIcon, children }: SplitAuthCardProps) {
+export function SplitAuthCard({
+  panelTitle,
+  panelBody,
+  panelIcon,
+  panelImage,
+  children,
+}: SplitAuthCardProps) {
   return (
     <div className="relative flex flex-1 items-center justify-center overflow-hidden px-6 py-12">
       <div
@@ -43,6 +51,20 @@ export function SplitAuthCard({ panelTitle, panelBody, panelIcon, children }: Sp
         {/* ---- Brand panel — fixed on the left, copy changes per step. ---- */}
         <div className="relative hidden md:block">
           <div className="relative flex h-full flex-col items-center justify-center gap-4 overflow-hidden bg-linear-to-br from-indigo-600 via-indigo-500 to-purple-600 px-10 text-center">
+            {panelImage && (
+              <>
+                <img
+                  src={panelImage}
+                  alt=""
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+                />
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-0 bg-linear-to-t from-indigo-950/85 via-indigo-900/60 to-purple-900/40"
+                />
+              </>
+            )}
             <div
               aria-hidden="true"
               className="pointer-events-none absolute -top-24 -right-24 h-64 w-64 rounded-full bg-white/15 blur-2xl"
@@ -53,11 +75,13 @@ export function SplitAuthCard({ panelTitle, panelBody, panelIcon, children }: Sp
             />
             <SparkleIcon className="pointer-events-none absolute top-10 left-10 h-4 w-4 text-white/60" />
             <SparkleIcon className="pointer-events-none absolute right-14 bottom-16 h-3 w-3 text-white/40" />
-            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 text-white ring-1 ring-white/20 backdrop-blur">
+            <span className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 text-white ring-1 ring-white/20 backdrop-blur">
               {panelIcon ?? <LockIcon className="h-6 w-6" />}
             </span>
-            <h2 className="text-2xl font-bold tracking-tight text-white">{panelTitle}</h2>
-            <p className="max-w-xs text-sm leading-relaxed text-white/85">{panelBody}</p>
+            <h2 className="relative text-2xl font-bold tracking-tight text-white">
+              {panelTitle}
+            </h2>
+            <p className="relative max-w-xs text-sm leading-relaxed text-white/85">{panelBody}</p>
           </div>
         </div>
 
