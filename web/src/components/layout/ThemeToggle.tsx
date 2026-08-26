@@ -17,9 +17,9 @@ export function ThemeToggle({ className = '' }: { className?: string }) {
       onClick={() => setMode(isDark ? 'light' : 'dark')}
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-      className={`inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-text-muted transition-colors duration-150 hover:bg-panel hover:text-text-primary ${className}`}
+      className={`inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-transparent text-text-muted transition-all duration-150 hover:border-edge hover:bg-panel hover:text-text-primary ${className}`}
     >
-      {isDark ? <SunIcon className="h-[18px] w-[18px]" /> : <MoonIcon className="h-[18px] w-[18px]" />}
+      {isDark ? <SunIcon className="h-4.5 w-4.5" /> : <MoonIcon className="h-4.5 w-4.5" />}
     </button>
   );
 }

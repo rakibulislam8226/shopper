@@ -11,7 +11,7 @@ export function BrandLogo({ iconOnly = false }: { iconOnly?: boolean }) {
     <NavLink
       to="/"
       className="group flex items-center gap-2"
-      title={iconOnly ? 'shopper' : undefined}
+      title={iconOnly ? 'Shopper' : undefined}
     >
       <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-linear-to-br from-indigo-500 to-purple-600 text-white shadow-md shadow-indigo-500/20 transition-transform duration-200 group-hover:scale-105">
         <BrandMarkIcon />
@@ -23,7 +23,7 @@ export function BrandLogo({ iconOnly = false }: { iconOnly?: boolean }) {
             : 'text-lg font-bold tracking-tight text-text-primary transition-colors group-hover:text-indigo-400'
         }
       >
-        shopper
+        Shopper
       </span>
     </NavLink>
   );
