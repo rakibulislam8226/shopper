@@ -2,6 +2,7 @@ import { type RegisterShopPayload, type ShopDocumentType, useRegisterShop } from
 import { type SignupDetails } from '@components/auth/SignUpForm';
 import { SplitAuthCard } from '@components/auth/SplitAuthCard';
 import { Button } from '@components/ui/Button';
+import { CheckIcon, FileIcon, ShieldIcon } from '@components/ui/icons';
 import { useAuthStore, useIsAuthenticated } from '@stores/auth';
 import { useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
@@ -93,7 +94,7 @@ export function SignupDocumentsPage() {
     <SplitAuthCard
       panelTitle="Verify your business"
       panelBody="A quick document check keeps every shop on the platform legitimate — most approvals clear within one business day."
-      panelIcon={<ShieldIcon />}
+      panelIcon={<ShieldIcon className="h-6 w-6" />}
     >
       <div>
         <h1 className="text-xl font-semibold tracking-tight text-slate-100">
@@ -174,7 +175,7 @@ function DocumentRow({
             : 'bg-elevated text-slate-500 group-hover:text-slate-300'
         }`}
       >
-        {file ? <CheckIcon /> : <FileIcon />}
+        {file ? <CheckIcon className="h-5 w-5" /> : <FileIcon className="h-5 w-5" />}
       </span>
 
       <span className="min-w-0 flex-1">
@@ -215,59 +216,5 @@ function DocumentRow({
         className="hidden"
       />
     </label>
-  );
-}
-
-function ShieldIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="h-6 w-6"
-      aria-hidden="true"
-    >
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
-      <path d="m9 12 2 2 4-4" />
-    </svg>
-  );
-}
-
-function FileIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.8}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="h-5 w-5"
-      aria-hidden="true"
-    >
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" />
-      <path d="M14 2v6h6" />
-    </svg>
-  );
-}
-
-function CheckIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2.5}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="h-5 w-5"
-      aria-hidden="true"
-    >
-      <path d="M20 6 9 17l-5-5" />
-    </svg>
   );
 }

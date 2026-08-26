@@ -1,3 +1,4 @@
+import { BrandMarkIcon, SparkleIcon } from '@components/ui/icons';
 import { type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -87,21 +88,7 @@ export function AuthCard({ mode, signIn, signUp }: AuthCardProps) {
             <SparkleIcon className="pointer-events-none absolute top-10 left-10 h-4 w-4 text-white/60" />
             <SparkleIcon className="pointer-events-none absolute right-14 bottom-16 h-3 w-3 text-white/40" />
             <span className="pointer-events-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 text-white ring-1 ring-white/20 backdrop-blur">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="h-6 w-6"
-                aria-hidden="true"
-              >
-                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
-                <path d="M3 6h18" />
-                <path d="M16 10a4 4 0 0 1-8 0" />
-              </svg>
+              <BrandMarkIcon className="h-6 w-6" />
             </span>
             <h2 className="text-2xl font-bold tracking-tight text-white">{copy.title}</h2>
             <p className="max-w-xs text-sm leading-relaxed text-white/85">{copy.body}</p>
@@ -115,14 +102,6 @@ export function AuthCard({ mode, signIn, signUp }: AuthCardProps) {
         </div>
       </div>
     </div>
-  );
-}
-
-function SparkleIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
-      <path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8L12 2Z" />
-    </svg>
   );
 }
 

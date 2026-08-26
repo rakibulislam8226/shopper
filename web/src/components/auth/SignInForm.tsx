@@ -1,6 +1,7 @@
 import { useLogin } from '@api/auth';
-import { AuthInput, LockIcon, PhoneIcon } from '@components/auth/AuthInput';
+import { AuthInput } from '@components/auth/AuthInput';
 import { Button } from '@components/ui/Button';
+import { LockIcon, PhoneIcon } from '@components/ui/icons';
 import { isSafeRedirect } from '@lib/session';
 import { useAuthStore } from '@stores/auth';
 import { type FormEvent, useState } from 'react';

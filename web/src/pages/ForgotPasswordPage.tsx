@@ -1,7 +1,8 @@
 import { useForgotPassword, useResetPassword, useVerifyResetOtp } from '@api/auth';
-import { AuthInput, LockIcon, PhoneIcon } from '@components/auth/AuthInput';
+import { AuthInput } from '@components/auth/AuthInput';
 import { SplitAuthCard } from '@components/auth/SplitAuthCard';
 import { Button } from '@components/ui/Button';
+import { CheckIcon, LockIcon, PhoneIcon } from '@components/ui/icons';
 import { type FormEvent, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -226,7 +227,7 @@ export function ForgotPasswordPage() {
       {step === 'done' && (
         <div className="mt-5 flex flex-col items-center gap-4 text-center">
           <span className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20">
-            <CheckIcon />
+            <CheckIcon className="h-5 w-5" />
           </span>
           <p className="text-sm leading-relaxed text-slate-400">
             Your password has been reset. Sign in with your new password to continue.
@@ -243,22 +244,5 @@ export function ForgotPasswordPage() {
         </div>
       )}
     </SplitAuthCard>
-  );
-}
-
-function CheckIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="h-5 w-5"
-      aria-hidden="true"
-    >
-      <path d="M20 6 9 17l-5-5" />
-    </svg>
   );
 }

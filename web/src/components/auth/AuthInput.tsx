@@ -1,3 +1,4 @@
+import { EyeIcon, EyeOffIcon, WarningIcon } from '@components/ui/icons';
 import { cn } from '@lib/cn';
 import { type InputHTMLAttributes, type ReactNode, useState } from 'react';
 
@@ -62,89 +63,5 @@ export function AuthInput({ label, icon, type, className, error, ...props }: Aut
         </span>
       )}
     </label>
-  );
-}
-
-function iconProps() {
-  return {
-    viewBox: '0 0 24 24',
-    fill: 'none',
-    stroke: 'currentColor',
-    strokeWidth: 1.8,
-    strokeLinecap: 'round' as const,
-    strokeLinejoin: 'round' as const,
-    className: 'h-4 w-4',
-    'aria-hidden': true,
-  };
-}
-
-export function UserIcon() {
-  return (
-    <svg {...iconProps()}>
-      <path d="M20 21a8 8 0 0 0-16 0" />
-      <circle cx="12" cy="7" r="4" />
-    </svg>
-  );
-}
-
-export function PhoneIcon() {
-  return (
-    <svg {...iconProps()}>
-      <path d="M13.5 2h-3A1.5 1.5 0 0 0 9 3.5v17A1.5 1.5 0 0 0 10.5 22h3a1.5 1.5 0 0 0 1.5-1.5v-17A1.5 1.5 0 0 0 13.5 2Z" />
-      <path d="M11 18h2" />
-    </svg>
-  );
-}
-
-export function LockIcon() {
-  return (
-    <svg {...iconProps()}>
-      <rect x="3" y="11" width="18" height="10" rx="2" />
-      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-    </svg>
-  );
-}
-
-export function StoreIcon() {
-  return (
-    <svg {...iconProps()}>
-      <path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h.01M9 13h.01M9 17h.01M15 9h.01M15 13h.01M15 17h.01" />
-    </svg>
-  );
-}
-
-function EyeIcon() {
-  return (
-    <svg {...iconProps()}>
-      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
-      <circle cx="12" cy="12" r="3" />
-    </svg>
-  );
-}
-
-function WarningIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="h-3 w-3 shrink-0"
-      aria-hidden="true"
-    >
-      <path d="M12 9v4M12 17h.01" />
-      <path d="M10.3 3.6 1.9 18a2 2 0 0 0 1.7 3h16.8a2 2 0 0 0 1.7-3L13.7 3.6a2 2 0 0 0-3.4 0Z" />
-    </svg>
-  );
-}
-
-function EyeOffIcon() {
-  return (
-    <svg {...iconProps()}>
-      <path d="M9.9 4.24A10.4 10.4 0 0 1 12 4c6.5 0 10 7 10 7a17.5 17.5 0 0 1-2.3 3.3M6.6 6.6C3.4 8.5 2 12 2 12s3.5 7 10 7a10.1 10.1 0 0 0 4.2-.9M2 2l20 20" />
-      <path d="M14.1 14.1a3 3 0 1 1-4.2-4.2" />
-    </svg>
   );
 }

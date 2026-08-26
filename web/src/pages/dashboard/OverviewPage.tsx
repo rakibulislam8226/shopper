@@ -1,7 +1,14 @@
 import { EmptySection } from '@components/dashboard/EmptySection';
 import { PageHeader } from '@components/dashboard/PageHeader';
+import {
+  BoxIcon,
+  type IconProps,
+  RevenueIcon,
+  TrendUpIcon,
+  UsersIcon,
+} from '@components/ui/icons';
 import { useAuthStore } from '@stores/auth';
-import { type ReactNode } from 'react';
+import { type ComponentType } from 'react';
 
 /**
  * Landing screen for a signed-in user.
@@ -15,50 +22,23 @@ import { type ReactNode } from 'react';
 interface Metric {
   label: string;
   hint: string;
-  icon: ReactNode;
+  icon: ComponentType<IconProps>;
 }
 
 const METRICS: Metric[] = [
-  {
-    label: "Today's sales",
-    hint: 'Awaiting the sales endpoint',
-    icon: <path d="M3 3v18h18M7 15l4-4 3 3 5-6" />,
-  },
-  {
-    label: 'Revenue today',
-    hint: 'Awaiting the sales endpoint',
-    icon: <path d="M12 2v20M17 6H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />,
-  },
-  {
-    label: 'Low stock items',
-    hint: 'Awaiting the products endpoint',
-    icon: <path d="M21 8l-9-5-9 5 9 5 9-5zM3 8v8l9 5 9-5V8" />,
-  },
-  {
-    label: 'Active staff',
-    hint: 'Awaiting the memberships endpoint',
-    icon: <path d="M16 20v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 10a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" />,
-  },
+  { label: "Today's sales", hint: 'Awaiting the sales endpoint', icon: TrendUpIcon },
+  { label: 'Revenue today', hint: 'Awaiting the sales endpoint', icon: RevenueIcon },
+  { label: 'Low stock items', hint: 'Awaiting the products endpoint', icon: BoxIcon },
+  { label: 'Active staff', hint: 'Awaiting the memberships endpoint', icon: UsersIcon },
 ];
 
-function MetricCard({ label, hint, icon }: Metric) {
+function MetricCard({ label, hint, icon: Icon }: Metric) {
   return (
     <article className="rounded-2xl border border-edge-strong bg-card p-5">
       <div className="mb-3 flex items-center justify-between">
         <span className="text-sm text-slate-400">{label}</span>
         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-700/60 text-slate-400">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="h-4 w-4"
-            aria-hidden="true"
-          >
-            {icon}
-          </svg>
+          <Icon strokeWidth={1.6} className="h-4 w-4" />
         </span>
       </div>
       <p className="text-2xl font-semibold text-slate-600">—</p>

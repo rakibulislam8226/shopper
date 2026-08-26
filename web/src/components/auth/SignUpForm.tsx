@@ -1,5 +1,6 @@
-import { AuthInput, LockIcon, PhoneIcon, StoreIcon, UserIcon } from '@components/auth/AuthInput';
+import { AuthInput } from '@components/auth/AuthInput';
 import { Button } from '@components/ui/Button';
+import { LockIcon, PhoneIcon, StoreIcon, UserIcon } from '@components/ui/icons';
 import { type FormEvent, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 

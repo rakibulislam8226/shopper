@@ -1,3 +1,4 @@
+import { LockIcon, SparkleIcon } from '@components/ui/icons';
 import { type ReactNode } from 'react';
 
 interface SplitAuthCardProps {
@@ -53,7 +54,7 @@ export function SplitAuthCard({ panelTitle, panelBody, panelIcon, children }: Sp
             <SparkleIcon className="pointer-events-none absolute top-10 left-10 h-4 w-4 text-white/60" />
             <SparkleIcon className="pointer-events-none absolute right-14 bottom-16 h-3 w-3 text-white/40" />
             <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 text-white ring-1 ring-white/20 backdrop-blur">
-              {panelIcon ?? <LockIcon />}
+              {panelIcon ?? <LockIcon className="h-6 w-6" />}
             </span>
             <h2 className="text-2xl font-bold tracking-tight text-white">{panelTitle}</h2>
             <p className="max-w-xs text-sm leading-relaxed text-white/85">{panelBody}</p>
@@ -64,32 +65,5 @@ export function SplitAuthCard({ panelTitle, panelBody, panelIcon, children }: Sp
         <div className="flex flex-col justify-center px-8 py-10 sm:px-12">{children}</div>
       </div>
     </div>
-  );
-}
-
-function SparkleIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
-      <path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8L12 2Z" />
-    </svg>
-  );
-}
-
-function LockIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="h-6 w-6"
-      aria-hidden="true"
-    >
-      <rect x="3" y="11" width="18" height="10" rx="2" />
-      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-    </svg>
   );
 }

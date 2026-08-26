@@ -1,5 +1,14 @@
 import { ButtonLink } from '@components/ui/Button';
-import { type ReactNode } from 'react';
+import {
+  BoxIcon,
+  CoinsIcon,
+  HistoryIcon,
+  type IconProps,
+  ScrollIcon,
+  ShieldIcon,
+  StoreIcon,
+} from '@components/ui/icons';
+import { type ComponentType } from 'react';
 
 /**
  * Marketing entry point. Deliberately makes no API calls — a landing page that
@@ -10,61 +19,45 @@ import { type ReactNode } from 'react';
 interface Feature {
   title: string;
   description: string;
-  icon: ReactNode;
+  icon: ComponentType<IconProps>;
 }
-
-/** 20×20 stroke icons, sized by the parent. */
-const icon = {
-  building: (
-    <path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h.01M9 13h.01M9 17h.01M15 9h.01M15 13h.01M15 17h.01" />
-  ),
-  shield: <path d="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6l7-3zM9 12l2 2 4-4" />,
-  box: <path d="M21 8l-9-5-9 5 9 5 9-5zM3 8v8l9 5 9-5V8M12 13v8" />,
-  coins: (
-    <path d="M12 7c4.4 0 8-1.3 8-3s-3.6-3-8-3-8 1.3-8 3 3.6 3 8 3zM4 4v6c0 1.7 3.6 3 8 3s8-1.3 8-3V4M4 10v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6" />
-  ),
-  history: <path d="M3 12a9 9 0 1 0 3-6.7L3 8m0-5v5h5M12 7v5l3 2" />,
-  scroll: (
-    <path d="M6 3h9a3 3 0 0 1 3 3v12a3 3 0 0 0 3 3H7a3 3 0 0 1-3-3V6a3 3 0 0 1 2-2.8M9 8h6M9 12h6M9 16h4" />
-  ),
-};
 
 const FEATURES: Feature[] = [
   {
     title: 'Multi-tenant by design',
     description:
       'Every org-scoped row carries an indexed organization_id, and every query filters on it. Tenants cannot see each other, structurally.',
-    icon: icon.building,
+    icon: StoreIcon,
   },
   {
     title: 'Roles that actually gate',
     description:
       'Owner, manager, salesman — one membership per person per organization, promotions update the role rather than forking history.',
-    icon: icon.shield,
+    icon: ShieldIcon,
   },
   {
     title: 'Stock that cannot go negative',
     description:
       'Inventory rules live in the database as CHECK constraints, not in a service method someone can forget to call.',
-    icon: icon.box,
+    icon: BoxIcon,
   },
   {
     title: 'Money you can reconcile',
     description:
       'Exact decimals everywhere, never floats. The unit price is frozen onto each sale, so a later price change cannot rewrite what a customer paid.',
-    icon: icon.coins,
+    icon: CoinsIcon,
   },
   {
     title: 'History that survives',
     description:
       'Nothing is hard-deleted. Every foreign key restricts, statuses move instead of rows disappearing, and financial history stays intact.',
-    icon: icon.history,
+    icon: HistoryIcon,
   },
   {
     title: 'An audit trail worth reading',
     description:
       'Append-only records of who changed what, with before and after snapshots — per organization, or platform-wide.',
-    icon: icon.scroll,
+    icon: ScrollIcon,
   },
 ];
 
@@ -74,22 +67,11 @@ const STATS = [
   { value: 'Append', label: 'only audit log' },
 ] as const;
 
-function FeatureCard({ title, description, icon: glyph }: Feature) {
+function FeatureCard({ title, description, icon: Icon }: Feature) {
   return (
     <article className="group relative rounded-2xl border border-edge-strong bg-card p-6 transition-colors duration-200 hover:border-slate-700 hover:bg-panel">
       <span className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-brand-soft text-indigo-400 ring-1 ring-brand-ring transition-colors group-hover:bg-brand-hover/15">
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.6"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="h-5 w-5"
-          aria-hidden="true"
-        >
-          {glyph}
-        </svg>
+        <Icon strokeWidth={1.6} className="h-5 w-5" />
       </span>
       <h3 className="mb-1.5 text-base font-semibold text-slate-100">{title}</h3>
       <p className="text-sm leading-relaxed text-slate-400">{description}</p>
