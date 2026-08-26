@@ -29,7 +29,7 @@ class UserPublic(BaseModel):
     uid: UUID
     name: str
     phone: str
-    is_superadmin: bool
+    is_superuser: bool
     is_active: bool
     must_change_password: bool
     last_login_at: datetime | None

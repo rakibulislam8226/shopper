@@ -6,7 +6,7 @@
 
 Idempotent: an existing user with the same phone is left untouched unless
 ``--force`` is passed, in which case the password, name, and flags are reset.
-A superadmin is a plain ``users`` row with ``is_superadmin`` set — there is no
+A superuser is a plain ``users`` row with ``is_superuser`` set — there is no
 separate superadmin table and no membership involved.
 """
 
@@ -37,7 +37,7 @@ async def seed_superadmin(phone: str, password: str, name: str, force: bool) -> 
         if user is not None and not force:
             print(
                 f"Superadmin already exists: phone={user.phone} uid={user.uid} "
-                f"is_superadmin={user.is_superadmin}. Pass --force to reset it."
+                f"is_superuser={user.is_superuser}. Pass --force to reset it."
             )
             return 0
 
@@ -50,7 +50,7 @@ async def seed_superadmin(phone: str, password: str, name: str, force: bool) -> 
             action = "reset"
 
         user.password_hash = hash_password(password)
-        user.is_superadmin = True
+        user.is_superuser = True
         user.is_active = True
         user.must_change_password = False
         user.deleted_at = None

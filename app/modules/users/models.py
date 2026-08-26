@@ -1,23 +1,27 @@
 """User accounts — the single identity table for the whole platform.
 
-There is one kind of human record: a ``User``. Access inside an organization
-comes only from a :class:`~app.modules.memberships.models.Membership` row — the
-user record itself carries no org, no role, and no org permissions.
+There is one kind of human record: a ``User``. Access inside a shop comes only
+from a :class:`~app.modules.memberships.models.ShopMembership` row — the user
+record itself carries no shop, no role, and no shop permissions.
 
-Platform operators are the one exception: ``is_superadmin`` is a flag on this
+Platform operators are the one exception: ``is_superuser`` is a flag on this
 table, not a separate identity. It sits *outside* the membership model on
-purpose — a superadmin acts across every tenant and belongs to none.
+purpose — a superuser acts across every tenant and belongs to none.
 """
 
 from __future__ import annotations
 
 from datetime import datetime
+from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, String
+from sqlalchemy import Boolean, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import BaseModel
-from app.modules.memberships.models import Membership
+from app.modules.memberships.models import ShopMembership
+
+if TYPE_CHECKING:
+    from app.modules.shops.models import Shop
 
 
 class User(BaseModel):
@@ -27,7 +31,7 @@ class User(BaseModel):
     phone: Mapped[str] = mapped_column(String(32), unique=True, index=True)
     password_hash: Mapped[str] = mapped_column(String(255))
 
-    is_superadmin: Mapped[bool] = mapped_column(
+    is_superuser: Mapped[bool] = mapped_column(
         Boolean,
         nullable=False,
         default=False,
@@ -50,12 +54,19 @@ class User(BaseModel):
         server_default="false",
     )
 
+    # The shop last selected in the UI; convenience default for the next
+    # login. Null before first selection or if that shop was later removed.
+    last_active_shop_id: Mapped[int | None] = mapped_column(
+        ForeignKey("shops.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+
     last_login_at: Mapped[datetime | None] = mapped_column(nullable=True)
 
-    # Organization's collections.
-    memberships: Mapped[list[Membership]] = relationship(
+    last_active_shop: Mapped[Shop | None] = relationship(foreign_keys=[last_active_shop_id])
+    memberships: Mapped[list[ShopMembership]] = relationship(
         back_populates="user",
-        foreign_keys="Membership.user_id",
+        foreign_keys="ShopMembership.user_id",
         passive_deletes="all",
     )
 

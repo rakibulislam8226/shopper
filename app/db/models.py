@@ -15,19 +15,28 @@ from __future__ import annotations
 
 from app.db.base import Base
 from app.modules.audit.models import AuditLog
-from app.modules.memberships.models import Membership
-from app.modules.organizations.models import Organization
-from app.modules.products.models import PriceHistory, Product
-from app.modules.sales.models import Sale
+from app.modules.expenses.models import ExpenseCategory, ShopExpense
+from app.modules.inventory.models import InventoryBatch, InventoryMovementLog
+from app.modules.memberships.models import ShopMembership
+from app.modules.products.models import Product, ProductCategory
+from app.modules.purchases.models import PurchaseReturn
+from app.modules.sales.models import SaleReturn, SaleTransaction
+from app.modules.shops.models import Shop
 from app.modules.users.models import User
 
 __all__ = [
     "AuditLog",
     "Base",
-    "Membership",
-    "Organization",
-    "PriceHistory",
+    "ExpenseCategory",
+    "InventoryBatch",
+    "InventoryMovementLog",
     "Product",
-    "Sale",
+    "ProductCategory",
+    "PurchaseReturn",
+    "SaleReturn",
+    "SaleTransaction",
+    "Shop",
+    "ShopExpense",
+    "ShopMembership",
     "User",
 ]

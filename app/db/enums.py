@@ -25,7 +25,7 @@ from sqlalchemy import Enum as SAEnum
 
 
 class MembershipRole(StrEnum):
-    """A user's role inside one organization."""
+    """A user's role inside one shop."""
 
     OWNER = "owner"
     MANAGER = "manager"
@@ -36,12 +36,13 @@ class MembershipStatus(StrEnum):
     """Lifecycle of a membership. Rows are never deleted, only transitioned."""
 
     ACTIVE = "active"
+    INVITED = "invited"  # invited but not yet accepted
     REMOVED = "removed"  # removed by someone else (Owner/Manager action)
     RESIGNED = "resigned"  # self-initiated departure
 
 
-class OrganizationStatus(StrEnum):
-    """Lifecycle of an organization. Both non-active states are reversible."""
+class ShopStatus(StrEnum):
+    """Lifecycle of a shop. Both non-active states are reversible."""
 
     ACTIVE = "active"
     SUSPENDED = "suspended"  # reversible lock
@@ -53,6 +54,16 @@ class ProductStatus(StrEnum):
 
     ACTIVE = "active"
     DISCONTINUED = "discontinued"
+
+
+class InventoryMovementType(StrEnum):
+    """Why an inventory batch's remaining_quantity changed."""
+
+    PURCHASE = "purchase"  # batch created / stock received
+    SALE = "sale"
+    SALE_RETURN = "sale_return"
+    PURCHASE_RETURN = "purchase_return"
+    ADJUSTMENT = "adjustment"  # manual stock correction
 
 
 def _enum_values(enum_cls: type[Enum]) -> list[str]:
@@ -79,5 +90,6 @@ def pg_enum(enum_cls: type[Enum], name: str) -> SAEnum:
 # points at the same PostgreSQL type.
 MEMBERSHIP_ROLE_ENUM = pg_enum(MembershipRole, "membership_role")
 MEMBERSHIP_STATUS_ENUM = pg_enum(MembershipStatus, "membership_status")
-ORGANIZATION_STATUS_ENUM = pg_enum(OrganizationStatus, "organization_status")
+SHOP_STATUS_ENUM = pg_enum(ShopStatus, "shop_status")
 PRODUCT_STATUS_ENUM = pg_enum(ProductStatus, "product_status")
+INVENTORY_MOVEMENT_TYPE_ENUM = pg_enum(InventoryMovementType, "inventory_movement_type")

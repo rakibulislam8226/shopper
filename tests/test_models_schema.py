@@ -24,29 +24,45 @@ from sqlalchemy import (
 from app.db.models import Base
 
 MONEY_COLUMNS: set[tuple[str, str]] = {
-    ("products", "cost_price"),
-    ("products", "sale_price"),
-    ("price_history", "old_cost_price"),
-    ("price_history", "new_cost_price"),
-    ("price_history", "old_sale_price"),
-    ("price_history", "new_sale_price"),
-    ("sales", "unit_price_at_sale"),
-    ("sales", "total_amount"),
+    ("products", "min_price"),
+    ("inventory_batches", "unit_cost"),
+    ("inventory_batches", "carry_cost"),
+    ("inventory_batches", "total_unit_cost"),
+    ("inventory_batches", "min_price"),
+    ("sale_transactions", "unit_price"),
+    ("sale_transactions", "total_amount"),
+    ("sale_returns", "refund_amount"),
+    ("purchase_returns", "refund_amount"),
+    ("shop_expenses", "amount"),
 }
 
 EXPECTED_TABLES = {
     "users",
-    "organizations",
-    "memberships",
+    "shops",
+    "shop_memberships",
     "products",
-    "price_history",
-    "sales",
+    "product_categories",
+    "inventory_batches",
+    "inventory_movement_logs",
+    "sale_transactions",
+    "sale_returns",
+    "purchase_returns",
+    "expense_categories",
+    "shop_expenses",
     "audit_logs",
 }
 
-# audit_logs is the sole exception: organization_id is nullable there because
-# platform-level superadmin actions belong to no organization.
-NULLABLE_ORG_ID_TABLES = {"audit_logs"}
+# audit_logs is the sole exception: shop_id is nullable there because
+# platform-level superuser actions belong to no shop.
+NULLABLE_SHOP_ID_TABLES = {"audit_logs"}
+
+# Deliberate SET NULL references: the referenced row may legitimately go away
+# without the child row's history becoming invalid.
+SET_NULL_FOREIGN_KEYS = {
+    ("users", "last_active_shop_id"),
+    ("products", "category_id"),
+    ("shop_expenses", "staff_id"),
+}
 
 
 def test_all_expected_tables_registered() -> None:
@@ -108,25 +124,31 @@ def test_every_table_has_soft_delete_and_timestamps() -> None:
         assert table.columns["deleted_at"].nullable, table.name
 
 
-def test_organization_id_is_indexed_and_not_null() -> None:
+def test_shop_id_is_indexed_and_not_null() -> None:
     for table in Base.metadata.tables.values():
-        column = table.columns.get("organization_id")
+        column = table.columns.get("shop_id")
         if column is None:
             continue
-        if table.name in NULLABLE_ORG_ID_TABLES:
+        if table.name in NULLABLE_SHOP_ID_TABLES:
             assert column.nullable, table.name
         else:
-            assert not column.nullable, f"{table.name}.organization_id must be NOT NULL"
-        indexed = any("organization_id" in index.columns for index in table.indexes)
-        assert indexed, f"{table.name}.organization_id is not indexed"
+            assert not column.nullable, f"{table.name}.shop_id must be NOT NULL"
+        indexed = any("shop_id" in index.columns for index in table.indexes)
+        assert indexed, f"{table.name}.shop_id is not indexed"
 
 
-def test_no_cascade_deletes() -> None:
-    """Hard deletes must never propagate through financial history."""
+def test_no_unexpected_cascade_deletes() -> None:
+    """Hard deletes must never propagate through financial history.
+
+    Every foreign key is RESTRICT except the deliberate SET NULL references
+    listed in SET_NULL_FOREIGN_KEYS.
+    """
     for table in Base.metadata.tables.values():
         for fk in table.foreign_keys:
-            assert fk.ondelete == "RESTRICT", (
-                f"{table.name}.{fk.parent.name} has ondelete={fk.ondelete!r}, expected RESTRICT"
+            key = (table.name, fk.parent.name)
+            expected = "SET NULL" if key in SET_NULL_FOREIGN_KEYS else "RESTRICT"
+            assert fk.ondelete == expected, (
+                f"{table.name}.{fk.parent.name} has ondelete={fk.ondelete!r}, expected {expected}"
             )
 
 
@@ -134,11 +156,16 @@ def test_no_cascade_deletes() -> None:
     ("table_name", "constraint_name"),
     [
         ("products", "ck_products_stock_quantity_non_negative"),
-        ("products", "ck_products_cost_price_non_negative"),
-        ("products", "ck_products_sale_price_non_negative"),
-        ("sales", "ck_sales_quantity_positive"),
-        ("sales", "ck_sales_total_amount_non_negative"),
-        ("sales", "ck_sales_unit_price_at_sale_non_negative"),
+        ("products", "ck_products_min_price_non_negative"),
+        ("inventory_batches", "ck_inventory_batches_quantity_non_negative"),
+        ("inventory_batches", "ck_inventory_batches_remaining_quantity_non_negative"),
+        ("inventory_batches", "ck_inventory_batches_unit_cost_non_negative"),
+        ("sale_transactions", "ck_sale_transactions_quantity_positive"),
+        ("sale_transactions", "ck_sale_transactions_total_amount_non_negative"),
+        ("sale_transactions", "ck_sale_transactions_unit_price_non_negative"),
+        ("sale_returns", "ck_sale_returns_quantity_positive"),
+        ("purchase_returns", "ck_purchase_returns_quantity_positive"),
+        ("shop_expenses", "ck_shop_expenses_amount_non_negative"),
     ],
 )
 def test_check_constraints_present(table_name: str, constraint_name: str) -> None:
@@ -151,16 +178,16 @@ def test_check_constraints_present(table_name: str, constraint_name: str) -> Non
 
 
 def test_composite_uniques_and_indexes() -> None:
-    memberships = Base.metadata.tables["memberships"]
+    memberships = Base.metadata.tables["shop_memberships"]
     uniques = {
         tuple(sorted(c.name for c in constraint.columns))
         for constraint in memberships.constraints
         if isinstance(constraint, UniqueConstraint)
     }
-    assert ("organization_id", "user_id") in uniques
+    assert ("shop_id", "user_id") in uniques
 
     index_columns = {tuple(c.name for c in index.columns) for index in memberships.indexes}
-    assert ("organization_id", "role", "status") in index_columns
+    assert ("shop_id", "role", "status") in index_columns
 
     products = Base.metadata.tables["products"]
     product_uniques = {
@@ -168,19 +195,20 @@ def test_composite_uniques_and_indexes() -> None:
         for constraint in products.constraints
         if isinstance(constraint, UniqueConstraint)
     }
-    assert ("organization_id", "sku") in product_uniques
+    assert ("shop_id", "sku") in product_uniques
 
     product_indexes = {tuple(c.name for c in index.columns) for index in products.indexes}
-    assert ("organization_id", "status") in product_indexes
+    assert ("shop_id", "is_active") in product_indexes
 
-    sales_indexes = {
-        tuple(c.name for c in index.columns) for index in Base.metadata.tables["sales"].indexes
+    sale_indexes = {
+        tuple(c.name for c in index.columns)
+        for index in Base.metadata.tables["sale_transactions"].indexes
     }
-    assert ("organization_id", "sold_at") in sales_indexes
+    assert ("shop_id", "sold_at") in sale_indexes
 
     audit = Base.metadata.tables["audit_logs"]
     audit_indexes = {tuple(c.name for c in index.columns) for index in audit.indexes}
-    assert ("organization_id", "created_at") in audit_indexes
+    assert ("shop_id", "created_at") in audit_indexes
     assert ("entity_type", "entity_id") in audit_indexes
 
 
