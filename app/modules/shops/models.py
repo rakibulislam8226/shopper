@@ -79,9 +79,7 @@ class Shop(BaseModel):
     expense_categories: Mapped[list[ExpenseCategory]] = relationship(
         back_populates="shop", passive_deletes="all"
     )
-    expenses: Mapped[list[ShopExpense]] = relationship(
-        back_populates="shop", passive_deletes="all"
-    )
+    expenses: Mapped[list[ShopExpense]] = relationship(back_populates="shop", passive_deletes="all")
 
     def __repr__(self) -> str:  # pragma: no cover - debugging aid
         return f"<Shop id={self.id} name={self.name!r} status={self.status.value}>"
