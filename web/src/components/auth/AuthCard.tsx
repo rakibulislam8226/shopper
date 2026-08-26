@@ -28,7 +28,7 @@ const BRAND_COPY: Record<
     title: 'Welcome back',
     body: 'Sign in to pick up where you left off — your shop is waiting.',
     to: '/login',
-    cta: 'Sign in instead',
+    cta: 'Sign in',
     image: signinShopImage,
   },
 };
@@ -131,7 +131,7 @@ export function AuthCard({ mode, signIn, signUp }: AuthCardProps) {
             <p className="relative max-w-xs text-sm leading-relaxed text-white/85">{copy.body}</p>
             <Link
               to={copy.to}
-              className="pointer-events-auto relative mt-2 inline-flex items-center justify-center rounded-lg border border-white/30 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm transition-all duration-200 hover:scale-[1.03] hover:bg-white/10 active:scale-[0.98]"
+              className="pointer-events-auto relative mt-2 inline-flex items-center justify-center rounded-lg border border-white/30 px-4 py-2 text-sm font-semibold text-white backdrop-blur-lg transition-all duration-200 hover:scale-[1.03] hover:bg-white/10 active:scale-[0.98]"
             >
               {copy.cta}
             </Link>
