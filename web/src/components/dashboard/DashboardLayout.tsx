@@ -1,27 +1,54 @@
 import { Button } from '@components/ui/Button';
+import { useUiStore } from '@stores/ui';
 import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 
 import { Sidebar } from './Sidebar';
 
+/** Widths the sidebar and the content offset must agree on. */
+const SIDEBAR_WIDTH = 'lg:w-64';
+const RAIL_WIDTH = 'lg:w-16';
+
 /**
- * Shell for every authenticated screen: a fixed sidebar on desktop, a slide-in
- * drawer below `lg`, and a topbar that carries the drawer trigger.
+ * Shell for every authenticated screen.
  *
- * Deliberately separate from the public `AppLayout` — the marketing pages and
- * the panel share a brand, not a chrome, and forcing one layout to serve both
- * ends in a thicket of conditionals.
+ * Two independent pieces of navigation state, because they answer different
+ * questions. Below `lg` the sidebar is a transient drawer — opened, used,
+ * gone — so the layout owns it in local state. At `lg` and above it is a
+ * standing preference (full panel or icon rail) that lives in the persisted
+ * UI store and survives reloads.
  */
 export function DashboardLayout() {
   // Closed by `onNavigate` on every link inside it, so a route change never
   // leaves the drawer hanging open.
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const collapsed = useUiStore((state) => state.sidebarCollapsed);
+  const toggleSidebar = useUiStore((state) => state.toggleSidebar);
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
-      {/* Desktop sidebar */}
-      <aside className="fixed inset-y-0 left-0 hidden w-64 lg:block">
-        <Sidebar />
+      {/* Desktop sidebar: full panel, or an icon rail when collapsed. */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-30 hidden transition-[width] duration-200 ease-out lg:block ${
+          collapsed ? RAIL_WIDTH : SIDEBAR_WIDTH
+        }`}
+      >
+        <Sidebar collapsed={collapsed} />
+
+        {/* Straddles the sidebar's right edge, so it reads as the handle that
+            moves it rather than another topbar control. Translating by half
+            its own width keeps it centred on the border at either width. */}
+        <Button
+          variant="secondary"
+          size="icon"
+          onClick={toggleSidebar}
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          aria-expanded={!collapsed}
+          className="absolute top-[3.25rem] right-0 z-40 h-8 w-8 translate-x-1/2 rounded-lg border-slate-700 bg-slate-900 shadow-lg"
+        >
+          <PanelIcon collapsed={collapsed} />
+        </Button>
       </aside>
 
       {/* Mobile drawer */}
@@ -39,8 +66,13 @@ export function DashboardLayout() {
         </div>
       ) : null}
 
-      <div className="lg:pl-64">
-        <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-slate-800/80 bg-slate-950/80 px-4 backdrop-blur-md sm:px-6">
+      <div
+        className={`transition-[padding] duration-200 ease-out ${
+          collapsed ? 'lg:pl-16' : 'lg:pl-64'
+        }`}
+      >
+        <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-slate-800/80 bg-slate-950/80 px-4 backdrop-blur-md sm:px-6">
+          {/* Below lg the sidebar is a drawer, so the trigger lives here. */}
           <Button
             variant="secondary"
             size="icon"
@@ -74,5 +106,23 @@ export function DashboardLayout() {
         </main>
       </div>
     </div>
+  );
+}
+
+/** Panel glyph whose chevron points the way the sidebar will move. */
+function PanelIcon({ collapsed }: { collapsed: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-4 w-4"
+      aria-hidden="true"
+    >
+      {collapsed ? <path d="M9 6l6 6-6 6" /> : <path d="M15 6l-6 6 6 6" />}
+    </svg>
   );
 }
