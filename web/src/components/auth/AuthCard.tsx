@@ -66,7 +66,7 @@ export function AuthCard({ mode, signIn, signUp }: AuthCardProps) {
         className="animate-drift pointer-events-none absolute right-[10%] bottom-1/4 h-80 w-80 rounded-full bg-purple-500/10 blur-3xl"
       />
 
-      <div className="relative grid h-160 w-full max-w-5xl grid-cols-1 overflow-hidden rounded-3xl border border-edge-strong bg-card shadow-2xl shadow-black/30 md:grid-cols-2">
+      <div className="relative grid h-180 w-full max-w-5xl grid-cols-1 overflow-hidden rounded-3xl border border-edge-strong bg-card shadow-2xl shadow-black/30 md:grid-cols-2">
         {/* ---- Form layer: both forms always mounted, cross-faded by mode. ---- */}
         <div className="relative col-span-1 md:col-span-2 md:grid md:grid-cols-2">
           <FormPane active={mode === 'signin'} side="left">

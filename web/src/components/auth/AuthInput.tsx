@@ -24,7 +24,7 @@ export function AuthInput({ label, icon, type, className, error, ...props }: Aut
       <div className="group relative">
         <span
           className={cn(
-            'pointer-events-none absolute inset-y-0 left-0 flex w-10 items-center justify-center transition-colors',
+            'pointer-events-none absolute inset-y-0 left-0 flex w-11 items-center justify-center transition-colors',
             error ? 'text-rose-400' : 'text-slate-500 group-focus-within:text-indigo-400',
           )}
         >
@@ -35,12 +35,12 @@ export function AuthInput({ label, icon, type, className, error, ...props }: Aut
           type={isPassword && revealed ? 'text' : type}
           aria-invalid={error ? true : undefined}
           className={cn(
-            'w-full rounded-lg border bg-inset py-2 pr-3 pl-10 text-sm text-slate-100',
+            'w-full rounded-lg border bg-inset py-3 pr-3 pl-11 text-sm text-slate-100',
             'outline-none transition-all duration-200 placeholder:text-slate-600',
             error
               ? 'border-rose-500/60 focus:border-rose-500 focus:ring-4 focus:ring-rose-500/15'
               : 'border-edge-strong focus:border-indigo-500 focus:ring-4 focus:ring-brand-ring',
-            isPassword && 'pr-10',
+            isPassword && 'pr-11',
             className,
           )}
         />
@@ -50,7 +50,7 @@ export function AuthInput({ label, icon, type, className, error, ...props }: Aut
             onClick={() => setRevealed((value) => !value)}
             tabIndex={-1}
             aria-label={revealed ? 'Hide password' : 'Show password'}
-            className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-slate-500 transition-colors hover:text-slate-300"
+            className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-slate-500 transition-colors hover:text-slate-300"
           >
             {revealed ? <EyeOffIcon /> : <EyeIcon />}
           </button>
