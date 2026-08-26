@@ -37,7 +37,7 @@ export interface RegisterShopPayload {
   shop_email?: string;
   shop_phone?: string;
   shop_address?: string;
-  shop_logo?: string;
+  shopLogo?: File;
   /** Required — registration is rejected without it. */
   ownerNid: File;
   tradeLicense?: File;
@@ -70,7 +70,7 @@ export function useRegisterShop() {
       if (payload.shop_email) form.append('shop_email', payload.shop_email);
       if (payload.shop_phone) form.append('shop_phone', payload.shop_phone);
       if (payload.shop_address) form.append('shop_address', payload.shop_address);
-      if (payload.shop_logo) form.append('shop_logo', payload.shop_logo);
+      if (payload.shopLogo) form.append('shop_logo', payload.shopLogo);
 
       form.append('owner_nid', payload.ownerNid);
       if (payload.tradeLicense) form.append('trade_license', payload.tradeLicense);
@@ -144,7 +144,6 @@ export interface UpdateShopPayload {
   email?: string;
   phone?: string;
   address?: string;
-  logo?: string;
 }
 
 /** PATCH /api/shops/{shop_uid} — updates only the fields provided. Owner-only. */
@@ -155,6 +154,31 @@ export function useUpdateShop() {
     mutationFn: async ({ shopUid, ...fields }: UpdateShopPayload) => {
       const response = await axios.patch<ApiResponse<Shop>>(`/shops/${shopUid}`, fields, {
         toast: { error: 'Unable to update shop' },
+      });
+      return response.data;
+    },
+    onSuccess: (_data, { shopUid }) => {
+      void queryClient.invalidateQueries({ queryKey: ['shop', shopUid] });
+    },
+  });
+}
+
+export interface UploadShopLogoPayload {
+  shopUid: string;
+  file: File;
+}
+
+/** POST /api/shops/{shop_uid}/logo — replaces the shop's logo image. Owner-only. */
+export function useUploadShopLogo() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ shopUid, file }: UploadShopLogoPayload) => {
+      const form = new FormData();
+      form.append('file', file);
+
+      const response = await axios.post<ApiResponse<Shop>>(`/shops/${shopUid}/logo`, form, {
+        toast: { error: 'Unable to update logo' },
       });
       return response.data;
     },

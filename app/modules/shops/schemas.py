@@ -38,7 +38,6 @@ class ShopRegisterRequest(BaseModel):
     shop_email: str | None = Field(default=None, max_length=255)
     shop_phone: str | None = Field(default=None, max_length=32)
     shop_address: str | None = Field(default=None, max_length=500)
-    shop_logo: str | None = Field(default=None, max_length=500)
 
     @model_validator(mode="after")
     def _passwords_must_match(self) -> ShopRegisterRequest:
@@ -106,7 +105,6 @@ class ShopUpdateRequest(BaseModel):
     email: str | None = Field(default=None, max_length=255)
     phone: str | None = Field(default=None, max_length=32)
     address: str | None = Field(default=None, max_length=500)
-    logo: str | None = Field(default=None, max_length=500)
 
 
 # UserPublic.active_shop is a forward reference ("ShopPublic | None") to break

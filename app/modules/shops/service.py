@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from datetime import UTC, datetime
 from uuid import UUID
 
 from fastapi import UploadFile, status
@@ -16,7 +17,12 @@ from app.db.enums import MembershipRole, ShopDocumentType
 from app.modules.memberships.models import ShopMembership
 from app.modules.memberships.repository import get_active_membership
 from app.modules.shops.models import Shop, ShopDocument
-from app.modules.shops.repository import get_shop_by_uid, get_shop_documents, slug_exists
+from app.modules.shops.repository import (
+    get_current_shop_document,
+    get_shop_by_uid,
+    get_shop_documents,
+    slug_exists,
+)
 from app.modules.shops.schemas import (
     ShopDetailResponse,
     ShopDocumentPublic,
@@ -78,6 +84,20 @@ async def _save_document(
     file: UploadFile,
     uploaded_by_user_id: int,
 ) -> ShopDocument:
+    """Save ``file`` as the current document of ``document_type`` for ``shop``.
+
+    Soft-supersedes rather than overwrites or deletes: if a document of this
+    type already exists, it is soft-deleted (excluded from every query going
+    forward) and its file stays on disk — a submitted compliance document
+    (NID, trade license, ...) is exactly the kind of thing you don't want to
+    lose just because a better copy arrived, in case a reviewer already
+    looked at it. Never more than one *current* row per (shop, type),
+    enforced here rather than as a DB constraint so history can accumulate.
+    """
+    current = await get_current_shop_document(db, shop_id=shop.id, document_type=document_type)
+    if current is not None:
+        current.deleted_at = datetime.now(UTC)
+
     file_url = await save_upload(file, subdir=f"shops/{shop.uid}/documents")
     document = ShopDocument(
         shop_id=shop.id,
@@ -94,6 +114,7 @@ async def register_shop(
     payload: ShopRegisterRequest,
     *,
     owner_nid: UploadFile,
+    shop_logo: UploadFile | None,
     trade_license: UploadFile | None,
     tin_certificate: UploadFile | None,
     other_document: UploadFile | None,
@@ -140,11 +161,13 @@ async def register_shop(
         email=payload.shop_email,
         phone=payload.shop_phone,
         address=payload.shop_address,
-        logo=payload.shop_logo,
         created_by_user_id=user.id,
     )
     db.add(shop)
     await db.flush()  # assign shop.id for the membership + document FKs
+
+    if shop_logo is not None and shop_logo.filename and shop_logo.size:
+        shop.logo = await save_upload(shop_logo, subdir=f"shops/{shop.uid}/logo")
 
     membership = ShopMembership(
         user_id=user.id,
@@ -235,6 +258,24 @@ async def upload_document(
         document_type=document_type.value,
     )
     return ShopDocumentPublic.model_validate(document)
+
+
+async def upload_logo(
+    db: AsyncSession, *, shop_uid: UUID, user_id: int, file: UploadFile
+) -> ShopPublic:
+    """Replace a shop's logo image. Owner-only; overwrites in place — a logo
+    is branding, not a compliance artifact, so there's no reason to keep the
+    old file around once a new one is set.
+    """
+    shop = await require_shop_owner(db, shop_uid=shop_uid, user_id=user_id)
+
+    shop.logo = await save_upload(file, subdir=f"shops/{shop.uid}/logo")
+
+    await db.commit()
+    await db.refresh(shop)
+
+    logger.info("shop_logo_updated", shop_uid=str(shop.uid))
+    return ShopPublic.model_validate(shop)
 
 
 async def get_shop_detail(db: AsyncSession, *, shop_uid: UUID, user_id: int) -> ShopDetailResponse:

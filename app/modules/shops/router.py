@@ -38,7 +38,7 @@ async def register_shop(
     shop_email: Annotated[str | None, Form()] = None,
     shop_phone: Annotated[str | None, Form()] = None,
     shop_address: Annotated[str | None, Form()] = None,
-    shop_logo: Annotated[str | None, Form()] = None,
+    shop_logo: UploadFile | None = File(None),
     trade_license: UploadFile | None = File(None),
     tin_certificate: UploadFile | None = File(None),
     other_document: UploadFile | None = File(None),
@@ -53,12 +53,12 @@ async def register_shop(
         shop_email=shop_email,
         shop_phone=shop_phone,
         shop_address=shop_address,
-        shop_logo=shop_logo,
     )
     result = await service.register_shop(
         db,
         payload,
         owner_nid=owner_nid,
+        shop_logo=shop_logo,
         trade_license=trade_license,
         tin_certificate=tin_certificate,
         other_document=other_document,
@@ -93,6 +93,23 @@ async def update_shop(
     return success_response(
         data=result.model_dump(mode="json"),
         message="Shop updated",
+        status_code=status.HTTP_200_OK,
+    )
+
+
+@router.post("/{shop_uid}/logo", summary="Upload or replace a shop's logo (owner only)")
+async def upload_logo(
+    shop_uid: UUID,
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> JSONResponse:
+    result = await service.upload_logo(
+        db, shop_uid=shop_uid, user_id=current_user.id, file=file
+    )
+    return success_response(
+        data=result.model_dump(mode="json"),
+        message="Logo updated",
         status_code=status.HTTP_200_OK,
     )
 

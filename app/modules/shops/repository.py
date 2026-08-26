@@ -7,6 +7,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.db.enums import ShopDocumentType
 from app.modules.shops.models import Shop, ShopDocument
 
 
@@ -34,3 +35,21 @@ async def get_shop_documents(db: AsyncSession, shop_id: int) -> list[ShopDocumen
         .order_by(ShopDocument.created_at.desc())
     )
     return list(result.scalars().all())
+
+
+async def get_current_shop_document(
+    db: AsyncSession, *, shop_id: int, document_type: ShopDocumentType
+) -> ShopDocument | None:
+    """Return the current (not soft-deleted) document of this type, if any.
+
+    A shop has at most one *current* document per type — re-submitting a
+    type supersedes the previous row rather than adding a second one.
+    """
+    result = await db.execute(
+        select(ShopDocument).where(
+            ShopDocument.shop_id == shop_id,
+            ShopDocument.type == document_type,
+            ShopDocument.deleted_at.is_(None),
+        )
+    )
+    return result.scalar_one_or_none()

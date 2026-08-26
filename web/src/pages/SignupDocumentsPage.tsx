@@ -2,7 +2,7 @@ import { type RegisterShopPayload, type ShopDocumentType, useRegisterShop } from
 import { type SignupDetails } from '@components/auth/SignUpForm';
 import { SplitAuthCard } from '@components/auth/SplitAuthCard';
 import { Button } from '@components/ui/Button';
-import { CheckIcon, FileIcon, ShieldIcon } from '@components/ui/icons';
+import { ArrowLeftIcon, CheckIcon, FileIcon, ShieldIcon } from '@components/ui/icons';
 import { useAuthStore, useIsAuthenticated } from '@stores/auth';
 import { useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
@@ -60,6 +60,7 @@ export function SignupDocumentsPage() {
 
   const registerShop = useRegisterShop();
   const [files, setFiles] = useState<Partial<Record<DocumentField['key'], File>>>({});
+  const [shopLogo, setShopLogo] = useState<File | undefined>(undefined);
 
   if (isAuthenticated) return <Navigate to="/dashboard" replace />;
   if (!details) return <Navigate to="/signup" replace />;
@@ -75,6 +76,7 @@ export function SignupDocumentsPage() {
       password: details.password,
       confirm_password: details.confirmPassword,
       shop_name: details.shopName,
+      shopLogo,
       ownerNid: files.ownerNid,
       tradeLicense: files.tradeLicense,
       tinCertificate: files.tinCertificate,
@@ -106,6 +108,13 @@ export function SignupDocumentsPage() {
       </div>
 
       <div className="mt-5 flex flex-col gap-3">
+        <DocumentRow
+          label="Shop logo"
+          description="A square image to represent your shop across the app."
+          file={shopLogo}
+          onSelect={setShopLogo}
+          accept=".jpg,.jpeg,.png,.webp"
+        />
         {DOCUMENT_FIELDS.map(({ key, label, description, required }) => (
           <DocumentRow
             key={key}
@@ -138,9 +147,10 @@ export function SignupDocumentsPage() {
 
       <button
         type="button"
-        onClick={() => void navigate('/signup')}
-        className="mt-3 w-full text-center text-xs font-medium text-slate-500 hover:text-slate-300"
+        onClick={() => void navigate('/signup', { state: details })}
+        className="mt-4 flex w-full items-center justify-center gap-1.5 text-sm font-medium text-slate-300 hover:text-slate-100"
       >
+        <ArrowLeftIcon className="h-3.5 w-3.5" />
         Back to account details
       </button>
     </SplitAuthCard>
@@ -153,12 +163,14 @@ function DocumentRow({
   required,
   file,
   onSelect,
+  accept = '.pdf,.jpg,.jpeg,.png,.webp',
 }: {
   label: string;
   description: string;
   required?: boolean;
   file: File | undefined;
   onSelect: (file: File | undefined) => void;
+  accept?: string;
 }) {
   return (
     <label
@@ -211,7 +223,7 @@ function DocumentRow({
 
       <input
         type="file"
-        accept=".pdf,.jpg,.jpeg,.png,.webp"
+        accept={accept}
         onChange={(event) => onSelect(event.target.files?.[0])}
         className="hidden"
       />

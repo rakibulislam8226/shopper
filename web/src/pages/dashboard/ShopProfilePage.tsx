@@ -1,10 +1,11 @@
-import { useShopDetail, useUpdateShop } from '@api/shops';
+import { useShopDetail, useUpdateShop, useUploadShopLogo } from '@api/shops';
 import { EmptySection } from '@components/dashboard/EmptySection';
 import { PageHeader } from '@components/dashboard/PageHeader';
 import { Button } from '@components/ui/Button';
+import { ImageIcon } from '@components/ui/icons';
 import { StatusPill, type StatusTone } from '@components/ui/StatusPill';
 import { useAuthStore } from '@stores/auth';
-import { type FormEvent, useState } from 'react';
+import { type FormEvent, useRef, useState } from 'react';
 
 const STATUS_COPY: Record<string, { label: string; tone: StatusTone }> = {
   active: { label: 'Active', tone: 'positive' },
@@ -35,6 +36,8 @@ export function ShopProfilePage() {
 function ShopProfileForm({ shopUid }: { shopUid: string }) {
   const { data, isLoading, isError } = useShopDetail(shopUid);
   const updateShop = useUpdateShop();
+  const uploadLogo = useUploadShopLogo();
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -81,6 +84,41 @@ function ShopProfileForm({ shopUid }: { shopUid: string }) {
       <div className="flex items-center justify-between">
         <span className="text-xs text-slate-500">Approval status</span>
         <StatusPill label={status.label} tone={status.tone} />
+      </div>
+
+      <div className="flex items-center gap-4">
+        <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-edge-strong bg-inset text-slate-500">
+          {data.shop.logo ? (
+            <img src={data.shop.logo} alt="" className="h-full w-full object-cover" />
+          ) : (
+            <ImageIcon className="h-6 w-6" />
+          )}
+        </span>
+        <div className="flex flex-col gap-1">
+          <span className="text-xs font-medium text-slate-400">Logo</span>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            isLoading={uploadLogo.isPending}
+            loadingText="Uploading…"
+            onClick={() => logoInputRef.current?.click()}
+            className="self-start"
+          >
+            {data.shop.logo ? 'Replace logo' : 'Upload logo'}
+          </Button>
+        </div>
+        <input
+          ref={logoInputRef}
+          type="file"
+          accept=".jpg,.jpeg,.png,.webp"
+          className="hidden"
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            if (file) uploadLogo.mutate({ shopUid, file });
+            event.target.value = '';
+          }}
+        />
       </div>
 
       <label className="flex flex-col gap-1.5">
