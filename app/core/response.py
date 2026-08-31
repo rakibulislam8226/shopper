@@ -5,14 +5,20 @@ All API responses adhere to the standard schema:
     "status": bool,
     "message": str,
     "data": T | None,
-    "error": dict | None,
+    "error": list[{"field": str, "msg": str}] | None,
     "meta": PaginationMeta | None
 }
 
 ``meta`` is reserved for pagination — it is only ever populated by
-``paginated_response`` and is always ``null`` otherwise. ``error`` carries
-failure detail (path, status_code, timestamp, ...) and is always ``null`` on
-success.
+``paginated_response`` and is always ``null`` otherwise.
+
+``error`` is always ``null`` on success. On failure it is either ``null``
+(a general error with nothing to attach to a specific input — the client
+shows ``message`` in a toast and nothing more) or a list of one-or-more
+``{field, msg}`` pairs a form can match against its own field names to show
+inline, alongside ``message`` in a toast. ``field`` is ``""`` for an error
+that fails a whole submission rather than one input (e.g. a cross-field
+rule) — a client should treat that the same as no field: toast-only.
 """
 
 from __future__ import annotations
@@ -47,13 +53,24 @@ class PaginationMeta(BaseModel):
         )
 
 
+class ApiFieldError(BaseModel):
+    """One error, matched to the request field it should be shown under.
+
+    ``field`` is ``""`` when the error belongs to the submission as a whole
+    rather than any single input (see the module docstring).
+    """
+
+    field: str = ""
+    msg: str
+
+
 class ApiResponse[T](BaseModel):
     """Standard unified response wrapper for all API endpoints."""
 
     status: bool = True
     message: str = "Success"
     data: T | None = None
-    error: dict[str, Any] | None = None
+    error: list[ApiFieldError] | None = None
     meta: PaginationMeta | None = None
 
 
@@ -95,17 +112,20 @@ def paginated_response(
 
 def error_response(
     message: str = "An error occurred",
-    data: Any = None,
-    error: dict[str, Any] | None = None,
+    errors: list[ApiFieldError] | None = None,
     status_code: int = http_status.HTTP_400_BAD_REQUEST,
     headers: dict[str, str] | None = None,
 ) -> JSONResponse:
-    """Build a standard JSONResponse for failed/error requests."""
+    """Build a standard JSONResponse for failed/error requests.
+
+    ``data`` is always ``null`` on an error response — a failure has nothing
+    to hand back but ``message`` and, optionally, ``errors``.
+    """
     content = {
         "status": False,
         "message": message,
-        "data": data,
-        "error": error,
+        "data": None,
+        "error": [e.model_dump() for e in errors] if errors else None,
         "meta": None,
     }
     return JSONResponse(status_code=status_code, content=content, headers=headers)

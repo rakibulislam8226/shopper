@@ -216,7 +216,11 @@ async def forgot_password(db: AsyncSession, payload: ForgotPasswordRequest) -> N
     user = await get_user_by_phone(db, payload.phone)
     if user is None:
         logger.info("forgot_password_unknown_phone", phone=payload.phone)
-        raise AppError("This phone number is not registered", status_code=status.HTTP_404_NOT_FOUND)
+        raise AppError(
+            "This phone number is not registered",
+            status_code=status.HTTP_404_NOT_FOUND,
+            field="phone",
+        )
 
     await send_otp(payload.phone, _PASSWORD_RESET_OTP_PURPOSE)
     logger.info("forgot_password_otp_sent", user_uid=str(user.uid))
@@ -236,7 +240,9 @@ async def verify_reset_otp(
         payload.phone, _PASSWORD_RESET_OTP_PURPOSE, payload.code
     ):
         logger.info("reset_otp_verify_failed", phone=payload.phone)
-        raise AppError("Invalid or expired OTP", status_code=status.HTTP_400_BAD_REQUEST)
+        raise AppError(
+            "Invalid or expired OTP", status_code=status.HTTP_400_BAD_REQUEST, field="code"
+        )
 
     token = secrets.token_urlsafe(32)
     await redis_client.set(

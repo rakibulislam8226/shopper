@@ -1,5 +1,6 @@
-import logo from '../../assets/logo.jpeg';
 import { NavLink } from 'react-router-dom';
+
+import logo from '../../assets/logo.jpeg';
 
 /**
  * Wordmark + icon, linking home. `iconOnly` drops the wordmark for tight

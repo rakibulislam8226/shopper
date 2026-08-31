@@ -2,6 +2,7 @@ import { type AxiosError, type AxiosInstance } from 'axios';
 import { toast } from 'sonner';
 
 import { type ApiResponse } from '../api/types';
+import { type ApiErrorResponse } from '../lib/apiErrors';
 
 /**
  * Per-request fallback text — only shown when the API response itself has no
@@ -43,16 +44,17 @@ export function attachToastPlugin(instance: AxiosInstance): void {
       return response;
     },
     (error: AxiosError<ApiResponse>) => {
-      const normalised: ApiResponse = error.response?.data ?? {
-        status: false,
-        message: error.message || 'Network error',
-        data: null,
-        error: {
-          path: error.config?.url ?? '',
-          status_code: error.response?.status ?? 0,
-          timestamp: new Date().toISOString(),
-        },
-        meta: null,
+      const normalised: ApiErrorResponse = {
+        ...(error.response?.data ?? {
+          status: false,
+          message: error.message || 'Network error',
+          data: null,
+          error: null,
+          meta: null,
+        }),
+        // Client-side only — see `ApiErrorResponse`. 0 means no response at
+        // all (the request never reached the server, or never came back).
+        httpStatus: error.response?.status ?? 0,
       };
 
       const opt = error.config?.toast;

@@ -3,6 +3,7 @@ import { AuthInput } from '@components/auth/AuthInput';
 import { SplitAuthCard } from '@components/auth/SplitAuthCard';
 import { Button } from '@components/ui/Button';
 import { CheckIcon, LockIcon, PhoneIcon } from '@components/ui/icons';
+import { toFieldErrors } from '@lib/apiErrors';
 import { type FormEvent, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -61,6 +62,9 @@ export function ForgotPasswordPage() {
   const verifyOtp = useVerifyResetOtp();
   const resetPassword = useResetPassword();
 
+  const phoneFieldErrors = toFieldErrors(forgotPassword.error);
+  const otpFieldErrors = toFieldErrors(verifyOtp.error);
+
   const passwordsMismatch = confirmPassword.length > 0 && newPassword !== confirmPassword;
 
   const handleRequestOtp = (event: FormEvent<HTMLFormElement>) => {
@@ -117,6 +121,7 @@ export function ForgotPasswordPage() {
             autoComplete="tel"
             autoFocus
             placeholder="01XXXXXXXXX"
+            error={phoneFieldErrors.phone}
           />
 
           <Button
@@ -156,6 +161,7 @@ export function ForgotPasswordPage() {
             required
             autoFocus
             placeholder="1234"
+            error={otpFieldErrors.code}
           />
 
           <Button

@@ -59,7 +59,7 @@ export const NAV_SECTIONS: { heading: string; items: NavItem[] }[] = [
   {
     heading: 'Organization',
     items: [
-      { label: 'Staff', path: '/dashboard/staff', icon: paths.users, badge: 'Soon' },
+      { label: 'Employees', path: '/dashboard/employees', icon: paths.users },
       {
         label: 'Organizations',
         path: '/dashboard/organizations',

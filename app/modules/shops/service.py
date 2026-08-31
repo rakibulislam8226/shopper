@@ -144,7 +144,9 @@ async def register_shop(
     if user is not None:
         if not verify_password(payload.password, user.password_hash):
             logger.info("shop_register_rejected_wrong_password", phone=payload.phone)
-            raise AppError(_WRONG_PASSWORD, status_code=status.HTTP_401_UNAUTHORIZED)
+            raise AppError(
+                _WRONG_PASSWORD, status_code=status.HTTP_401_UNAUTHORIZED, field="password"
+            )
     else:
         user = User(
             name=payload.owner_name,

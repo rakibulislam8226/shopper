@@ -127,11 +127,11 @@ Point the app at your local services via `.env`.
 
 ```bash
 # 1. Environment
-cp .env.example .env                      # edit to match your local Postgres/Redis
+cp .env.example .env 
 
 # 2. Virtualenv
 python -m venv venv
-source venv/bin/activate                 # Windows: .venv\Scripts\activate
+source venv/bin/activate 
 
 # 3. Dependencies
 pip install -r requirements.txt -r requirements-dev.txt

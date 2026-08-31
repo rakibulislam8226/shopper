@@ -1,4 +1,4 @@
-import { type ApiResponse } from '@api/types';
+import { type ApiErrorResponse } from '@lib/apiErrors';
 import { QueryClient } from '@tanstack/react-query';
 
 /**
@@ -9,7 +9,7 @@ import { QueryClient } from '@tanstack/react-query';
  * status 0) are worth a second attempt.
  */
 function retryTransientOnly(failureCount: number, error: unknown): boolean {
-  const status = (error as ApiResponse)?.error?.status_code ?? 0;
+  const status = (error as ApiErrorResponse)?.httpStatus ?? 0;
   if (status >= 400 && status < 500) return false;
   return failureCount < 1;
 }

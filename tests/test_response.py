@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 
 from app.core.response import (
+    ApiFieldError,
     PaginationMeta,
     error_response,
     paginated_response,
@@ -71,13 +72,25 @@ def test_error_response_structure() -> None:
     assert content["meta"] is None
 
 
-def test_error_response_carries_detail_in_error_not_meta() -> None:
-    """Failure detail belongs in `error`; `meta` stays reserved for pagination."""
-    detail = {"path": "/api/thing", "status_code": 404, "timestamp": "2026-01-01T00:00:00Z"}
-    res = error_response(message="Not found", error=detail, status_code=404)
+def test_error_response_carries_field_errors_not_meta() -> None:
+    """Field-level failures belong in `error`; `meta` stays reserved for pagination."""
+    res = error_response(
+        message="Please check the highlighted fields.",
+        errors=[ApiFieldError(field="phone", msg="This phone number is already registered")],
+        status_code=422,
+    )
     content = json.loads(res.body.decode())
-    assert content["error"] == detail
+    assert content["error"] == [
+        {"field": "phone", "msg": "This phone number is already registered"}
+    ]
     assert content["meta"] is None
+
+
+def test_error_response_defaults_error_to_none() -> None:
+    """A general (non-field) error carries only `message` — `error` stays null."""
+    res = error_response(message="Invalid or expired refresh token", status_code=401)
+    content = json.loads(res.body.decode())
+    assert content["error"] is None
 
 
 def test_error_response_forwards_headers() -> None:

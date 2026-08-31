@@ -1,4 +1,5 @@
 import { type Shop } from '@api/shops';
+import { type ApiErrorResponse } from '@lib/apiErrors';
 import { axios } from '@plugins/axios';
 import { useMutation } from '@tanstack/react-query';
 
@@ -41,7 +42,7 @@ export interface RefreshData {
 
 /** POST /api/users/login — phone + password, returns the user and a token pair. */
 export function useLogin() {
-  return useMutation({
+  return useMutation<ApiResponse<LoginData>, ApiErrorResponse, LoginPayload>({
     mutationFn: async (payload: LoginPayload) => {
       const response = await axios.post<ApiResponse<LoginData>>('/users/login', payload, {
         toast: { error: 'Unable to sign in' },
@@ -61,7 +62,7 @@ export interface ForgotPasswordPayload {
  * `toast` config) when the phone has no account.
  */
 export function useForgotPassword() {
-  return useMutation({
+  return useMutation<ApiResponse<null>, ApiErrorResponse, ForgotPasswordPayload>({
     mutationFn: async (payload: ForgotPasswordPayload) => {
       const response = await axios.post<ApiResponse<null>>('/users/forgot-password', payload, {
         toast: { error: 'Unable to send the code' },
@@ -83,7 +84,7 @@ export interface VerifyResetOtpData {
 
 /** POST /api/users/verify-reset-otp — trades a correct OTP for a one-time reset token. */
 export function useVerifyResetOtp() {
-  return useMutation({
+  return useMutation<ApiResponse<VerifyResetOtpData>, ApiErrorResponse, VerifyResetOtpPayload>({
     mutationFn: async (payload: VerifyResetOtpPayload) => {
       const response = await axios.post<ApiResponse<VerifyResetOtpData>>(
         '/users/verify-reset-otp',
@@ -103,7 +104,7 @@ export interface ResetPasswordPayload {
 
 /** POST /api/users/reset-password — consumes the reset token, sets the new password. */
 export function useResetPassword() {
-  return useMutation({
+  return useMutation<ApiResponse<null>, ApiErrorResponse, ResetPasswordPayload>({
     mutationFn: async (payload: ResetPasswordPayload) => {
       const response = await axios.post<ApiResponse<null>>('/users/reset-password', payload, {
         toast: { error: 'Unable to reset password' },

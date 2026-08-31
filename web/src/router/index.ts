@@ -13,7 +13,7 @@ export const ROUTES = {
     root: '/dashboard',
     products: '/dashboard/products',
     sales: '/dashboard/sales',
-    staff: '/dashboard/staff',
+    employees: '/dashboard/employees',
     organizations: '/dashboard/organizations',
     audit: '/dashboard/audit',
     settings: {
