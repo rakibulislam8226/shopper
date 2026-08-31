@@ -9,14 +9,28 @@ import { EmptySection } from '@components/dashboard/EmptySection';
 import { PageHeader } from '@components/dashboard/PageHeader';
 import { Button } from '@components/ui/Button';
 import { FieldError } from '@components/ui/FieldError';
-import { LockIcon, PhoneIcon, UserIcon, UsersIcon } from '@components/ui/icons';
+import { LockIcon, PhoneIcon, SearchIcon, UserIcon, UsersIcon } from '@components/ui/icons';
 import { Modal } from '@components/ui/Modal';
+import { Pagination } from '@components/ui/Pagination';
+import { Select, type SelectOption } from '@components/ui/Select';
 import { StatusPill, type StatusTone } from '@components/ui/StatusPill';
 import { toFieldErrors } from '@lib/apiErrors';
 import { cn } from '@lib/cn';
 import { formatCurrency, formatDateTime } from '@lib/format';
+import { useDebouncedValue } from '@lib/useDebouncedValue';
 import { useAuthStore } from '@stores/auth';
 import { type FormEvent, useState } from 'react';
+
+const PAGE_SIZE = 10;
+/** Below this many characters, a search is too broad to be worth sending. */
+const MIN_SEARCH_LENGTH = 2;
+
+const ROLE_FILTER_OPTIONS: SelectOption<MembershipRole | 'all'>[] = [
+  { value: 'all', label: 'All roles' },
+  { value: 'owner', label: 'Owner' },
+  { value: 'manager', label: 'Manager' },
+  { value: 'salesman', label: 'Staff' },
+];
 
 const ROLE_COPY: Record<MembershipRole, { label: string; tone: StatusTone }> = {
   owner: { label: 'Owner', tone: 'positive' },
@@ -31,11 +45,20 @@ const STATUS_COPY: Record<Employee['status'], { label: string; tone: StatusTone 
   resigned: { label: 'Resigned', tone: 'negative' },
 };
 
+const ROLE_OPTIONS: { value: AddEmployeePayload['role']; label: string; description: string }[] = [
+  {
+    value: 'salesman',
+    label: 'Staff (salesman)',
+    description: 'Sells and records transactions',
+  },
+  { value: 'manager', label: 'Manager', description: 'Can also add staff and manage the shop' },
+];
+
 export function EmployeesPage() {
   const activeShopUid = useAuthStore((state) => state.activeShopUid);
 
   return (
-    <div className="mx-auto max-w-5xl">
+    <div className="mx-auto max-w-7xl">
       <PageHeader
         title="Employees"
         description="Everyone with access to your organization — owners, managers, and staff."
@@ -53,41 +76,92 @@ export function EmployeesPage() {
 }
 
 function EmployeesSection({ shopUid }: { shopUid: string }) {
-  const { data, isLoading, isError } = useEmployees(shopUid);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [searchInput, setSearchInput] = useState('');
+  const [roleFilter, setRoleFilter] = useState<MembershipRole | 'all'>('all');
+  const [page, setPage] = useState(1);
 
-  if (isLoading) {
-    return <p className="text-sm text-text-muted">Loading employees…</p>;
-  }
+  const debouncedSearch = useDebouncedValue(searchInput.trim());
+  // A 1-character query is too broad to be worth a backend round trip — wait
+  // for at least 2 before it's sent as a filter at all.
+  const q = debouncedSearch.length >= MIN_SEARCH_LENGTH ? debouncedSearch : '';
 
-  if (isError || !data) {
+  const { data, isLoading, isError } = useEmployees(shopUid, {
+    q,
+    role: roleFilter === 'all' ? undefined : roleFilter,
+    page,
+    limit: PAGE_SIZE,
+  });
+
+  if (isError) {
     return <p className="text-sm text-rose-400">Unable to load this shop's employees.</p>;
   }
 
-  const canAddEmployees = data.viewer_role === 'owner' || data.viewer_role === 'manager';
+  const canAddEmployees = data?.viewer_role === 'owner' || data?.viewer_role === 'manager';
 
   return (
     <div className="flex flex-col gap-4">
-      {canAddEmployees && (
-        <div className="flex justify-end">
-          <Button variant="primary" size="sm" onClick={() => setShowAddModal(true)}>
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 rounded-lg border border-edge-strong bg-inset px-3 py-2 focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-brand-ring">
+            <SearchIcon className="h-4 w-4 shrink-0 text-text-faint" />
+            <input
+              type="search"
+              value={searchInput}
+              onChange={(event) => {
+                setSearchInput(event.target.value);
+                setPage(1);
+              }}
+              placeholder="Search by name or phone"
+              className="w-full bg-transparent text-lg text-text-primary outline-none placeholder:text-text-faint"
+            />
+          </div>
+          {searchInput.trim().length > 0 && searchInput.trim().length < MIN_SEARCH_LENGTH && (
+            <p className="mt-1 text-xs text-text-faint">
+              Type at least {MIN_SEARCH_LENGTH} characters to search.
+            </p>
+          )}
+        </div>
+
+        <div className="w-40 shrink-0">
+          <Select
+            className="cursor-pointer"
+            size="md"
+            value={roleFilter}
+            onChange={(value) => {
+              setRoleFilter(value);
+              setPage(1);
+            }}
+            options={ROLE_FILTER_OPTIONS}
+          />
+        </div>
+
+        {canAddEmployees && (
+          <Button variant="primary" size="lg" onClick={() => setShowAddModal(true)}>
             Add employee
           </Button>
-        </div>
-      )}
+        )}
+      </div>
 
-      <EmployeesTable employees={data.members} />
+      {isLoading && !data ? (
+        <p className="text-sm text-text-muted">Loading employees…</p>
+      ) : (
+        <>
+          <EmployeesTable employees={data?.members ?? []} />
+          {data && <Pagination meta={data.meta} onPageChange={setPage} />}
+        </>
+      )}
 
       <Modal
         open={showAddModal}
         onClose={() => setShowAddModal(false)}
         title="Add a manager or staff member"
-        description="If this phone number already has an account, it's attached to this shop as-is — the password below only applies to a brand-new account."
-        size="lg"
+        description="If this phone number already has an account, it's attached to this shop as-is."
+        size="xl"
       >
         <AddEmployeeForm
           shopUid={shopUid}
-          canAddManager={data.viewer_role === 'owner'}
+          canAddManager={data?.viewer_role === 'owner'}
           onAdded={() => setShowAddModal(false)}
         />
       </Modal>
@@ -99,15 +173,15 @@ function EmployeesTable({ employees }: { employees: Employee[] }) {
   if (employees.length === 0) {
     return (
       <EmptySection
-        title="No employees yet"
-        description="Add a manager or staff member to get started."
+        title="No employees found"
+        description="Try a different search or filter, or add a manager or staff member to get started."
       />
     );
   }
 
   return (
     <div className="overflow-x-auto rounded-2xl border border-edge-strong bg-card">
-      <table className="w-full min-w-[720px] text-left text-sm">
+      <table className="w-full min-w-170 text-left text-sm">
         <thead>
           <tr className="border-b border-edge-strong text-xs text-text-muted">
             <th className="px-4 py-3 font-medium">Name</th>
@@ -173,6 +247,10 @@ function AddEmployeeForm({
   const [confirmPassword, setConfirmPassword] = useState('');
   const [role, setRole] = useState<AddEmployeePayload['role']>('salesman');
 
+  const roleOptions = canAddManager
+    ? ROLE_OPTIONS
+    : ROLE_OPTIONS.filter((option) => option.value !== 'manager');
+
   // Only nag once the visitor has actually typed a confirmation — see
   // SignUpForm for the same rule on the registration form.
   const passwordsMismatch = confirmPassword.length > 0 && password !== confirmPassword;
@@ -198,122 +276,119 @@ function AddEmployeeForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <label className="flex flex-col gap-1.5">
-        <span className="text-xs font-medium text-text-muted">Full name</span>
-        <div
-          className={cn(
-            'flex items-center gap-2 rounded-lg border bg-inset px-3 py-2 focus-within:ring-4',
-            fieldErrors.name
-              ? 'border-rose-500/60 focus-within:border-rose-500 focus-within:ring-rose-500/15'
-              : 'border-edge-strong focus-within:border-indigo-500 focus-within:ring-brand-ring',
-          )}
-        >
-          <UserIcon className="h-4 w-4 shrink-0 text-text-faint" />
-          <input
-            type="text"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            required
-            className="w-full bg-transparent text-sm text-text-primary outline-none"
-          />
-        </div>
-        <FieldError message={fieldErrors.name} />
-      </label>
-
-      <label className="flex flex-col gap-1.5">
-        <span className="text-xs font-medium text-text-muted">Phone</span>
-        <div
-          className={cn(
-            'flex items-center gap-2 rounded-lg border bg-inset px-3 py-2 focus-within:ring-4',
-            fieldErrors.phone
-              ? 'border-rose-500/60 focus-within:border-rose-500 focus-within:ring-rose-500/15'
-              : 'border-edge-strong focus-within:border-indigo-500 focus-within:ring-brand-ring',
-          )}
-        >
-          <PhoneIcon className="h-4 w-4 shrink-0 text-text-faint" />
-          <input
-            type="tel"
-            value={phone}
-            onChange={(event) => setPhone(event.target.value)}
-            placeholder="01XXXXXXXXX"
-            required
-            className="w-full bg-transparent text-sm text-text-primary outline-none placeholder:text-text-faint"
-          />
-        </div>
-        <FieldError message={fieldErrors.phone} />
-      </label>
-
-      <label className="flex flex-col gap-1.5">
-        <span className="text-xs font-medium text-text-muted">Role</span>
-        <div className="flex items-center gap-2 rounded-lg border border-edge-strong bg-inset px-3 py-2 focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-brand-ring">
-          <UsersIcon className="h-4 w-4 shrink-0 text-text-faint" />
-          <select
-            value={role}
-            onChange={(event) => setRole(event.target.value as AddEmployeePayload['role'])}
-            className="w-full bg-transparent text-sm text-text-primary outline-none"
+    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+      <div className="grid gap-5 sm:grid-cols-2">
+        <label className="flex flex-col gap-1.5">
+          <span className="text-sm font-medium text-text-muted">Full name</span>
+          <div
+            className={cn(
+              'flex items-start gap-2.5 rounded-lg border bg-inset px-3.5 py-3 focus-within:ring-4',
+              fieldErrors.name
+                ? 'border-rose-500/60 focus-within:border-rose-500 focus-within:ring-rose-500/15'
+                : 'border-edge-strong focus-within:border-indigo-500 focus-within:ring-brand-ring',
+            )}
           >
-            <option value="salesman">Staff (salesman)</option>
-            {canAddManager && <option value="manager">Manager</option>}
-          </select>
-        </div>
-        <FieldError message={fieldErrors.role} />
-      </label>
+            <UserIcon className="h-5 w-5 shrink-0 text-text-faint" />
+            <input
+              type="text"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              required
+              className="w-full bg-transparent text-base text-text-primary outline-none"
+            />
+          </div>
+          <FieldError message={fieldErrors.name} />
+        </label>
 
-      <label className="flex flex-col gap-1.5">
-        <span className="text-xs font-medium text-text-muted">Initial password</span>
-        <div
-          className={cn(
-            'flex items-center gap-2 rounded-lg border bg-inset px-3 py-2 focus-within:ring-4',
-            fieldErrors.password
-              ? 'border-rose-500/60 focus-within:border-rose-500 focus-within:ring-rose-500/15'
-              : 'border-edge-strong focus-within:border-indigo-500 focus-within:ring-brand-ring',
-          )}
-        >
-          <LockIcon className="h-4 w-4 shrink-0 text-text-faint" />
-          <input
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            minLength={8}
-            required
-            className="w-full bg-transparent text-sm text-text-primary outline-none"
-          />
-        </div>
-        <FieldError message={fieldErrors.password} />
-      </label>
+        <label className="flex flex-col gap-1.5">
+          <span className="text-sm font-medium text-text-muted">Phone</span>
+          <div
+            className={cn(
+              'flex items-center gap-2.5 rounded-lg border bg-inset px-3.5 py-3 focus-within:ring-4',
+              fieldErrors.phone
+                ? 'border-rose-500/60 focus-within:border-rose-500 focus-within:ring-rose-500/15'
+                : 'border-edge-strong focus-within:border-indigo-500 focus-within:ring-brand-ring',
+            )}
+          >
+            <PhoneIcon className="h-5 w-5 shrink-0 text-text-faint" />
+            <input
+              type="tel"
+              value={phone}
+              onChange={(event) => setPhone(event.target.value)}
+              placeholder="01XXXXXXXXX"
+              required
+              className="w-full bg-transparent text-base text-text-primary outline-none placeholder:text-text-faint"
+            />
+          </div>
+          <FieldError message={fieldErrors.phone} />
+        </label>
+      </div>
 
-      <label className="flex flex-col gap-1.5">
-        <span className="text-xs font-medium text-text-muted">Confirm password</span>
-        <div
-          className={cn(
-            'flex items-center gap-2 rounded-lg border bg-inset px-3 py-2 focus-within:ring-4',
-            passwordsMismatch || fieldErrors.confirm_password
-              ? 'border-rose-500/60 focus-within:border-rose-500 focus-within:ring-rose-500/15'
-              : 'border-edge-strong focus-within:border-indigo-500 focus-within:ring-brand-ring',
-          )}
-        >
-          <LockIcon className="h-4 w-4 shrink-0 text-text-faint" />
-          <input
-            type="password"
-            value={confirmPassword}
-            onChange={(event) => setConfirmPassword(event.target.value)}
-            minLength={8}
-            required
-            className="w-full bg-transparent text-sm text-text-primary outline-none"
+      <Select
+        label="Role"
+        icon={<UsersIcon className="h-5 w-5" />}
+        value={role}
+        onChange={setRole}
+        options={roleOptions}
+        error={fieldErrors.role}
+      />
+
+      <div className="grid gap-5 sm:grid-cols-2">
+        <label className="flex flex-col gap-1.5">
+          <span className="text-sm font-medium text-text-muted">Initial password</span>
+          <div
+            className={cn(
+              'flex items-center gap-2.5 rounded-lg border bg-inset px-3.5 py-3 focus-within:ring-4',
+              fieldErrors.password
+                ? 'border-rose-500/60 focus-within:border-rose-500 focus-within:ring-rose-500/15'
+                : 'border-edge-strong focus-within:border-indigo-500 focus-within:ring-brand-ring',
+            )}
+          >
+            <LockIcon className="h-5 w-5 shrink-0 text-text-faint" />
+            <input
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              minLength={8}
+              required
+              className="w-full bg-transparent text-base text-text-primary outline-none"
+            />
+          </div>
+          <FieldError message={fieldErrors.password} />
+        </label>
+
+        <label className="flex flex-col gap-1.5">
+          <span className="text-sm font-medium text-text-muted">Confirm password</span>
+          <div
+            className={cn(
+              'flex items-center gap-2.5 rounded-lg border bg-inset px-3.5 py-3 focus-within:ring-4',
+              passwordsMismatch || fieldErrors.confirm_password
+                ? 'border-rose-500/60 focus-within:border-rose-500 focus-within:ring-rose-500/15'
+                : 'border-edge-strong focus-within:border-indigo-500 focus-within:ring-brand-ring',
+            )}
+          >
+            <LockIcon className="h-5 w-5 shrink-0 text-text-faint" />
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(event) => setConfirmPassword(event.target.value)}
+              minLength={8}
+              required
+              className="w-full bg-transparent text-base text-text-primary outline-none"
+            />
+          </div>
+          <FieldError
+            message={passwordsMismatch ? "Passwords don't match" : fieldErrors.confirm_password}
           />
-        </div>
-        <FieldError
-          message={passwordsMismatch ? "Passwords don't match" : fieldErrors.confirm_password}
-        />
-      </label>
+        </label>
+      </div>
 
       <Button
         type="submit"
-        size="md"
+        size="lg"
         isLoading={addEmployee.isPending}
         loadingText="Adding…"
-        className="self-start"
+        className="mt-1 self-end"
       >
         Add employee
       </Button>

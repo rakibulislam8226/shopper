@@ -10,8 +10,8 @@ export function FieldError({ message }: { message?: string }) {
   if (!message) return null;
 
   return (
-    <span className="flex items-center gap-1 text-xs text-rose-400">
-      <WarningIcon />
+    <span className="flex items-center gap-1.5 text-sm text-rose-400">
+      <WarningIcon className="h-3.5 w-3.5 shrink-0" />
       {message}
     </span>
   );

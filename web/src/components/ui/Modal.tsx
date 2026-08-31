@@ -7,10 +7,10 @@ import { CloseIcon } from './icons';
 export type ModalSize = 'sm' | 'md' | 'lg' | 'xl';
 
 const SIZE_CLASSES: Record<ModalSize, string> = {
-  sm: 'max-w-sm',
-  md: 'max-w-lg',
-  lg: 'max-w-2xl',
-  xl: 'max-w-4xl',
+  sm: 'max-w-md',
+  md: 'max-w-xl',
+  lg: 'max-w-3xl',
+  xl: 'max-w-5xl',
 };
 
 export interface ModalProps {
@@ -75,27 +75,29 @@ export function Modal({ open, onClose, title, description, size = 'md', children
         )}
       >
         {(title ?? description) && (
-          <div className="flex items-start justify-between gap-4 border-b border-edge-strong px-6 py-4">
+          <div className="flex items-start justify-between gap-4 border-b border-edge-strong px-8 py-6">
             <div className="min-w-0">
               {title && (
-                <h2 id={titleId} className="text-base font-semibold text-text-primary">
+                <h2 id={titleId} className="text-xl font-semibold text-text-primary">
                   {title}
                 </h2>
               )}
-              {description && <p className="mt-1 text-sm text-text-muted">{description}</p>}
+              {description && (
+                <p className="mt-1.5 text-base leading-relaxed text-text-muted">{description}</p>
+              )}
             </div>
             <button
               type="button"
               onClick={onClose}
               aria-label="Close"
-              className="shrink-0 rounded-lg p-1.5 text-text-muted transition-colors hover:bg-elevated hover:text-text-primary"
+              className="shrink-0 rounded-lg p-2 text-text-muted transition-colors hover:bg-elevated hover:text-text-primary"
             >
-              <CloseIcon className="h-4 w-4" />
+              <CloseIcon className="h-5 w-5" />
             </button>
           </div>
         )}
 
-        <div className="overflow-y-auto px-6 py-5">{children}</div>
+        <div className="overflow-y-auto px-8 py-6">{children}</div>
       </div>
     </div>,
     document.body,

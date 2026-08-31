@@ -40,9 +40,6 @@ _ONLY_MANAGERS = "Only the shop owner or a manager can do this"
 _ONLY_OWNER_ADDS_MANAGER = "Only the shop owner can add a manager"
 _ALREADY_A_MEMBER = "This phone number already belongs to a member of this shop"
 
-# Owner, then manager, then salesman — display order for the staff list.
-_ROLE_RANK = {MembershipRole.OWNER: 0, MembershipRole.MANAGER: 1, MembershipRole.SALESMAN: 2}
-
 
 async def _require_membership(
     db: AsyncSession, *, shop_uid: UUID, user_id: int
@@ -158,18 +155,34 @@ async def add_member(
     )
 
 
-async def list_members(db: AsyncSession, *, shop_uid: UUID, user_id: int) -> MembersListResponse:
-    """List every active member of the caller's shop. Any active member can view."""
+async def list_members(
+    db: AsyncSession,
+    *,
+    shop_uid: UUID,
+    user_id: int,
+    q: str | None = None,
+    role: MembershipRole | None = None,
+    page: int = 1,
+    limit: int = 20,
+) -> tuple[MembersListResponse, int]:
+    """List one page of the caller's shop's active members, optionally
+    filtered by a name/phone search (``q``) and/or an exact ``role``.
+
+    Any active member can view. Returns the response alongside the total
+    row count across every page, for the caller (the router) to build the
+    envelope's pagination ``meta`` from.
+    """
     shop, viewer_membership = await _require_membership(db, shop_uid=shop_uid, user_id=user_id)
 
-    rows = await list_shop_members(db, shop_id=shop.id)
-    rows.sort(key=lambda row: (_ROLE_RANK[row[0].role], row[1].name.lower()))
+    rows, total = await list_shop_members(
+        db, shop_id=shop.id, q=q, role=role, page=page, limit=limit
+    )
 
     sales_by_user = await get_total_sales_by_user(
         db, shop_id=shop.id, user_ids=[user.id for _membership, user in rows]
     )
 
-    return MembersListResponse(
+    response = MembersListResponse(
         members=[
             _member_public(
                 user, membership, total_sales=sales_by_user.get(user.id, Decimal("0.00"))
@@ -178,3 +191,4 @@ async def list_members(db: AsyncSession, *, shop_uid: UUID, user_id: int) -> Mem
         ],
         viewer_role=viewer_membership.role,
     )
+    return response, total

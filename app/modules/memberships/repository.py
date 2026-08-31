@@ -4,13 +4,24 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from sqlalchemy import func, select
+from sqlalchemy import case, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.enums import MembershipStatus
+from app.db.enums import MembershipRole, MembershipStatus
 from app.modules.memberships.models import ShopMembership
 from app.modules.sales.models import SaleTransaction
 from app.modules.users.models import User
+
+# Owner, then manager, then salesman — the employee list's display order.
+# A SQL-level CASE rather than a Python sort: rows are paginated in the
+# database, so the ordering that determines *which* rows land on which page
+# has to happen there too.
+_ROLE_RANK = case(
+    (ShopMembership.role == MembershipRole.OWNER, 0),
+    (ShopMembership.role == MembershipRole.MANAGER, 1),
+    (ShopMembership.role == MembershipRole.SALESMAN, 2),
+    else_=3,
+)
 
 
 async def get_active_membership(
@@ -45,18 +56,47 @@ async def get_membership(
 
 
 async def list_shop_members(
-    db: AsyncSession, *, shop_id: int
-) -> list[tuple[ShopMembership, User]]:
-    """Return every ACTIVE membership for a shop together with its user."""
-    result = await db.execute(
+    db: AsyncSession,
+    *,
+    shop_id: int,
+    q: str | None = None,
+    role: MembershipRole | None = None,
+    page: int = 1,
+    limit: int = 20,
+) -> tuple[list[tuple[ShopMembership, User]], int]:
+    """Return one page of ACTIVE memberships for a shop together with their
+    user, ordered owner-first then alphabetically, plus the total row count
+    across every page (for the response's pagination `meta`).
+
+    ``q`` matches a substring of the member's name or phone
+    (case-insensitive); ``role`` narrows to exactly one role. Both are
+    optional — an absent filter matches every row.
+    """
+    conditions = [
+        ShopMembership.shop_id == shop_id,
+        ShopMembership.status == MembershipStatus.ACTIVE,
+    ]
+    if role is not None:
+        conditions.append(ShopMembership.role == role)
+    if q:
+        pattern = f"%{q}%"
+        conditions.append(or_(User.name.ilike(pattern), User.phone.ilike(pattern)))
+
+    base_query = (
         select(ShopMembership, User)
         .join(User, User.id == ShopMembership.user_id)
-        .where(
-            ShopMembership.shop_id == shop_id,
-            ShopMembership.status == MembershipStatus.ACTIVE,
-        )
+        .where(*conditions)
     )
-    return [(row[0], row[1]) for row in result.all()]
+
+    total = await db.scalar(select(func.count()).select_from(base_query.subquery()))
+
+    result = await db.execute(
+        base_query.order_by(_ROLE_RANK, func.lower(User.name))
+        .offset((page - 1) * limit)
+        .limit(limit)
+    )
+    rows = [(row[0], row[1]) for row in result.all()]
+    return rows, total or 0
 
 
 async def get_total_sales_by_user(

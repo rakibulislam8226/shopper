@@ -2,7 +2,7 @@ import { type ApiErrorResponse } from '@lib/apiErrors';
 import { axios } from '@plugins/axios';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { type ApiResponse } from './types';
+import { type ApiResponse, type PaginationMeta } from './types';
 
 /** Mirrors `MembershipRole` in `app/db/enums.py`. */
 export type MembershipRole = 'owner' | 'manager' | 'salesman';
@@ -31,23 +31,63 @@ export interface Employee {
   total_sales: string;
 }
 
-export interface EmployeesListData {
+interface EmployeesListData {
   members: Employee[];
   /** The caller's own role on this shop — gates the "add manager" option. */
   viewer_role: MembershipRole;
 }
 
-const employeesQueryKey = (shopUid: string | null | undefined) => ['employees', shopUid] as const;
+export interface EmployeesPage extends EmployeesListData {
+  meta: PaginationMeta;
+}
 
-/** GET /api/shops/{shop_uid}/members — every active employee. Any member can view. */
-export function useEmployees(shopUid: string | null | undefined) {
+/** Query/filter/pagination state for `GET /api/shops/{shop_uid}/members`. */
+export interface EmployeesQuery {
+  /** Matches a substring of the employee's name or phone. */
+  q?: string;
+  role?: MembershipRole;
+  page?: number;
+  limit?: number;
+}
+
+const DEFAULT_LIMIT = 10;
+
+const employeesQueryKey = (shopUid: string | null | undefined, query: EmployeesQuery) =>
+  ['employees', shopUid, query] as const;
+
+/**
+ * GET /api/shops/{shop_uid}/members — one page of active employees,
+ * optionally filtered by `q` (name/phone search) and/or `role`. Any member
+ * can view. Pagination follows the standard `PaginationMeta` envelope —
+ * see `components/ui/Pagination`.
+ */
+export function useEmployees(shopUid: string | null | undefined, query: EmployeesQuery = {}) {
+  const { q, role, page = 1, limit = DEFAULT_LIMIT } = query;
+
   return useQuery({
-    queryKey: employeesQueryKey(shopUid),
-    queryFn: async () => {
-      const response = await axios.get<ApiResponse<EmployeesListData>>(`/shops/${shopUid}/members`);
-      return response.data.data;
+    queryKey: employeesQueryKey(shopUid, { q, role, page, limit }),
+    queryFn: async (): Promise<EmployeesPage | null> => {
+      const response = await axios.get<ApiResponse<EmployeesListData>>(
+        `/shops/${shopUid}/members`,
+        { params: { q: q || undefined, role, page, limit } },
+      );
+      if (!response.data.data) return null;
+      return {
+        ...response.data.data,
+        meta: response.data.meta ?? {
+          page,
+          limit,
+          total: 0,
+          total_pages: 0,
+          has_next: false,
+          has_prev: false,
+        },
+      };
     },
     enabled: Boolean(shopUid),
+    // Keeps the current page's rows on screen while the next page loads,
+    // instead of flashing back to a loading state on every click.
+    placeholderData: (previous) => previous,
   });
 }
 
@@ -70,11 +110,12 @@ export interface AddEmployeeData {
  * POST /api/shops/{shop_uid}/members — adds a manager or salesman. Owners can
  * add either role; managers can only add salesmen (enforced server-side).
  *
- * The new employee is written straight into the `employees` cache on
- * success — the list updates the instant the request resolves, with no
- * second round trip for the caller to wait on — and a background
- * `invalidateQueries` follows to reconcile with the server's own ordering
- * and any stats (e.g. total sales) this response doesn't carry.
+ * Invalidates every `employees` query for this shop on success — one for
+ * each open search/filter/page combination — so whichever view the caller
+ * lands back on reflects the new employee without a manual reload. A
+ * targeted cache write isn't attempted here: which page and filter the new
+ * row would land on depends on the current sort/search/role state, so a
+ * refetch is the only version that's actually correct.
  */
 export function useAddEmployee() {
   const queryClient = useQueryClient();
@@ -88,18 +129,8 @@ export function useAddEmployee() {
       );
       return response.data;
     },
-    onSuccess: (response, { shopUid }) => {
-      const added = response.data?.member;
-      const queryKey = employeesQueryKey(shopUid);
-
-      if (added) {
-        queryClient.setQueryData<EmployeesListData>(queryKey, (current) =>
-          current
-            ? { ...current, members: [...current.members, added] }
-            : { members: [added], viewer_role: added.role },
-        );
-      }
-      void queryClient.invalidateQueries({ queryKey });
+    onSuccess: (_response, { shopUid }) => {
+      void queryClient.invalidateQueries({ queryKey: ['employees', shopUid] });
     },
   });
 }
