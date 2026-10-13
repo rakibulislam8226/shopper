@@ -13,7 +13,7 @@ from app.core.response import PaginationMeta, success_response
 from app.db.enums import MembershipRole
 from app.db.session import get_db
 from app.modules.memberships import service
-from app.modules.memberships.schemas import AddMemberRequest
+from app.modules.memberships.schemas import AddMemberRequest, UpdateMemberRoleRequest
 from app.modules.users.models import User
 
 router = APIRouter(tags=["memberships"])
@@ -34,6 +34,41 @@ async def add_member(
         message="Member added",
         status_code=status.HTTP_201_CREATED,
     )
+
+
+@router.patch("/{shop_uid}/members/{user_uid}", summary="Change a member's role")
+async def update_member_role(
+    shop_uid: UUID,
+    user_uid: UUID,
+    payload: UpdateMemberRoleRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> JSONResponse:
+    member = await service.update_member_role(
+        db,
+        shop_uid=shop_uid,
+        actor_user_id=current_user.id,
+        user_uid=user_uid,
+        payload=payload,
+    )
+    return success_response(
+        data=member.model_dump(mode="json"),
+        message="Member role updated",
+        status_code=status.HTTP_200_OK,
+    )
+
+
+@router.delete("/{shop_uid}/members/{user_uid}", summary="Remove a member from the shop")
+async def remove_member(
+    shop_uid: UUID,
+    user_uid: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> JSONResponse:
+    await service.remove_member(
+        db, shop_uid=shop_uid, actor_user_id=current_user.id, user_uid=user_uid
+    )
+    return success_response(message="Member removed", status_code=status.HTTP_200_OK)
 
 
 @router.get("/{shop_uid}/members", summary="List a shop's active staff")

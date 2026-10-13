@@ -4,6 +4,8 @@ import {
   type MembershipRole,
   useAddEmployee,
   useEmployees,
+  useRemoveMember,
+  useUpdateMemberRole,
 } from '@api/memberships';
 import { EmptySection } from '@components/dashboard/EmptySection';
 import { PageHeader } from '@components/dashboard/PageHeader';
@@ -77,6 +79,8 @@ export function EmployeesPage() {
 
 function EmployeesSection({ shopUid }: { shopUid: string }) {
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+  const [removingEmployee, setRemovingEmployee] = useState<Employee | null>(null);
   const [searchInput, setSearchInput] = useState('');
   const [roleFilter, setRoleFilter] = useState<MembershipRole | 'all'>('all');
   const [page, setPage] = useState(1);
@@ -97,7 +101,16 @@ function EmployeesSection({ shopUid }: { shopUid: string }) {
     return <p className="text-sm text-rose-400">Unable to load this shop's employees.</p>;
   }
 
-  const canAddEmployees = data?.viewer_role === 'owner' || data?.viewer_role === 'manager';
+  const viewerRole = data?.viewer_role;
+  const canAddEmployees = viewerRole === 'owner' || viewerRole === 'manager';
+
+  /** Whether the viewer may change this member's role or remove them. */
+  const canManage = (employee: Employee) => {
+    if (viewerRole !== 'owner' && viewerRole !== 'manager') return false;
+    if (employee.role === 'owner') return false;
+    if (employee.role === 'manager' && viewerRole !== 'owner') return false;
+    return true;
+  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -147,7 +160,12 @@ function EmployeesSection({ shopUid }: { shopUid: string }) {
         <p className="text-sm text-text-muted">Loading employees…</p>
       ) : (
         <>
-          <EmployeesTable employees={data?.members ?? []} />
+          <EmployeesTable
+            employees={data?.members ?? []}
+            canManage={canManage}
+            onEditRole={setEditingEmployee}
+            onRemove={setRemovingEmployee}
+          />
           {data && <Pagination meta={data.meta} onPageChange={setPage} />}
         </>
       )}
@@ -165,11 +183,58 @@ function EmployeesSection({ shopUid }: { shopUid: string }) {
           onAdded={() => setShowAddModal(false)}
         />
       </Modal>
+
+      <Modal
+        open={editingEmployee !== null}
+        onClose={() => setEditingEmployee(null)}
+        title="Change role"
+        description={editingEmployee ? `Update ${editingEmployee.name}'s access level.` : undefined}
+        size="sm"
+      >
+        {editingEmployee && (
+          <EditRoleForm
+            shopUid={shopUid}
+            employee={editingEmployee}
+            canAssignManager={viewerRole === 'owner'}
+            onDone={() => setEditingEmployee(null)}
+          />
+        )}
+      </Modal>
+
+      <Modal
+        open={removingEmployee !== null}
+        onClose={() => setRemovingEmployee(null)}
+        title="Remove this member?"
+        description={
+          removingEmployee
+            ? `${removingEmployee.name} will lose access to this shop immediately. This can't be undone from here.`
+            : undefined
+        }
+        size="sm"
+      >
+        {removingEmployee && (
+          <RemoveMemberConfirm
+            shopUid={shopUid}
+            employee={removingEmployee}
+            onDone={() => setRemovingEmployee(null)}
+          />
+        )}
+      </Modal>
     </div>
   );
 }
 
-function EmployeesTable({ employees }: { employees: Employee[] }) {
+function EmployeesTable({
+  employees,
+  canManage,
+  onEditRole,
+  onRemove,
+}: {
+  employees: Employee[];
+  canManage: (employee: Employee) => boolean;
+  onEditRole: (employee: Employee) => void;
+  onRemove: (employee: Employee) => void;
+}) {
   if (employees.length === 0) {
     return (
       <EmptySection
@@ -189,6 +254,9 @@ function EmployeesTable({ employees }: { employees: Employee[] }) {
             <th className="px-4 py-3 font-medium">Status</th>
             <th className="px-4 py-3 font-medium">Total sales</th>
             <th className="px-4 py-3 font-medium">Last login</th>
+            <th className="px-4 py-3 font-medium">
+              <span className="sr-only">Actions</span>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -219,6 +287,18 @@ function EmployeesTable({ employees }: { employees: Employee[] }) {
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap text-text-muted">
                   {formatDateTime(employee.last_login_at)}
+                </td>
+                <td className="px-4 py-3 whitespace-nowrap">
+                  {canManage(employee) && (
+                    <div className="flex justify-end gap-2">
+                      <Button variant="secondary" size="sm" onClick={() => onEditRole(employee)}>
+                        Change role
+                      </Button>
+                      <Button variant="danger" size="sm" onClick={() => onRemove(employee)}>
+                        Remove
+                      </Button>
+                    </div>
+                  )}
                 </td>
               </tr>
             );
@@ -393,5 +473,102 @@ function AddEmployeeForm({
         Add employee
       </Button>
     </form>
+  );
+}
+
+const EDIT_ROLE_OPTIONS: { value: 'manager' | 'salesman'; label: string; description: string }[] =
+  [
+    { value: 'salesman', label: 'Staff (salesman)', description: 'Sells and records transactions' },
+    { value: 'manager', label: 'Manager', description: 'Can also add staff and manage the shop' },
+  ];
+
+function EditRoleForm({
+  shopUid,
+  employee,
+  canAssignManager,
+  onDone,
+}: {
+  shopUid: string;
+  employee: Employee;
+  canAssignManager: boolean;
+  onDone: () => void;
+}) {
+  const updateRole = useUpdateMemberRole();
+  const [role, setRole] = useState<'manager' | 'salesman'>(
+    employee.role === 'manager' ? 'manager' : 'salesman',
+  );
+
+  const roleOptions = canAssignManager
+    ? EDIT_ROLE_OPTIONS
+    : EDIT_ROLE_OPTIONS.filter((option) => option.value !== 'manager');
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    updateRole.mutate(
+      { shopUid, userUid: employee.user_uid, role },
+      { onSuccess: (response) => response.status && onDone() },
+    );
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+      <Select
+        label="Role"
+        icon={<UsersIcon className="h-5 w-5" />}
+        value={role}
+        onChange={setRole}
+        options={roleOptions}
+      />
+      <div className="flex justify-end gap-2">
+        <Button type="button" variant="secondary" size="lg" onClick={onDone}>
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          size="lg"
+          isLoading={updateRole.isPending}
+          loadingText="Saving…"
+          disabled={role === employee.role}
+        >
+          Save
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+function RemoveMemberConfirm({
+  shopUid,
+  employee,
+  onDone,
+}: {
+  shopUid: string;
+  employee: Employee;
+  onDone: () => void;
+}) {
+  const removeMember = useRemoveMember();
+
+  const handleRemove = () => {
+    removeMember.mutate(
+      { shopUid, userUid: employee.user_uid },
+      { onSuccess: (response) => response.status && onDone() },
+    );
+  };
+
+  return (
+    <div className="flex justify-end gap-2">
+      <Button variant="secondary" size="lg" onClick={onDone}>
+        Cancel
+      </Button>
+      <Button
+        variant="danger"
+        size="lg"
+        isLoading={removeMember.isPending}
+        loadingText="Removing…"
+        onClick={handleRemove}
+      >
+        Remove
+      </Button>
+    </div>
   );
 }

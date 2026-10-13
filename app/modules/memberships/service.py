@@ -27,18 +27,23 @@ from app.modules.memberships.schemas import (
     AddMemberResponse,
     MemberPublic,
     MembersListResponse,
+    UpdateMemberRoleRequest,
 )
 from app.modules.shops.models import Shop
 from app.modules.shops.repository import get_shop_by_uid
 from app.modules.users.models import User
-from app.modules.users.repository import get_user_by_phone
+from app.modules.users.repository import get_user_by_phone, get_user_by_uid
 
 logger = get_logger(__name__)
 
 _SHOP_NOT_FOUND = "Shop not found"
 _ONLY_MANAGERS = "Only the shop owner or a manager can do this"
 _ONLY_OWNER_ADDS_MANAGER = "Only the shop owner can add a manager"
+_ONLY_OWNER_MANAGES_MANAGER = "Only the shop owner can manage a manager"
 _ALREADY_A_MEMBER = "This phone number already belongs to a member of this shop"
+_MEMBER_NOT_FOUND = "Member not found"
+_CANNOT_TARGET_OWNER = "The shop owner's role or access can't be changed here"
+_CANNOT_TARGET_SELF = "You can't change your own role or remove yourself"
 
 
 async def _require_membership(
@@ -72,6 +77,42 @@ async def require_shop_manager(
     if membership.role not in (MembershipRole.OWNER, MembershipRole.MANAGER):
         raise AppError(_ONLY_MANAGERS, status_code=status.HTTP_403_FORBIDDEN)
     return shop, membership
+
+
+async def _require_target_member(
+    db: AsyncSession,
+    *,
+    shop: Shop,
+    actor_user_id: int,
+    actor_membership: ShopMembership,
+    user_uid: UUID,
+) -> tuple[User, ShopMembership]:
+    """Resolve and authorize the member a role-change or removal targets.
+
+    404s on an unknown uid or a membership that isn't ACTIVE — same
+    not-leaking-existence posture as `_require_membership`. Then applies the
+    rules shared by both actions: nobody acts on themselves here (that's a
+    "leave" flow, not implemented by this endpoint), nobody acts on the
+    owner, and a manager can't touch another manager — only the owner can.
+    """
+    target_user = await get_user_by_uid(db, user_uid)
+    if target_user is None:
+        raise AppError(_MEMBER_NOT_FOUND, status_code=status.HTTP_404_NOT_FOUND)
+
+    membership = await get_membership(db, user_id=target_user.id, shop_id=shop.id)
+    if membership is None or membership.status != MembershipStatus.ACTIVE:
+        raise AppError(_MEMBER_NOT_FOUND, status_code=status.HTTP_404_NOT_FOUND)
+
+    if target_user.id == actor_user_id:
+        raise AppError(_CANNOT_TARGET_SELF, status_code=status.HTTP_403_FORBIDDEN)
+
+    if membership.role == MembershipRole.OWNER:
+        raise AppError(_CANNOT_TARGET_OWNER, status_code=status.HTTP_403_FORBIDDEN)
+
+    if membership.role == MembershipRole.MANAGER and actor_membership.role != MembershipRole.OWNER:
+        raise AppError(_ONLY_OWNER_MANAGES_MANAGER, status_code=status.HTTP_403_FORBIDDEN)
+
+    return target_user, membership
 
 
 def _member_public(
@@ -152,6 +193,78 @@ async def add_member(
     )
     return AddMemberResponse(
         member=_member_public(user, membership), created_new_account=created_new_account
+    )
+
+
+async def update_member_role(
+    db: AsyncSession,
+    *,
+    shop_uid: UUID,
+    actor_user_id: int,
+    user_uid: UUID,
+    payload: UpdateMemberRoleRequest,
+) -> MemberPublic:
+    """Promote a salesman to manager or demote a manager to salesman.
+
+    Same owner-only gate on the manager role as `add_member`: a manager can
+    hand the manager role to no one, including by demoting one manager and
+    promoting someone else in the same breath.
+    """
+    shop, actor_membership = await require_shop_manager(
+        db, shop_uid=shop_uid, user_id=actor_user_id
+    )
+    target_user, membership = await _require_target_member(
+        db,
+        shop=shop,
+        actor_user_id=actor_user_id,
+        actor_membership=actor_membership,
+        user_uid=user_uid,
+    )
+
+    if payload.role == MembershipRole.MANAGER and actor_membership.role != MembershipRole.OWNER:
+        raise AppError(_ONLY_OWNER_ADDS_MANAGER, status_code=status.HTTP_403_FORBIDDEN)
+
+    membership.role = payload.role
+    await db.commit()
+    await db.refresh(target_user)
+    await db.refresh(membership)
+
+    logger.info(
+        "shop_member_role_updated",
+        shop_uid=str(shop.uid),
+        user_uid=str(target_user.uid),
+        role=payload.role.value,
+    )
+    return _member_public(target_user, membership)
+
+
+async def remove_member(
+    db: AsyncSession, *, shop_uid: UUID, actor_user_id: int, user_uid: UUID
+) -> None:
+    """Remove a manager or salesman from the caller's shop.
+
+    Sets the membership to REMOVED rather than deleting the row — see the
+    model docstring: a membership row, once created, is never deleted.
+    """
+    shop, actor_membership = await require_shop_manager(
+        db, shop_uid=shop_uid, user_id=actor_user_id
+    )
+    target_user, membership = await _require_target_member(
+        db,
+        shop=shop,
+        actor_user_id=actor_user_id,
+        actor_membership=actor_membership,
+        user_uid=user_uid,
+    )
+
+    membership.status = MembershipStatus.REMOVED
+    membership.left_at = datetime.now(UTC)
+    await db.commit()
+
+    logger.info(
+        "shop_member_removed",
+        shop_uid=str(shop.uid),
+        user_uid=str(target_user.uid),
     )
 
 

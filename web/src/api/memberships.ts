@@ -134,3 +134,61 @@ export function useAddEmployee() {
     },
   });
 }
+
+export interface UpdateMemberRolePayload {
+  shopUid: string;
+  userUid: string;
+  role: 'manager' | 'salesman';
+}
+
+/**
+ * PATCH /api/shops/{shop_uid}/members/{user_uid} — promotes/demotes between
+ * manager and salesman. Only the owner can hand out or take away the
+ * manager role; the owner itself is never a valid target (enforced
+ * server-side either way).
+ */
+export function useUpdateMemberRole() {
+  const queryClient = useQueryClient();
+
+  return useMutation<ApiResponse<Employee>, ApiErrorResponse, UpdateMemberRolePayload>({
+    mutationFn: async ({ shopUid, userUid, role }: UpdateMemberRolePayload) => {
+      const response = await axios.patch<ApiResponse<Employee>>(
+        `/shops/${shopUid}/members/${userUid}`,
+        { role },
+        { toast: { error: 'Unable to update role' } },
+      );
+      return response.data;
+    },
+    onSuccess: (_response, { shopUid }) => {
+      void queryClient.invalidateQueries({ queryKey: ['employees', shopUid] });
+    },
+  });
+}
+
+export interface RemoveMemberPayload {
+  shopUid: string;
+  userUid: string;
+}
+
+/**
+ * DELETE /api/shops/{shop_uid}/members/{user_uid} — removes a manager or
+ * salesman from the shop (soft: the membership row is marked REMOVED, never
+ * deleted). The owner can't be removed this way, and nobody can remove
+ * themselves.
+ */
+export function useRemoveMember() {
+  const queryClient = useQueryClient();
+
+  return useMutation<ApiResponse<null>, ApiErrorResponse, RemoveMemberPayload>({
+    mutationFn: async ({ shopUid, userUid }: RemoveMemberPayload) => {
+      const response = await axios.delete<ApiResponse<null>>(
+        `/shops/${shopUid}/members/${userUid}`,
+        { toast: { error: 'Unable to remove member' } },
+      );
+      return response.data;
+    },
+    onSuccess: (_response, { shopUid }) => {
+      void queryClient.invalidateQueries({ queryKey: ['employees', shopUid] });
+    },
+  });
+}

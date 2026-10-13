@@ -41,6 +41,23 @@ class AddMemberRequest(BaseModel):
         return self
 
 
+class UpdateMemberRoleRequest(BaseModel):
+    """Body for `PATCH /api/shops/{shop_uid}/members/{user_uid}`.
+
+    Same addable-role restriction as `AddMemberRequest` — this can promote a
+    salesman to manager or demote a manager to salesman, never touch an
+    owner's role (the owner isn't a target this endpoint can act on at all).
+    """
+
+    role: MembershipRole
+
+    @model_validator(mode="after")
+    def _validate(self) -> UpdateMemberRoleRequest:
+        if self.role not in _ADDABLE_ROLES:
+            raise ValueError("role must be 'manager' or 'salesman'")
+        return self
+
+
 class MemberPublic(BaseModel):
     """One shop member, combining their user identity with their membership
     and the read-only stats an owner/manager cares about for the employee
