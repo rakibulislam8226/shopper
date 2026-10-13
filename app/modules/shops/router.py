@@ -80,6 +80,16 @@ async def get_shop(
     return success_response(data=result.model_dump(mode="json"), status_code=status.HTTP_200_OK)
 
 
+@router.get("/{shop_uid}/status", summary="Get a shop's status (any active member)")
+async def get_shop_status(
+    shop_uid: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> JSONResponse:
+    result = await service.get_shop_status(db, shop_uid=shop_uid, user_id=current_user.id)
+    return success_response(data=result.model_dump(mode="json"), status_code=status.HTTP_200_OK)
+
+
 @router.patch("/{shop_uid}", summary="Update a shop's profile (owner only)")
 async def update_shop(
     shop_uid: UUID,

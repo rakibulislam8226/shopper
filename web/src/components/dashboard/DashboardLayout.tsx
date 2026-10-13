@@ -3,6 +3,7 @@ import { useUiStore } from '@stores/ui';
 import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 
+import { OrganizationGate } from './OrganizationGate';
 import { Sidebar } from './Sidebar';
 
 /** Widths the sidebar and the content offset must agree on. */
@@ -102,7 +103,9 @@ export function DashboardLayout() {
         </header>
 
         <main className="px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-          <Outlet />
+          <OrganizationGate>
+            <Outlet />
+          </OrganizationGate>
         </main>
       </div>
     </div>

@@ -127,6 +127,18 @@ export interface ShopDetailData {
   documents: ShopDocument[];
 }
 
+/** GET /api/shops/{shop_uid}/status — any active member, not owner-only. */
+export function useShopStatus(shopUid: string | null | undefined) {
+  return useQuery({
+    queryKey: ['shop-status', shopUid],
+    queryFn: async () => {
+      const response = await axios.get<ApiResponse<Shop>>(`/shops/${shopUid}/status`);
+      return response.data.data;
+    },
+    enabled: Boolean(shopUid),
+  });
+}
+
 /** GET /api/shops/{shop_uid} — shop profile plus its documents. Owner-only. */
 export function useShopDetail(shopUid: string | null | undefined) {
   return useQuery({

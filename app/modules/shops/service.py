@@ -280,6 +280,22 @@ async def upload_logo(
     return ShopPublic.model_validate(shop)
 
 
+async def get_shop_status(db: AsyncSession, *, shop_uid: UUID, user_id: int) -> ShopPublic:
+    """Shop status, for any active member (not owner-only) to gate the
+    dashboard: products/sales/employees stay off-limits until a superuser
+    approves the shop, regardless of the caller's role.
+    """
+    shop = await get_shop_by_uid(db, shop_uid)
+    if shop is None:
+        raise AppError(_SHOP_NOT_FOUND, status_code=status.HTTP_404_NOT_FOUND)
+
+    membership = await get_active_membership(db, user_id=user_id, shop_id=shop.id)
+    if membership is None:
+        raise AppError(_SHOP_NOT_FOUND, status_code=status.HTTP_404_NOT_FOUND)
+
+    return ShopPublic.model_validate(shop)
+
+
 async def get_shop_detail(db: AsyncSession, *, shop_uid: UUID, user_id: int) -> ShopDetailResponse:
     """Shop profile plus its documents, for the Settings screen. Owner-only."""
     shop = await require_shop_owner(db, shop_uid=shop_uid, user_id=user_id)
