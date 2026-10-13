@@ -59,6 +59,7 @@ class ShopPublic(BaseModel):
     address: str | None
     logo: str | None
     status: ShopStatus
+    rejection_reason: str | None
     created_at: datetime
 
 

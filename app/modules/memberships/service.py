@@ -115,7 +115,7 @@ async def _require_target_member(
     return target_user, membership
 
 
-def _member_public(
+def member_public(
     user: User, membership: ShopMembership, *, total_sales: Decimal = Decimal("0.00")
 ) -> MemberPublic:
     return MemberPublic(
@@ -192,7 +192,7 @@ async def add_member(
         created_new_account=created_new_account,
     )
     return AddMemberResponse(
-        member=_member_public(user, membership), created_new_account=created_new_account
+        member=member_public(user, membership), created_new_account=created_new_account
     )
 
 
@@ -235,7 +235,7 @@ async def update_member_role(
         user_uid=str(target_user.uid),
         role=payload.role.value,
     )
-    return _member_public(target_user, membership)
+    return member_public(target_user, membership)
 
 
 async def remove_member(
@@ -297,7 +297,7 @@ async def list_members(
 
     response = MembersListResponse(
         members=[
-            _member_public(
+            member_public(
                 user, membership, total_sales=sales_by_user.get(user.id, Decimal("0.00"))
             )
             for membership, user in rows

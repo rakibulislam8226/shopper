@@ -22,6 +22,14 @@ _Last reviewed: 2026-10-13. Supersedes the "Phase 2" status in README.md, which 
 - Edit role (promote/demote manager ↔ salesman) and remove/deactivate — owner-only for anything touching a manager; the owner itself can't be targeted, nor can you act on yourself
 - Frontend: table + modal with field-level validation, inline "Change role" / "Remove" actions gated by viewer role
 
+### Platform-admin interface (superuser)
+- A separate top-level interface at `/admin`, with its own sidebar (Overview / Organizations / Users) — not a section bolted onto the shop dashboard, since a superuser has no tenant
+- **Unlisted login**: the public `/login` form refuses a superuser account (generic "invalid credentials", same as a wrong password); a superuser instead signs in at an unpublished URL known only out of band (`web/src/router/admin/router.tsx`'s `ADMIN_LOGIN_PATH`, deliberately kept off the shared `ROUTES` table). This is obscurity for a cleaner UX split, not the actual access control — see Security below.
+- **Organizations**: review queue (`GET /api/admin/shops`, filter by status, search shop/owner, paginated), full lifecycle control (approve / reject with a reason / suspend / reactivate / remove), and a read-only staff list per shop (`GET /api/admin/shops/{uid}/members` — a superuser needs no membership of their own to see it)
+- **Users**: platform-wide account list (search, paginated) with activate/deactivate; a superuser can't deactivate their own account
+- **Overview**: shop counts by status, total users, total superusers (`GET /api/admin/stats`)
+- Security: every `/api/admin/*` route depends on `get_current_superuser`, which re-reads `is_superuser` from the database on every request via the JWT's user id — the token itself carries no role claim. Tampering with client-side state (devtools, localStorage: the stored `isSuperuser` flag, or which login form was used) only changes what renders locally; it grants no API access, since the server never trusts it. The frontend's `RequireSuperuser` guard and the hidden login URL are both UX only, same caveat as `RequireAuth`.
+
 ### Platform / UX
 - Unified API response envelope + pagination + error handling
 - Rate limiting (login, OTP, document upload)
@@ -36,8 +44,7 @@ _Last reviewed: 2026-10-13. Supersedes the "Phase 2" status in README.md, which 
 | OTP delivery | No real SMS provider wired — codes are just logged (`app/core/otp.py`) |
 | File storage | Only local disk driver works; non-local (e.g. S3) raises `NotImplementedError` |
 | Employee management | Edit role / remove are done. No resend-invite — there's no invite-by-link flow at all yet (accounts are created directly with a password set by the adder) |
-| Shop approval | `ShopStatus.PENDING` exists but no admin UI/API to review & approve/reject shops |
-| Superadmin | CLI bootstrap only (`app/cli/superadmin.py`); no web UI |
+| Superadmin | Shop review/approve/reject is done; granting `is_superuser` itself is still CLI-only (`app/cli/superadmin.py`), no web UI to promote another admin |
 
 ## ❌ Not Started (schema exists, no API/UI)
 
@@ -58,9 +65,8 @@ Dashboard overview metrics (today's sales, revenue, low stock, active staff) ren
 1. **Products API + UI** — unblocks inventory and sales, and is the next logical dependency for everything else in commerce.
 2. **Inventory** (stock in/out, FIFO batches) — depends on Products.
 3. **Sales** (transactions + returns) — depends on Products + Inventory; also lets Overview show real numbers.
-4. **Shop approval flow** — close the loop on `ShopStatus.PENDING` so new shop signups aren't stuck.
-5. **Real OTP/SMS provider** — replace the logging stand-in before any external users rely on password reset.
-6. Purchases, Expenses, Audit log, multi-shop org admin — lower priority, can follow once core commerce is live.
+4. **Real OTP/SMS provider** — replace the logging stand-in before any external users rely on password reset.
+5. Purchases, Expenses, Audit log, multi-shop org admin — lower priority, can follow once core commerce is live.
 
 ## Tests
 Backend only: schema/constraint tests (`tests/test_models_schema.py`), response envelope tests (`tests/test_response.py`). No frontend tests, no e2e/integration tests.

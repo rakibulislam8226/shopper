@@ -18,6 +18,7 @@ _bearer = HTTPBearer(auto_error=False)
 
 _INVALID_TOKEN = "Invalid or expired access token"
 _ACCOUNT_INACTIVE = "This account has been deactivated. Contact your administrator."
+_NOT_SUPERUSER = "This action requires a platform administrator"
 
 
 async def get_current_user(
@@ -45,4 +46,14 @@ async def get_current_user(
     if not user.is_active:
         raise AppError(_ACCOUNT_INACTIVE, status_code=status.HTTP_403_FORBIDDEN)
 
+    return user
+
+
+async def get_current_superuser(user: User = Depends(get_current_user)) -> User:
+    """Resolve the caller and require ``is_superuser`` — platform-admin-only
+    routes (reviewing/approving shops, ...) depend on this instead of
+    `get_current_user` directly.
+    """
+    if not user.is_superuser:
+        raise AppError(_NOT_SUPERUSER, status_code=status.HTTP_403_FORBIDDEN)
     return user

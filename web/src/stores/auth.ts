@@ -17,12 +17,19 @@ import { createJSONStorage, persist } from 'zustand/middleware';
  */
 export interface AuthState {
   name: string | null;
+  /** Gates platform-admin screens (e.g. shop review) — mirrors `User.is_superuser`. */
+  isSuperuser: boolean;
   /** The shop Settings and other shop-scoped screens operate on. */
   activeShopUid: string | null;
   accessToken: string | null;
   refreshToken: string | null;
-  /** Sign-in: display name, active shop uid, and the first token pair. */
-  setSession: (name: string, tokens: TokenPair, activeShopUid?: string | null) => void;
+  /** Sign-in: display name, superuser flag, active shop uid, and the first token pair. */
+  setSession: (
+    name: string,
+    tokens: TokenPair,
+    activeShopUid?: string | null,
+    isSuperuser?: boolean,
+  ) => void;
   /** Refresh: a rotated token pair, same user. */
   setTokens: (tokens: TokenPair) => void;
   /** After `POST /users/active-shop` succeeds — the shop the user now operates in. */
@@ -38,13 +45,15 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       name: null,
+      isSuperuser: false,
       activeShopUid: null,
       accessToken: null,
       refreshToken: null,
 
-      setSession: (name, tokens, activeShopUid = null) =>
+      setSession: (name, tokens, activeShopUid = null, isSuperuser = false) =>
         set({
           name,
+          isSuperuser,
           activeShopUid,
           accessToken: tokens.access_token,
           refreshToken: tokens.refresh_token,
@@ -59,22 +68,35 @@ export const useAuthStore = create<AuthState>()(
       setActiveShopUid: (shopUid) => set({ activeShopUid: shopUid }),
 
       clearSession: () =>
-        set({ name: null, activeShopUid: null, accessToken: null, refreshToken: null }),
+        set({
+          name: null,
+          isSuperuser: false,
+          activeShopUid: null,
+          accessToken: null,
+          refreshToken: null,
+        }),
     }),
     {
       name: STORAGE_KEY,
-      version: 3,
+      version: 4,
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         name: state.name,
+        isSuperuser: state.isSuperuser,
         activeShopUid: state.activeShopUid,
         accessToken: state.accessToken,
         refreshToken: state.refreshToken,
       }),
-      // v1 persisted a full user object, v2 dropped activeShopUid entirely.
-      // Anything older than v3 is dropped rather than migrated — the user
-      // simply signs in again once.
-      migrate: () => ({ name: null, activeShopUid: null, accessToken: null, refreshToken: null }),
+      // v1 persisted a full user object, v2 dropped activeShopUid entirely,
+      // v3 -> v4 added isSuperuser. Anything older than v4 is dropped rather
+      // than migrated — the user simply signs in again once.
+      migrate: () => ({
+        name: null,
+        isSuperuser: false,
+        activeShopUid: null,
+        accessToken: null,
+        refreshToken: null,
+      }),
     },
   ),
 );

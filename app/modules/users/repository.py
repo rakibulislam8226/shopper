@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import ColumnElement, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -31,3 +31,35 @@ async def get_user_by_uid(db: AsyncSession, uid: UUID) -> User | None:
         select(User).where(User.uid == uid, User.deleted_at.is_(None)).options(_WITH_ACTIVE_SHOP)
     )
     return result.scalar_one_or_none()
+
+
+async def list_users(
+    db: AsyncSession, *, q: str | None = None, page: int = 1, limit: int = 20
+) -> tuple[list[User], int]:
+    """One page of every platform user, newest first — the platform-admin
+    "manage users" screen. ``q`` matches a substring of name or phone.
+    """
+    conditions: list[ColumnElement[bool]] = [User.deleted_at.is_(None)]
+    if q:
+        pattern = f"%{q}%"
+        conditions.append(or_(User.name.ilike(pattern), User.phone.ilike(pattern)))
+
+    base_query = select(User).where(*conditions)
+    total = await db.scalar(select(func.count()).select_from(base_query.subquery()))
+
+    result = await db.execute(
+        base_query.options(_WITH_ACTIVE_SHOP)
+        .order_by(User.created_at.desc())
+        .offset((page - 1) * limit)
+        .limit(limit)
+    )
+    return list(result.scalars().all()), total or 0
+
+
+async def count_users(db: AsyncSession) -> tuple[int, int]:
+    """Return (total users, total superusers) for the admin stats screen."""
+    total = await db.scalar(select(func.count()).where(User.deleted_at.is_(None)))
+    superusers = await db.scalar(
+        select(func.count()).where(User.deleted_at.is_(None), User.is_superuser.is_(True))
+    )
+    return total or 0, superusers or 0

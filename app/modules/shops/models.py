@@ -48,6 +48,10 @@ class Shop(BaseModel):
         index=True,
     )
 
+    # Set when a superuser rejects the shop (`ShopStatus.REJECTED`); cleared
+    # on a later approval. Null the rest of the time.
+    rejection_reason: Mapped[str | None] = mapped_column(String(500), nullable=True)
+
     # The user (owner or superuser) who created this shop.
     created_by_user_id: Mapped[int | None] = mapped_column(
         ForeignKey("users.id", ondelete="RESTRICT"),

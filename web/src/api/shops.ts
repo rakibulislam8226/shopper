@@ -14,6 +14,7 @@ export interface Shop {
   address: string | null;
   logo: string | null;
   status: 'pending' | 'active' | 'suspended' | 'rejected' | 'removed';
+  rejection_reason: string | null;
   created_at: string;
 }
 

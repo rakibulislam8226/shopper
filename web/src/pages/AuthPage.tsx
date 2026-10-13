@@ -1,7 +1,7 @@
 import { AuthCard, type AuthMode } from '@components/auth/AuthCard';
 import { SignInForm } from '@components/auth/SignInForm';
 import { SignUpForm } from '@components/auth/SignUpForm';
-import { useIsAuthenticated } from '@stores/auth';
+import { useAuthStore, useIsAuthenticated } from '@stores/auth';
 import { Navigate, useLocation } from 'react-router-dom';
 
 /**
@@ -13,9 +13,10 @@ import { Navigate, useLocation } from 'react-router-dom';
 export function AuthPage() {
   const location = useLocation();
   const isAuthenticated = useIsAuthenticated();
+  const isSuperuser = useAuthStore((state) => state.isSuperuser);
   const mode: AuthMode = location.pathname.startsWith('/signup') ? 'signup' : 'signin';
 
-  if (isAuthenticated) return <Navigate to="/dashboard" replace />;
+  if (isAuthenticated) return <Navigate to={isSuperuser ? '/admin' : '/dashboard'} replace />;
 
   return <AuthCard mode={mode} signIn={<SignInForm />} signUp={<SignUpForm />} />;
 }

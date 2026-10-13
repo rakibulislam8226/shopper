@@ -6,6 +6,11 @@ import { isSafeRedirect } from '@lib/session';
 import { useAuthStore } from '@stores/auth';
 import { type FormEvent, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { toast } from 'sonner';
+
+// A superuser signs in via the unlisted admin URL instead; this form just
+// declines, with the same message as a wrong password.
+const SUPERUSER_BLOCKED_MESSAGE = 'Invalid phone number or password';
 
 /** The sign-in half of `AuthCard`. */
 export function SignInForm() {
@@ -18,7 +23,6 @@ export function SignInForm() {
   const [password, setPassword] = useState('');
 
   const next = searchParams.get('next');
-  const redirectTo = isSafeRedirect(next) ? next : '/dashboard';
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -28,8 +32,14 @@ export function SignInForm() {
         onSuccess: (response) => {
           const data = response.data;
           if (!data) return;
-          setSession(data.user.name, data.tokens, data.user.active_shop?.uid);
-          void navigate(redirectTo, { replace: true });
+
+          if (data.user.is_superuser) {
+            toast.error(SUPERUSER_BLOCKED_MESSAGE);
+            return;
+          }
+
+          setSession(data.user.name, data.tokens, data.user.active_shop?.uid, false);
+          void navigate(isSafeRedirect(next) ? next : '/dashboard', { replace: true });
         },
       },
     );

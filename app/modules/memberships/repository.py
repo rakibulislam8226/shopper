@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.enums import MembershipRole, MembershipStatus
 from app.modules.memberships.models import ShopMembership
 from app.modules.sales.models import SaleTransaction
+from app.modules.shops.models import Shop
 from app.modules.users.models import User
 
 # Owner, then manager, then salesman — the employee list's display order.
@@ -123,3 +124,24 @@ async def get_total_sales_by_user(
     for user_id, total in result.all():
         totals[user_id] = total
     return totals
+
+
+async def get_user_organizations(
+    db: AsyncSession, *, user_ids: list[int]
+) -> dict[int, list[tuple[Shop, MembershipRole]]]:
+    """Active (shop, role) pairs per user — one query for any number of users."""
+    if not user_ids:
+        return {}
+
+    result = await db.execute(
+        select(ShopMembership.user_id, Shop, ShopMembership.role)
+        .join(Shop, Shop.id == ShopMembership.shop_id)
+        .where(
+            ShopMembership.user_id.in_(user_ids),
+            ShopMembership.status == MembershipStatus.ACTIVE,
+        )
+    )
+    organizations: dict[int, list[tuple[Shop, MembershipRole]]] = {}
+    for user_id, shop, role in result.all():
+        organizations.setdefault(user_id, []).append((shop, role))
+    return organizations
