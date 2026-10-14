@@ -52,7 +52,7 @@ export const NAV_SECTIONS: { heading: string; items: NavItem[] }[] = [
   {
     heading: 'Operations',
     items: [
-      { label: 'Products', path: '/dashboard/products', icon: paths.box, badge: 'Soon' },
+      { label: 'Products', path: '/dashboard/products', icon: paths.box },
       { label: 'Sales', path: '/dashboard/sales', icon: paths.receipt, badge: 'Soon' },
     ],
   },

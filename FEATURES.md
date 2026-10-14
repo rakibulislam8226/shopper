@@ -22,6 +22,17 @@ _Last reviewed: 2026-10-13. Supersedes the "Phase 2" status in README.md, which 
 - Edit role (promote/demote manager ↔ salesman) and remove/deactivate — owner-only for anything touching a manager; the owner itself can't be targeted, nor can you act on yourself
 - Frontend: table + modal with field-level validation, inline "Change role" / "Remove" actions gated by viewer role
 
+### Products
+- Full CRUD: categories (list/create) and products (list/create/update/activate/deactivate/image upload), scoped to the caller's shop
+- Read (list/detail) open to any active member (salesman included — they need the catalogue to sell from); write is owner/manager-only, enforced server-side (`require_shop_manager`)
+- List: search by name/SKU, filter by category and active/inactive/all, paginated
+- Never hard-deleted — "delete" is `is_active=false`, matching the model's own invariant (sale history references products)
+- Frontend: filters + table + add/edit modal (inline "new category" affordance), actions gated by `viewer_role`
+
+### Dashboard access gate
+- `DashboardLayout` blocks every screen (via `OrganizationGate`) while the caller's active shop isn't ACTIVE — shows a single "contact your administrator" notice (with the rejection reason, if any) instead of whatever page was requested
+- Backed by `GET /api/shops/{shop_uid}/status`, open to any active member (not owner-only like the full profile endpoint)
+
 ### Platform-admin interface (superuser)
 - A separate top-level interface at `/admin`, with its own sidebar (Overview / Organizations / Users) — not a section bolted onto the shop dashboard, since a superuser has no tenant
 - **Unlisted login**: the public `/login` form refuses a superuser account (generic "invalid credentials", same as a wrong password); a superuser instead signs in at an unpublished URL known only out of band (`web/src/router/admin/router.tsx`'s `ADMIN_LOGIN_PATH`, deliberately kept off the shared `ROUTES` table). This is obscurity for a cleaner UX split, not the actual access control — see Security below.
@@ -50,8 +61,7 @@ _Last reviewed: 2026-10-13. Supersedes the "Phase 2" status in README.md, which 
 
 These have SQLAlchemy models + Alembic migrations but **no router/service/schemas**, and their frontend pages are intentional placeholders tagged "Soon" in the sidebar:
 
-- **Products** (`product_categories`, `products`)
-- **Inventory** (`inventory_batches`, `inventory_movement_logs`) — FIFO costing designed but unimplemented
+- **Inventory** (`inventory_batches`, `inventory_movement_logs`) — FIFO costing designed but unimplemented; `Product.stock_quantity` stays 0 until this exists
 - **Purchases** (`purchase_returns`)
 - **Sales** (`sale_transactions`, `sale_returns`)
 - **Expenses** (`expense_categories`, `shop_expenses`)
@@ -62,11 +72,10 @@ Dashboard overview metrics (today's sales, revenue, low stock, active staff) ren
 
 ## Next Up (suggested priority)
 
-1. **Products API + UI** — unblocks inventory and sales, and is the next logical dependency for everything else in commerce.
-2. **Inventory** (stock in/out, FIFO batches) — depends on Products.
-3. **Sales** (transactions + returns) — depends on Products + Inventory; also lets Overview show real numbers.
-4. **Real OTP/SMS provider** — replace the logging stand-in before any external users rely on password reset.
-5. Purchases, Expenses, Audit log, multi-shop org admin — lower priority, can follow once core commerce is live.
+1. **Inventory** (stock in/out, FIFO batches) — now that Products exists, this is the next dependency for Sales.
+2. **Sales** (transactions + returns) — depends on Inventory; also lets Overview show real numbers.
+3. **Real OTP/SMS provider** — replace the logging stand-in before any external users rely on password reset.
+4. Purchases, Expenses, Audit log, multi-shop org admin — lower priority, can follow once core commerce is live.
 
 ## Tests
 Backend only: schema/constraint tests (`tests/test_models_schema.py`), response envelope tests (`tests/test_response.py`). No frontend tests, no e2e/integration tests.

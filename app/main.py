@@ -28,6 +28,7 @@ from app.core.spa import register_spa
 from app.db.session import engine
 from app.modules.admin.router import router as admin_router
 from app.modules.memberships.router import router as memberships_router
+from app.modules.products.router import router as products_router
 from app.modules.shops.router import router as shops_router
 from app.modules.users.router import router as users_router
 from app.redis.client import close_redis, redis_client
@@ -115,6 +116,7 @@ async def request_context_middleware(
 app.include_router(users_router, prefix="/api/users")
 app.include_router(shops_router, prefix="/api/shops")
 app.include_router(memberships_router, prefix="/api/shops")
+app.include_router(products_router, prefix="/api/shops")
 app.include_router(admin_router)
 
 # Serves whatever app.core.storage.save_upload wrote to disk. Only relevant
