@@ -249,6 +249,16 @@ export function ImageIcon(props: IconProps) {
   );
 }
 
+export function InfoIcon(props: IconProps) {
+  return (
+    <svg {...strokeIconProps(props)}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 16v-5" />
+      <path d="M12 8h.01" />
+    </svg>
+  );
+}
+
 /** The shopping-bag brand mark used in `BrandLogo` and the auth panels' badge. */
 export function BrandMarkIcon(props: IconProps) {
   return (

@@ -13,7 +13,9 @@ import {
 import { EmptySection } from '@components/dashboard/EmptySection';
 import { PageHeader } from '@components/dashboard/PageHeader';
 import { Button } from '@components/ui/Button';
+import { Combobox } from '@components/ui/Combobox';
 import { FieldError } from '@components/ui/FieldError';
+import { FieldLabel } from '@components/ui/FieldLabel';
 import { BoxIcon, ImageIcon, SearchIcon } from '@components/ui/icons';
 import { Modal } from '@components/ui/Modal';
 import { Pagination } from '@components/ui/Pagination';
@@ -153,7 +155,7 @@ function ProductsSection({ shopUid }: { shopUid: string }) {
         open={showAddModal}
         onClose={() => setShowAddModal(false)}
         title="Add a product"
-        size="lg"
+        size="xl"
       >
         <ProductForm shopUid={shopUid} onDone={() => setShowAddModal(false)} />
       </Modal>
@@ -162,7 +164,7 @@ function ProductsSection({ shopUid }: { shopUid: string }) {
         open={editingProduct !== null}
         onClose={() => setEditingProduct(null)}
         title="Edit product"
-        size="lg"
+        size="xl"
       >
         {editingProduct && (
           <ProductForm
@@ -293,25 +295,18 @@ function ProductForm({
   const [description, setDescription] = useState(product?.description ?? '');
   const [minPrice, setMinPrice] = useState(product?.min_price ?? '');
   const [categoryUid, setCategoryUid] = useState(product?.category?.uid ?? NO_CATEGORY);
-  const [newCategoryName, setNewCategoryName] = useState('');
-  const [addingCategory, setAddingCategory] = useState(false);
 
-  const categoryOptions: SelectOption<string>[] = [
+  const categoryOptions = [
     { value: NO_CATEGORY, label: 'No category' },
     ...(categories.data ?? []).map((category) => ({ value: category.uid, label: category.name })),
   ];
 
-  const handleAddCategory = () => {
-    const trimmedName = newCategoryName.trim();
-    if (!trimmedName) return;
+  const handleCreateCategory = (categoryName: string) => {
     createCategory.mutate(
-      { shopUid, name: trimmedName },
+      { shopUid, name: categoryName },
       {
         onSuccess: (response) => {
-          if (!response.data) return;
-          setCategoryUid(response.data.uid);
-          setNewCategoryName('');
-          setAddingCategory(false);
+          if (response.data) setCategoryUid(response.data.uid);
         },
       },
     );
@@ -350,7 +345,9 @@ function ProductForm({
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
       <div className="grid gap-5 sm:grid-cols-2">
         <label className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-text-muted">Name</span>
+          <FieldLabel required hint="The product's display name, shown throughout the dashboard and on receipts.">
+            Name
+          </FieldLabel>
           <input
             type="text"
             value={name}
@@ -362,7 +359,9 @@ function ProductForm({
         </label>
 
         <label className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-text-muted">SKU (optional)</span>
+          <FieldLabel hint="A unique code for this product, if you track one. Leave blank if you don't use SKUs.">
+            SKU
+          </FieldLabel>
           <input
             type="text"
             value={sku}
@@ -375,7 +374,9 @@ function ProductForm({
 
       <div className="grid gap-5 sm:grid-cols-2">
         <label className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-text-muted">Unit</span>
+          <FieldLabel required hint="How this product is counted or measured when sold, e.g. pcs, kg, bottle.">
+            Unit
+          </FieldLabel>
           <input
             type="text"
             value={unit}
@@ -388,7 +389,9 @@ function ProductForm({
         </label>
 
         <label className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-text-muted">Minimum price (optional)</span>
+          <FieldLabel hint="The lowest price per unit this product can be sold for. The actual sale price is set per batch and may be higher. Leave blank to allow any price.">
+            Minimum price (per unit)
+          </FieldLabel>
           <input
             type="number"
             min="0"
@@ -401,47 +404,21 @@ function ProductForm({
         </label>
       </div>
 
-      <div className="flex items-end gap-2">
-        <div className="flex-1">
-          <Select
-            label="Category"
-            value={categoryUid}
-            onChange={setCategoryUid}
-            options={categoryOptions}
-          />
-        </div>
-        <Button type="button" variant="secondary" size="md" onClick={() => setAddingCategory(true)}>
-          New category
-        </Button>
-      </div>
-
-      {addingCategory && (
-        <div className="flex items-end gap-2 rounded-lg border border-edge-strong bg-inset p-3">
-          <label className="flex flex-1 flex-col gap-1.5">
-            <span className="text-sm font-medium text-text-muted">Category name</span>
-            <input
-              type="text"
-              value={newCategoryName}
-              onChange={(event) => setNewCategoryName(event.target.value)}
-              className="rounded-lg border border-edge-strong bg-card px-3 py-2 text-sm text-text-primary outline-none focus:border-indigo-500"
-            />
-          </label>
-          <Button
-            type="button"
-            size="md"
-            isLoading={createCategory.isPending}
-            onClick={handleAddCategory}
-          >
-            Add
-          </Button>
-          <Button type="button" variant="ghost" size="md" onClick={() => setAddingCategory(false)}>
-            Cancel
-          </Button>
-        </div>
-      )}
+      <Combobox
+        label="Category"
+        hint="Groups similar products together for filtering and reporting. Search for one, or type a new name to create it."
+        value={categoryUid}
+        onChange={setCategoryUid}
+        options={categoryOptions}
+        placeholder="Search or create a category…"
+        onCreate={handleCreateCategory}
+        creating={createCategory.isPending}
+      />
 
       <label className="flex flex-col gap-1.5">
-        <span className="text-sm font-medium text-text-muted">Description (optional)</span>
+        <FieldLabel hint="Extra details about this product, visible to staff when selling.">
+          Description
+        </FieldLabel>
         <textarea
           value={description}
           onChange={(event) => setDescription(event.target.value)}
@@ -452,7 +429,7 @@ function ProductForm({
       </label>
 
       <label className="flex flex-col gap-1.5">
-        <span className="text-sm font-medium text-text-muted">Image (optional)</span>
+        <FieldLabel hint="A photo shown in the product list and on the point-of-sale screen.">Image</FieldLabel>
         <div className="flex items-center gap-3">
           <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-elevated text-text-muted">
             {product?.image ? (

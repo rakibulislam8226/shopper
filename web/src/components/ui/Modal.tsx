@@ -75,15 +75,17 @@ export function Modal({ open, onClose, title, description, size = 'md', children
         )}
       >
         {(title ?? description) && (
-          <div className="flex items-start justify-between gap-4 border-b border-edge-strong px-8 py-6">
+          <div className="flex items-start justify-between gap-4 border-b border-edge-strong px-5 py-5 sm:px-8 sm:py-6">
             <div className="min-w-0">
               {title && (
-                <h2 id={titleId} className="text-xl font-semibold text-text-primary">
+                <h2 id={titleId} className="text-lg font-semibold text-text-primary sm:text-xl">
                   {title}
                 </h2>
               )}
               {description && (
-                <p className="mt-1.5 text-base leading-relaxed text-text-muted">{description}</p>
+                <p className="mt-1.5 text-sm leading-relaxed text-text-muted sm:text-base">
+                  {description}
+                </p>
               )}
             </div>
             <button
@@ -97,7 +99,7 @@ export function Modal({ open, onClose, title, description, size = 'md', children
           </div>
         )}
 
-        <div className="overflow-y-auto px-8 py-6">{children}</div>
+        <div className="overflow-y-auto px-5 py-5 sm:px-8 sm:py-6">{children}</div>
       </div>
     </div>,
     document.body,
